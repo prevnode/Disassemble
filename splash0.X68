@@ -55,6 +55,10 @@ SPLASH2     DC.B        '          _        _                  _       ',CR,LF
 
 * End
 *-----------------------------------------------------------
+
+            *This is a test of merging
+            *I started this on line 59
+            *And ended it on line 61
             END         START            ; last line of source
 
 
