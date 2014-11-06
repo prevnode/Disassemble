@@ -47,6 +47,8 @@ MAIN             LEA    SPLASH2,A1
                  MOVE   #14,D0
                  TRAP   #15
                  
+                 BRA    hex2bin
+                 
 *----------------------------------Begining of Example code from project addendem---------------------------- 
 
 start_opword     LEA     stack,SP        *Load the SP
@@ -161,7 +163,8 @@ code1111       STOP        #$2700
 
 *-----------------------------------HEX TO BINARY-----------------------
 *Replaces the data in register D7 with its binary form
-hex2bin        
+hex2bin        MOVE.L   #$FFFFFFFF,D7 *Manually load some test data
+               STOP     #$2700
 
 
 
@@ -175,6 +178,7 @@ nop_ea
 
 
                END   $400 
+
 
 *~Font name~Courier New~
 *~Font size~10~
