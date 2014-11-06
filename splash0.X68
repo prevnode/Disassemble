@@ -14,6 +14,33 @@ MAIN        LEA         SPLASH,A1
             MOVE        #14,D0
             TRAP        #15
 
+* PromptStartHex
+* prompt the user for a starting address in hex
+* this does not error check!
+*-----------------------------------------------------------
+PROMPTSTARTHEX
+            LEA         GETSRTHEX,A1
+            MOVE        #14,D0
+            TRAP        #15
+
+* PromptEndHex
+* prompt the user for a ending address in hex
+* this does not error check!
+*-----------------------------------------------------------
+PROMPTENDHEX
+            LEA         GETENDHEX,A1
+            MOVE        #14,D0
+            TRAP        #15
+
+* PromptRunAgain
+* ask to run the program again, if Y then call MAIN
+* if N then END program
+*-----------------------------------------------------------
+PROMPTRUNAGAIN     
+            LEA         RUNAGAIN,A1
+            MOVE        #14,D0
+            TRAP        #15
+
 * Put variables and constants here
 *-----------------------------------------------------------
 CR          EQU         $0D             ; Carriage Return
