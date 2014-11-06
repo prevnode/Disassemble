@@ -1,0 +1,216 @@
+00000400 Starting Address
+Assembler used: EASy68K Editor/Assembler v5.15.02
+Created On: 11/6/2014 8:50:29 AM
+
+00000000                             1  *-----------------------------------------------------------
+00000000                             2  * Title      :  DISSEMBLER PROTOTYPE I/O
+00000000                             3  * Written by :  BRANDAN HAERTEL
+00000000                             4  *               GARY MIXSON
+00000000                             5  *               ERICK HOUSE
+00000000                             6  * Date       :  10/5/2014
+00000000                             7  * Description:  SPLASH SCREEN AND SIMPLE LOOP THROUGH 10
+00000000                             8  *               10 MEMORY LOCATIONS
+00000000                             9  *-----------------------------------------------------------
+00000000                            10  
+00000000                            11  
+00000000                            12  *-----------------------SPLASH SCREEN------------------------------------
+00000000  =0000000D                 13  CR          EQU         $0D
+00000000  =0000000A                 14  LF          EQU         $0A
+00000000                            15  
+00000000= 20 20 20 20 20 20 ...     16  SPLASH2     DC.B    '        ____ ___  __ __                        ',CR,LF
+00000031= 20 20 20 20 20 20 ...     17              DC.B    '       / __/( _ )/ //_/                        ',CR,LF
+00000062= 20 20 20 20 20 20 ...     18              DC.B    '      / _ \/ _  / ,<                           ',CR,LF
+00000093= 20 20 20 20 20 20 ...     19              DC.B    '      \___/\___/_/|_|  __      _               ',CR,LF
+000000C4= 20 20 20 20 20 20 ...     20              DC.B    '        / __/ /__ ____/ /_____(_)___           ',CR,LF
+000000F5= 20 20 20 20 20 20 ...     21              DC.B    '       / _// / -_) __/ __/ __/ / __/           ',CR,LF
+00000126= 20 20 20 20 20 20 ...     22              DC.B    '      /___/_/\__/\__/\__/_/_/_/\__/        __  ',CR,LF
+00000157= 20 20 20 20 20 20 ...     23              DC.B    '        / __/ /  ___ ___  / /  ___ _______/ /__',CR,LF
+00000188= 20 20 20 20 20 20 ...     24              DC.B    '       _\ \/ _ \/ -_) _ \/ _ \/ -_) __/ _  (_-<',CR,LF
+000001B9= 20 20 20 20 20 20 ...     25              DC.B    '      /___/_//_/\__/ .__/_//_/\__/_/  \_,_/___/',CR,LF
+000001EA= 20 20 20 20 20 20 ...     26              DC.B    '                  /_/                          ',CR,LF,0
+0000021C                            27  
+0000021C                            28  * End
+0000021C                            29  
+0000021C                            30  
+0000021C                            31  *--------------------------System equates----------------------------------
+0000021C                            32   
+0000021C                            33  
+0000021C  =0000A000                 34  stack            EQU      $A000
+0000021C                            35  
+0000021C  =0000DE61                 36  example          EQU      %1101111001100001    * I made up bits 0 to 11      
+0000021C                            37  
+0000021C  =0000000C                 38  shift            EQU     12                   * Shift 12 bits  
+0000021C                            39  
+0000021C                            40  *-----------------------------------------------------------
+0000021C                            41  
+0000021C                            42  
+00000400                            43                   ORG     $400
+00000400                            44                   
+00000400                            45                   
+00000400  43F8 0000                 46  MAIN             LEA    SPLASH2,A1
+00000404  303C 000E                 47                   MOVE   #14,D0
+00000408  4E4F                      48                   TRAP   #15
+0000040A                            49                   
+0000040A                            50  *----------------------------------Begining of Example code from project addendem---------------------------- 
+0000040A                            51  
+0000040A  4FF9 0000A000             52  start_opword     LEA     stack,SP        *Load the SP
+00000410                            53  
+00000410  41F9 0000042A             54                   LEA     jmp_table,A0    *Index into the table
+00000416                            55  
+00000416  4280                      56                   CLR.L   D0              *Zero it
+00000418                            57  
+00000418  303C DE61                 58                   MOVE.W  #example,D0     *We'll play with it here
+0000041C                            59  
+0000041C  123C 000C                 60                   MOVE.B  #shift,D1       *Shift 12 bits to the right  
+00000420                            61  
+00000420  E268                      62                   LSR.W   D1,D0           *Move the bits
+00000422                            63  
+00000422                            64  *
+00000422                            65  
+00000422                            66  * Consider the next instruction. Why do we have to multiply the index 
+00000422                            67  
+00000422                            68  * by 6? How many bytes does a single jump table entry require? 
+00000422                            69  
+00000422                            70   
+00000422                            71  
+00000422  C0FC 0006                 72                 MULU        #6,D0       *Form offset     
+00000426                            73  
+00000426  4EB0 0000                 74                 JSR         0(A0,D0)     *Jump indirect with index
+0000042A                            75  
+0000042A                            76                      
+0000042A                            77  
+0000042A  4EF9 0000048A             78  jmp_table      JMP         code0000     *Bit manip /Movep / Immediate
+00000430                            79  
+00000430  4EF9 0000048E             80                 JMP         code0001     *Move.b
+00000436                            81  
+00000436  4EF9 00000492             82                 JMP         code0010     *Move.l
+0000043C                            83  
+0000043C  4EF9 00000496             84                 JMP         code0011     *Move.w
+00000442                            85  
+00000442  4EF9 0000049A             86                 JMP         code0100     *Misc
+00000448                            87  
+00000448  4EF9 0000049E             88                 JMP         code0101     *Addq/SubQ/Scc/DBcc
+0000044E                            89  
+0000044E  4EF9 000004A2             90                 JMP         code0110     *Bsr/Bra/Bcc
+00000454                            91  
+00000454  4EF9 000004A6             92                 JMP         code0111     *MoveQ
+0000045A                            93  
+0000045A  4EF9 000004AA             94                 JMP         code1000     *OR/DIV/SBCD
+00000460                            95  
+00000460  4EF9 000004AE             96                 JMP         code1001     *SUB/SUBX
+00000466                            97  
+00000466  4EF9 000004B2             98                 JMP         code1010     *Unassigned
+0000046C                            99  
+0000046C  4EF9 000004B6            100                 JMP         code1011     *Cmp/Eor
+00000472                           101  
+00000472  4EF9 000004B8            102                 JMP         code1100     *AND/MUL/ABCD/EXG
+00000478                           103  
+00000478  4EF9 000004BC            104                 JMP         code1101     *ADD/ADDA/ADDX
+0000047E                           105  
+0000047E  4EF9 000004C0            106                 JMP         code1110     *SHIFT/ROTATE
+00000484                           107  
+00000484  4EF9 000004C4            108                 JMP         code1111     *SPECIAL/RESERVED       
+0000048A                           109  
+0000048A                           110   
+0000048A                           111  
+0000048A                           112  *The following subroutines will get filled in as you decode the instructions . For *now, just exit gracefully.
+0000048A                           113  
+0000048A                           114   
+0000048A                           115  
+0000048A  4E72 2700                116  code0000       STOP        #$2700
+0000048E                           117  
+0000048E  4E72 2700                118  code0001       STOP        #$2700
+00000492                           119  
+00000492  4E72 2700                120  code0010       STOP        #$2700
+00000496                           121  
+00000496  4E72 2700                122  code0011       STOP        #$2700
+0000049A                           123  
+0000049A  4E72 2700                124  code0100       STOP        #$2700
+0000049E                           125  
+0000049E  4E72 2700                126  code0101       STOP        #$2700
+000004A2                           127  
+000004A2  4E72 2700                128  code0110       STOP        #$2700
+000004A6                           129  
+000004A6  4E72 2700                130  code0111       STOP        #$2700
+000004AA                           131  
+000004AA  4E72 2700                132  code1000       STOP        #$2700
+000004AE                           133  
+000004AE  4E72 2700                134  code1001       STOP        #$2700
+000004B2                           135  
+000004B2  4E72 2700                136  code1010       STOP        #$2700
+000004B6                           137  
+000004B6                           138   
+000004B6                           139  
+000004B6                           140  * Next we put in the next level of decoding. I just stuck this BRA
+000004B6                           141  
+000004B6                           142  * instruction here so it would look different. If this was your real
+000004B6                           143  
+000004B6                           144  * code, you would decode to the next level. Perhaps this would be
+000004B6                           145  
+000004B6                           146  * another jump table to the 8 possible op-codes at the next level.
+000004B6                           147  
+000004B6                           148   
+000004B6                           149  
+000004B6  60FE                     150  code1011        BRA        code1011
+000004B8                           151  
+000004B8                           152    
+000004B8                           153  
+000004B8  4E72 2700                154  code1100       STOP        #$2700
+000004BC                           155  
+000004BC  4E72 2700                156  code1101       STOP        #$2700
+000004C0                           157  
+000004C0  4E72 2700                158  code1110       STOP        #$2700
+000004C4                           159  
+000004C4  4E72 2700                160  code1111       STOP        #$2700
+000004C8                           161  
+000004C8                           162  *-----------------------------------HEX TO BINARY-----------------------
+000004C8                           163  *Replaces the data in register D7 with its binary form
+000004C8                           164  hex2bin        
+000004C8                           165  
+000004C8                           166  
+000004C8                           167  
+000004C8                           168  
+000004C8                           169  
+000004C8                           170  
+000004C8                           171  *-----------------------------------NOP_EA------------------------------ 
+000004C8                           172  *NOP doesn't actually have an ea but hey you gotta start somewhere
+000004C8                           173  
+000004C8                           174  nop_ea      
+000004C8                           175  
+000004C8                           176  
+000004C8                           177                 END   $400 
+
+No errors detected
+No warnings generated
+
+
+SYMBOL TABLE INFORMATION
+Symbol-name         Value
+-------------------------
+CODE0000            48A
+CODE0001            48E
+CODE0010            492
+CODE0011            496
+CODE0100            49A
+CODE0101            49E
+CODE0110            4A2
+CODE0111            4A6
+CODE1000            4AA
+CODE1001            4AE
+CODE1010            4B2
+CODE1011            4B6
+CODE1100            4B8
+CODE1101            4BC
+CODE1110            4C0
+CODE1111            4C4
+CR                  D
+EXAMPLE             DE61
+HEX2BIN             4C8
+JMP_TABLE           42A
+LF                  A
+MAIN                400
+NOP_EA              4C8
+SHIFT               C
+SPLASH2             0
+STACK               A000
+START_OPWORD        40A
