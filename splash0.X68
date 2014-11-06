@@ -10,7 +10,8 @@ START:      ORG         $1000            ; first instruction of program
 
 * Put program code here
 *-----------------------------------------------------------
-MAIN        LEA         SPLASH,A1
+MAIN        
+            LEA         SPLASH,A1
             MOVE        #14,D0
             TRAP        #15
 
