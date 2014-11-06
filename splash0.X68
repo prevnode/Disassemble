@@ -31,7 +31,14 @@ SPLASH      DC.B        '        ____ ___  __ __                        ',CR,LF
             DC.B        '        / __/ /  ___ ___  / /  ___ _______/ /__',CR,LF
             DC.B        '       _\ \/ _ \/ -_) _ \/ _ \/ -_) __/ _  (_-<',CR,LF
             DC.B        '      /___/_//_/\__/ .__/_//_/\__/_/  \_,_/___/',CR,LF
-            DC.B        '                  /_/                          ',CR,LF,0
+            DC.B        '                  /_/                          ',CR,LF
+            DC.B        'Brandan Heaertel' ,CR,LF
+            DC.B        'Erick House'      ,CR,LF
+            DC.B        'Gary Mixson'      ,CR,LF,CR,LF,0
+
+GETSRTHEX   DC.B        'Enter Starting Hex Address Of Program: ',CR,LF,0
+GETENDHEX   DC.B        'Enter Ending Hex Address Of Program: ',CR,LF,0
+RUNAGAIN    DC.B        'Would You Like To Dissasmble Anouther Program? (Y/N): ',CR,LF,0
 
 * End
 *-----------------------------------------------------------
