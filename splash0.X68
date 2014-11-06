@@ -1,8 +1,6 @@
 *-----------------------------------------------------------
 * Title      :  DISSEMBLER PROTOTYPE I/O
-* Written by :  BRANDAN HAERTEL
-*               GARY MIXSON
-*               ERICK HOUSE
+* Written by :  BRANDAN HAERTEL, GARY MIXSON, ERICK HOUSE
 * Date       :  10/5/2014
 * Description:  SPLASH SCREEN AND SIMPLE LOOP THROUGH 10
 *               10 MEMORY LOCATIONS
@@ -12,15 +10,17 @@ START:      ORG         $1000            ; first instruction of program
 
 * Put program code here
 *-----------------------------------------------------------
-MAIN        LEA         SPLASH2,A1
+MAIN        LEA         SPLASH,A1
             MOVE        #14,D0
             TRAP        #15
 
 * Put variables and constants here
 *-----------------------------------------------------------
-CR          EQU         $0D
-LF          EQU         $0A
+CR          EQU         $0D             ; Carriage Return
+LF          EQU         $0A             ; Line Feed
 
+* Main Splash Screen to be displayed at begining of program
+*-----------------------------------------------------------
 SPLASH      DC.B        '        ____ ___  __ __                        ',CR,LF
             DC.B        '       / __/( _ )/ //_/                        ',CR,LF
             DC.B        '      / _ \/ _  / ,<                           ',CR,LF
@@ -32,43 +32,7 @@ SPLASH      DC.B        '        ____ ___  __ __                        ',CR,LF
             DC.B        '       _\ \/ _ \/ -_) _ \/ _ \/ -_) __/ _  (_-<',CR,LF
             DC.B        '      /___/_//_/\__/ .__/_//_/\__/_/  \_,_/___/',CR,LF
             DC.B        '                  /_/                          ',CR,LF,0
-            
-SPLASH2     DC.B        '          _        _                  _       ',CR,LF
-            DC.B        '        /\ \     / /\                /\_\     ',CR,LF      
-            DC.b        '       /  \ \   / /  \              / / /     ',CR,LF   
-            DC.B        '      / /\ \_\ / / /\ \            / / /  /\_\',CR,LF 
-            DC.B        '     / / /\/_//_/ /\ \ \          / / /__/ / /',CR,LF 
-            DC.B        '    / /_/_    \ \ \_\ \ \        / /\_____/ / ',CR,LF  
-            DC.B        '   / /___/\    \ \/__\ \ \      / /\_______/  ',CR,LF   
-            DC.B        '  / /\__ \ \    \_____\ \ \    / / /\ \ \     ',CR,LF      
-            DC.B        ' / / /__\ \ \    \ \ \_\ \ \  / / /  \ \ \    ',CR,LF     
-            DC.B        '/ / /____\ \ \    \ \___\ \ \/ / /    \ \ \   ',CR,LF    
-            DC.B        '\/__________\/     \_______\/\/_/      \_\_\  ',CR,LF   
-            DC.B        '   ____ _        _       _                    ',CR,LF        
-            DC.B        '  / __/ /__ ____/ /_____(_)___                ',CR,LF           
-            DC.B        ' / _// / -_) __/ __/ __/ / __/                ',CR,LF
-            DC.B        '/___/_/\__/\__/\__/_/_/_/\__/        __       ',CR,LF  
-            DC.B        '  / __/ /  ___ ___  / /  ___ _______/ /__     ',CR,LF
-            DC.B        ' _\ \/ _ \/ -_) _ \/ _ \/ -_) __/ _  (_-<     ',CR,LF
-            DC.B        '/___/_//_/\__/ .__/_//_/\__/_/  \_,_/___/     ',CR,LF
-            DC.B        '            /_/                               ',CR,LF,0
 
 * End
 *-----------------------------------------------------------
-
-            *This is a test of merging
-            *I started this on line 59
-            *And ended it on line 61
             END         START            ; last line of source
-            * THIS IS SEVERAL LINES
-            * OF COMMENTS TO TEST GIT AND RUNNING
-            * INTO EACHOTHERS LINES
-            * OMGLOL
-
-
-
-
-*~Font name~Courier New~
-*~Font size~10~
-*~Tab type~1~
-*~Tab size~4~
