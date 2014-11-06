@@ -1,31 +1,55 @@
-*****************************************
+*-----------------------------------------------------------
+* Title      :  DISSEMBLER PROTOTYPE I/O
+* Written by :  BRANDAN HAERTEL
+*               GARY MIXSON
+*               ERICK HOUSE
+* Date       :  10/5/2014
+* Description:  SPLASH SCREEN AND SIMPLE LOOP THROUGH 10
+*               10 MEMORY LOCATIONS
+*-----------------------------------------------------------
 
-* Example of using a jump table to decode an instruction
 
-*
+*-----------------------SPLASH SCREEN------------------------------------
+CR          EQU         $0D
+LF          EQU         $0A
 
-****************************************
+SPLASH2     DC.B    '        ____ ___  __ __                        ',CR,LF
+            DC.B    '       / __/( _ )/ //_/                        ',CR,LF
+            DC.B    '      / _ \/ _  / ,<                           ',CR,LF
+            DC.B    '      \___/\___/_/|_|  __      _               ',CR,LF
+            DC.B    '        / __/ /__ ____/ /_____(_)___           ',CR,LF
+            DC.B    '       / _// / -_) __/ __/ __/ / __/           ',CR,LF
+            DC.B    '      /___/_/\__/\__/\__/_/_/_/\__/        __  ',CR,LF
+            DC.B    '        / __/ /  ___ ___  / /  ___ _______/ /__',CR,LF
+            DC.B    '       _\ \/ _ \/ -_) _ \/ _ \/ -_) __/ _  (_-<',CR,LF
+            DC.B    '      /___/_//_/\__/ .__/_//_/\__/_/  \_,_/___/',CR,LF
+            DC.B    '                  /_/                          ',CR,LF,0
 
- 
+* End
 
-* System equates
 
+*--------------------------System equates----------------------------------
  
 
 stack            EQU      $A000
 
 example          EQU      %1101111001100001    * I made up bits 0 to 11      
 
-shift            EQU     12                   * Shift 12 bits 
+shift            EQU     12                   * Shift 12 bits  
 
- 
+*-----------------------------------------------------------
 
-* Program starts here
- 
 
                  ORG     $400
+                 
+                 
+MAIN             LEA    SPLASH2,A1
+                 MOVE   #14,D0
+                 TRAP   #15
+                 
+*----------------------------------Begining of Example code from project addendem---------------------------- 
 
-start            LEA     stack,SP        *Load the SP
+start_opword     LEA     stack,SP        *Load the SP
 
                  LEA     jmp_table,A0    *Index into the table
 
@@ -81,15 +105,11 @@ jmp_table      JMP         code0000     *Bit manip /Movep / Immediate
 
                JMP         code1110     *SHIFT/ROTATE
 
-               JMP         code1111     *SPECIAL/RESERVED
-
-        
+               JMP         code1111     *SPECIAL/RESERVED       
 
  
 
 *The following subroutines will get filled in as you decode the instructions . For *now, just exit gracefully.
-
- 
 
  
 
@@ -123,7 +143,7 @@ code1010       STOP        #$2700
 
 * code, you would decode to the next level. Perhaps this would be
 
- * another jump table to the 8 possible op-codes at the next level.
+* another jump table to the 8 possible op-codes at the next level.
 
  
 
@@ -139,9 +159,14 @@ code1110       STOP        #$2700
 
 code1111       STOP        #$2700
 
- 
+*-----------------------------------NOP_EA------------------------------ 
+*NOP doesn't actually have an ea but hey you gotta start somewhere
+
+nop_ea      
+
 
                END   $400 
+
 *~Font name~Courier New~
 *~Font size~10~
 *~Tab type~1~
