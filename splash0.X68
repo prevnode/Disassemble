@@ -56,6 +56,10 @@ SPLASH2     DC.B        '          _        _                  _       ',CR,LF
 * End
 *-----------------------------------------------------------
             END         START            ; last line of source
+            * THIS IS SEVERAL LINES
+            * OF COMMENTS TO TEST GIT AND RUNNING
+            * INTO EACHOTHERS LINES
+            * OMGLOL
 
 
 
