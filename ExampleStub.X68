@@ -147,7 +147,7 @@ code1010       STOP        #$2700
 
  
 
-code1011     BRA        code1011
+code1011        BRA        code1011
 
   
 
@@ -158,6 +158,15 @@ code1101       STOP        #$2700
 code1110       STOP        #$2700
 
 code1111       STOP        #$2700
+
+*-----------------------------------HEX TO BINARY-----------------------
+*Replaces the data in register D7 with its binary form
+hex2bin        
+
+
+
+
+
 
 *-----------------------------------NOP_EA------------------------------ 
 *NOP doesn't actually have an ea but hey you gotta start somewhere

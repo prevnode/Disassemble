@@ -1,6 +1,6 @@
 00000400 Starting Address
 Assembler used: EASy68K Editor/Assembler v5.15.02
-Created On: 11/6/2014 7:32:21 AM
+Created On: 11/6/2014 8:50:29 AM
 
 00000000                             1  *-----------------------------------------------------------
 00000000                             2  * Title      :  DISSEMBLER PROTOTYPE I/O
@@ -151,7 +151,7 @@ Created On: 11/6/2014 7:32:21 AM
 000004B6                           147  
 000004B6                           148   
 000004B6                           149  
-000004B6  60FE                     150  code1011     BRA        code1011
+000004B6  60FE                     150  code1011        BRA        code1011
 000004B8                           151  
 000004B8                           152    
 000004B8                           153  
@@ -163,13 +163,22 @@ Created On: 11/6/2014 7:32:21 AM
 000004C4                           159  
 000004C4  4E72 2700                160  code1111       STOP        #$2700
 000004C8                           161  
-000004C8                           162  *-----------------------------------NOP_EA------------------------------ 
-000004C8                           163  *NOP doesn't actually have an ea but hey you gotta start somewhere
-000004C8                           164  
-000004C8                           165  nop_ea      
+000004C8                           162  *-----------------------------------HEX TO BINARY-----------------------
+000004C8                           163  *Replaces the data in register D7 with its binary form
+000004C8                           164  hex2bin        
+000004C8                           165  
 000004C8                           166  
 000004C8                           167  
-000004C8                           168                 END   $400 
+000004C8                           168  
+000004C8                           169  
+000004C8                           170  
+000004C8                           171  *-----------------------------------NOP_EA------------------------------ 
+000004C8                           172  *NOP doesn't actually have an ea but hey you gotta start somewhere
+000004C8                           173  
+000004C8                           174  nop_ea      
+000004C8                           175  
+000004C8                           176  
+000004C8                           177                 END   $400 
 
 No errors detected
 No warnings generated
@@ -196,6 +205,7 @@ CODE1110            4C0
 CODE1111            4C4
 CR                  D
 EXAMPLE             DE61
+HEX2BIN             4C8
 JMP_TABLE           42A
 LF                  A
 MAIN                400
