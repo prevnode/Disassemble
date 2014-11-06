@@ -1,6 +1,8 @@
 *-----------------------------------------------------------
 * Title      :  DISSEMBLER PROTOTYPE I/O
-* Written by :  Me
+* Written by :  BRANDAN HAERTEL
+*               GARY MIXSON
+*               ERICK HOUSE
 * Date       :  10/5/2014
 * Description:  SPLASH SCREEN AND SIMPLE LOOP THROUGH 10
 *               10 MEMORY LOCATIONS
@@ -54,6 +56,8 @@ SPLASH2     DC.B        '          _        _                  _       ',CR,LF
 * End
 *-----------------------------------------------------------
             END         START            ; last line of source
+
+
 
 
 *~Font name~Courier New~
