@@ -35,7 +35,9 @@ stack            EQU      $A000
 
 example          EQU      %1101111001100001    * I made up bits 0 to 11      
 
-shift            EQU     12                   * Shift 12 bits  
+shift            EQU     12                   * Shift 12 bits
+
+
 
 *-----------------------------------------------------------
 
@@ -47,7 +49,7 @@ MAIN             LEA    SPLASH2,A1
                  MOVE   #14,D0
                  TRAP   #15
                  
-                 BRA    hex2bin
+               
                  
 *----------------------------------Begining of Example code from project addendem---------------------------- 
 
@@ -71,7 +73,7 @@ start_opword     LEA     stack,SP        *Load the SP
 
  
 
-               MULU        #6,D0       *Form offset     
+               MULU        #6,D0       *Form offset                                 
 
                JSR         0(A0,D0)     *Jump indirect with index
 
@@ -161,12 +163,13 @@ code1110       STOP        #$2700
 
 code1111       STOP        #$2700
 
-*-----------------------------------HEX TO BINARY-----------------------
-*Replaces the data in register D7 with its binary form
-hex2bin        MOVE.L   #$FFFFFFFF,D7 *Manually load some test data
-               STOP     #$2700
 
+              
+               
 
+                *BRA      startcnvt
+                STOP     #$2700
+*--------------------------------------------------------------------------------
 
 
 
