@@ -20,27 +20,27 @@ MAIN
 * this does not error check!
 *-----------------------------------------------------------
 PROMPTSTARTHEX
-            LEA         GETSRTHEX,A1
-            MOVE        #14,D0
-            TRAP        #15
+            LEA         GETSRTHEX,A1        ; put the GETSRTHEX message into A1
+            MOVE        #14,D0              ; trap task #14 to print the message to screen
+            TRAP        #15                 ; trap #15 I/O
 
 * PromptEndHex
 * prompt the user for a ending address in hex
 * this does not error check!
 *-----------------------------------------------------------
 PROMPTENDHEX
-            LEA         GETENDHEX,A1
-            MOVE        #14,D0
-            TRAP        #15
+            LEA         GETENDHEX,A1        ; put the GETENDHEX message into A1
+            MOVE        #14,D0              ; trap task #14 to print the message to screen
+            TRAP        #15                 ; trap #15 I/O
 
 * PromptRunAgain
 * ask to run the program again, if Y then call MAIN
 * if N then END program
 *-----------------------------------------------------------
 PROMPTRUNAGAIN     
-            LEA         RUNAGAIN,A1
-            MOVE        #14,D0
-            TRAP        #15
+            LEA         RUNAGAIN,A1         ; put the RUNAGAIN message into A1
+            MOVE        #14,D0              ; trap task #14 to print the message to screen
+            TRAP        #15                 ; trap #15 I/O
 
 * Put variables and constants here
 *-----------------------------------------------------------
@@ -71,3 +71,8 @@ RUNAGAIN    DC.B        'Would You Like To Dissasmble Anouther Program? (Y/N): '
 * End
 *-----------------------------------------------------------
             END         START            ; last line of source
+
+*~Font name~Courier New~
+*~Font size~10~
+*~Tab type~1~
+*~Tab size~4~
