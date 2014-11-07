@@ -1,6 +1,6 @@
 *-----------------------------------------------------------
 * Title      :  DISSEMBLER PROTOTYPE I/O
-* Written by :  BRANDAN HAERTEL, GARY MIXSON, ERICK HOUSE
+* Written by :  BRANDAN HAERTEL, ERICK HOUSE, GARY MIXSON
 * Date       :  10/5/2014
 * Description:  SPLASH SCREEN AND SIMPLE LOOP THROUGH 10
 *               10 MEMORY LOCATIONS
@@ -15,51 +15,76 @@ MAIN
             MOVE        #14,D0              ; trap task #14 to print the message to screen
             TRAP        #15                 ; trap #15 I/O
 
-* PromptStartHex
+* StartHex
 * prompt the user for a starting address in hex
 * this does not error check!
 *-----------------------------------------------------------
-PROMPTSTARTHEX
+STARTHEX
             LEA         GETSRTHEX,A1        ; put the GETSRTHEX message into A1
-            MOVE        #14,D0              ; trap task #14 to print the message to screen
+            MOVE.B      #14,D0              ; trap task #14 to print the message to screen
             TRAP        #15                 ; trap #15 I/O
+            
+            MOVE.B      #2,D0               ; read a string in from the keyboard
+            TRAP        #15                 ; trap #15 I/O
+            MOVE.L      (A1),D2             ; store the starting address in D6
 
-* PromptEndHex
+* EndHex
 * prompt the user for a ending address in hex
 * this does not error check!
 *-----------------------------------------------------------
-PROMPTENDHEX
+ENDHEX
             LEA         GETENDHEX,A1        ; put the GETENDHEX message into A1
-            MOVE        #14,D0              ; trap task #14 to print the message to screen
+            MOVE.B      #14,D0              ; trap task #14 to print the message to screen
             TRAP        #15                 ; trap #15 I/O
+            
+            MOVE.B      #2,D0               ; read a string in from the keyboard
+            TRAP        #15                 ; trap #15 I/O
+            MOVE.L      (A1),D3             ; store the starting address in D6
 
 * PromptRunAgain
 * ask to run the program again, if Y then call MAIN
 * if N then END program
 *-----------------------------------------------------------
 PROMPTRUNAGAIN     
-            LEA         RUNAGAIN,A1         ; put the RUNAGAIN message into A1
+            LEA         RUNAGAIN,A1         ; put message into A1
             MOVE        #14,D0              ; trap task #14 to print the message to screen
             TRAP        #15                 ; trap #15 I/O
             
-            MOVE.B      #4,D0               ; trap task 4 does the following:
-            TRAP        #15
-            CMP.L       #89,D1
-            BEQ         MAIN
+            MOVE.B      #5,D0               ; trap task 5 grabs a single character
+            TRAP        #15                 ; trap #15 I/O
+            CMP.L       #$59,D1             ; compare Y to D1
+            BEQ         RESET               ; brach to Reset if D1 == Y
             
-            CMP.B       #121,D1
-            BEQ         MAIN
-            *BRA         ENDPROGRAM
-            
-* SetStartAddress
-* sets the starting address to the value in D1
-*-----------------------------------------------------------
-SETSTARTADDRESS   
+            CMP.B       #$79,D1             ; compare y to D1
+            BEQ         RESET               ; brach to Reset if D1 == y
+            BRA         ENDPROGRAM          ; else branch to end
 
-* SetEndAddress
-* sets the ending address to the value in D1
+* Reset
+* prep the program to run again
 *-----------------------------------------------------------
-SETENDADDRESS   
+RESET
+            MOVE.B      #11,D0
+            MOVE.W      #$FF00,D1
+            TRAP        #15
+            
+            CLR         D0
+            CLR         D1
+            CLR         D2
+            CLR         D3
+            CLR         D4
+            CLR         D5
+            CLR         D6
+            CLR         D7
+            
+            SUBA.L      A0,A0
+            SUBA.L      A1,A1
+            SUBA.L      A2,A2
+            SUBA.L      A3,A3
+            SUBA.L      A4,A4
+            SUBA.L      A5,A5
+            SUBA.L      A6,A6
+
+            BRA         START 
 
 * Put variables and constants here
 *-----------------------------------------------------------
@@ -86,12 +111,16 @@ SPLASH      DC.B        '        ____ ___  __ __                        ',CR,LF
 GETSRTHEX   DC.B        'Enter Starting Hex Address Of Program: ',CR,LF,0
 GETENDHEX   DC.B        'Enter Ending Hex Address Of Program: ',CR,LF,0
 RUNAGAIN    DC.B        'Would You Like To Dissasmble Anouther Program? (Y/N): ',CR,LF,0
-
+CONFIRMSRT  DC.B        'Starting address is stored',CR,LF,0
+CONFIRMEND  DC.B        'Ending address is stored',CR,LF,0
 
 * EndProgram
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
+
+
 
 
 *~Font name~Courier New~
