@@ -203,13 +203,18 @@ nop_str     DC.B    'NOP'
 *Parse the effective address of a move opcode
 move_ea
 move_str            DC.B    'MOVE'
+*test_msk            EQU     %00101010101010101010101010101000
 size_msk            EQU     %0011000000000000
-destin_reg_msk      EQU     %0000111000000000
-destin_mod_msk      EQU     %0000000111000000
-source_mod_msk      EQU     %0000000000111000
-source_reg_msk      EQU     %0000000000000111    
+destin_reg_msk      EQU     %00001110000000000000000000000000
+destin_mod_msk      EQU     %00000001110000000000000000000000
+source_mod_msk      EQU     %00000000001110000000000000000000
+source_reg_msk      EQU     %00000000000001110000000000000000
+
+                    *MOVE.L  #test_msk,D7
+                        
 
                     MOVE.L  #$1C050000,$1600       *Test data that corresponds to MOVE.B D5,D6
+                    *MOVE.L  #$1C381400,$1600             *Test data corresponds to  MOVE.B    $1400,D6
                     
                     MOVE.L  $1600,$1610            *Make a copy
                     MOVE.L  #size_msk,D7           *Load the mask
@@ -233,7 +238,7 @@ source_reg_msk      EQU     %0000000000000111
                     MOVE.L  $1610,D7               *Move the remaining bits into a reg to be shifted
                     MOVE.L  #24,D6                 *Lots of bits to shift
                     LSR.L   D6,D7                  *Shift bits to the LSB
-                    MOVE.L  D7,A5                  *Move the size for display
+                    MOVE.L  D7,A5                  *Move the mode for display
                     
                     MOVE.L  $1600,$1610            *Make a copy
                     MOVE.L  #source_mod_msk,D7     *Load the mask
@@ -241,7 +246,7 @@ source_reg_msk      EQU     %0000000000000111
                     MOVE.L  $1610,D7               *Move the remaining bits into a reg to be shifted
                     MOVE.L  #21,D6                 *Lots of bits to shift
                     LSR.L   D6,D7                  *Shift bits to the LSB
-                    MOVE.L  D7,A6                  *Move the size for display
+                    MOVE.L  D7,A6                  *Move the mode for display
                     
                     MOVE.L  $1600,$1610            *Make a copy
                     MOVE.L  #source_reg_msk,D7     *Load the mask
@@ -249,12 +254,16 @@ source_reg_msk      EQU     %0000000000000111
                     MOVE.L  $1610,D7               *Move the remaining bits into a reg to be shifted
                     MOVE.L  #16,D6                 *Lots of bits to shift
                     LSR.L   D6,D7                  *Shift bits to the LSB
-                    MOVE.L  D7,A7                  *Move the size for display
+                    MOVE.L  D7,A7                  *Move the reg num for display
+                    
+                    RTS
 
 
 
 
                     END   $400
+
+
 *~Font name~Courier New~
 *~Font size~10~
 *~Tab type~1~
