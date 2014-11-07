@@ -31,11 +31,17 @@ SPLASH2     DC.B    '        ____ ___  __ __                        ',CR,LF
 *--------------------------System equates----------------------------------
  
 
-stack            EQU      $A000
+stack           EQU      $A000
 
-example          EQU      %1101111001100001    * I made up bits 0 to 11      
+example         EQU      %1101111001100001    * I made up bits 0 to 11      
 
-shift            EQU     12                   * Shift 12 bits
+shift           EQU     12                   * Shift 12 bits
+
+byte_str        DC.B    '.B'                 *Byte sized 
+
+word_str        DC.B    '.W'                 *Word sized
+
+long_str        DC.B    '.L'                 *Long sized
 
 
 
@@ -48,6 +54,8 @@ shift            EQU     12                   * Shift 12 bits
 MAIN             LEA    SPLASH2,A1
                  MOVE   #14,D0
                  TRAP   #15
+                 
+                 BRA    move_ea         *Testing the move ea sr
                  
                
                  
@@ -163,21 +171,45 @@ code1110       STOP        #$2700
 
 code1111       STOP        #$2700
 
+*-----------------------------Invalid Opcode---------------------------
+*Used when the word read in is garbage/unsupported opcode/invalid ea 
+invalid_opcode
 
-              
-               
+inv_mem     DC.B    '1000'
+inv_code    DC.B    'DATA'
+inv_operand DC.B    '$WXYZ'
 
-                *BRA      startcnvt
-                STOP     #$2700
-*--------------------------------------------------------------------------------
-
-
-
+            MOVE.L  inv_mem,A1
+            MOVE.L  inv_code,A2
+            MOVE.L  inv_operand,A3
+            RTS
+  
 
 *-----------------------------------NOP_EA------------------------------ 
 *NOP doesn't actually have an ea but hey you gotta start somewhere
+nop_ea
 
-nop_ea      
+nop_str     DC.B    'NOP'
+
+            MOVE.L  nop_str,A1
+
+            RTS
+*-------------------------------------------------------------------------
+
+
+
+*---------------------------------MOVE_EA----------------------------------
+*Parse the effective address of a move opcode
+move_ea
+
+            CLR.L   D0              *Zero it (FOR TESTING ONLY)
+            MOVE.L  #$1C050000,D0       *Test data that corresponds to MOVE.B D5,D6
+            
+
+move_str    DC.B    'MOVE'
+            
+            
+
 
 
                END   $400 
