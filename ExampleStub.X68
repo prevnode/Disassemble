@@ -49,13 +49,14 @@ long_str        DC.B    '.L'                 *Long sized
 
 
                  ORG     $400
+                 BRA    move_ea         *Testing the move ea sr
                  
-                 
-MAIN             LEA    SPLASH2,A1
+MAIN             
+                 LEA    SPLASH2,A1
                  MOVE   #14,D0
                  TRAP   #15
                  
-                 BRA    move_ea         *Testing the move ea sr
+                
                  
                
                  
@@ -201,20 +202,59 @@ nop_str     DC.B    'NOP'
 *---------------------------------MOVE_EA----------------------------------
 *Parse the effective address of a move opcode
 move_ea
+move_str            DC.B    'MOVE'
+size_msk            EQU     %0011000000000000
+destin_reg_msk      EQU     %0000111000000000
+destin_mod_msk      EQU     %0000000111000000
+source_mod_msk      EQU     %0000000000111000
+source_reg_msk      EQU     %0000000000000111    
 
-            CLR.L   D0              *Zero it (FOR TESTING ONLY)
-            MOVE.L  #$1C050000,D0       *Test data that corresponds to MOVE.B D5,D6
-            
+                    MOVE.L  #$1C050000,$1600       *Test data that corresponds to MOVE.B D5,D6
+                    
+                    MOVE.L  $1600,$1610            *Make a copy
+                    MOVE.L  #size_msk,D7           *Load the mask
+                    AND     D7,$1610               *Apply the mask to the copy
+                    MOVE.L  $1610,D7               *Move the remaining bits into a reg to be shifted
+                    MOVE.L  #27,D6                 *Lots of bits to shift
+                    LSR.L   D6,D7                  *Shift bits to the LSB
+                    MOVE.L  D7,A3                  *Move the size for display
+                  
+                    MOVE.L  $1600,$1610            *Make a copy
+                    MOVE.L  #destin_reg_msk,D7     *Load the mask                   
+                    AND     D7,$1610               *Apply the mask to the copy
+                    MOVE.L  $1610,D7               *Move the remaining bits into a register to be shifted
+                    MOVE.L  #25,D6                 *Going to shift a lot of bits
+                    LSR.L   D6,D7                  *Move the bits to the LSB
+                    MOVE.L  D7,A4                  *Move the finished destination reg in place for display
+                    
+                    MOVE.L  $1600,$1610            *Make a copy
+                    MOVE.L  #destin_mod_msk,D7     *Load the mask
+                    AND     D7,$1610               *Apply the mask to the copy
+                    MOVE.L  $1610,D7               *Move the remaining bits into a reg to be shifted
+                    MOVE.L  #24,D6                 *Lots of bits to shift
+                    LSR.L   D6,D7                  *Shift bits to the LSB
+                    MOVE.L  D7,A5                  *Move the size for display
+                    
+                    MOVE.L  $1600,$1610            *Make a copy
+                    MOVE.L  #source_mod_msk,D7     *Load the mask
+                    AND     D7,$1610               *Apply the mask to the copy
+                    MOVE.L  $1610,D7               *Move the remaining bits into a reg to be shifted
+                    MOVE.L  #21,D6                 *Lots of bits to shift
+                    LSR.L   D6,D7                  *Shift bits to the LSB
+                    MOVE.L  D7,A6                  *Move the size for display
+                    
+                    MOVE.L  $1600,$1610            *Make a copy
+                    MOVE.L  #source_reg_msk,D7     *Load the mask
+                    AND     D7,$1610               *Apply the mask to the copy
+                    MOVE.L  $1610,D7               *Move the remaining bits into a reg to be shifted
+                    MOVE.L  #16,D6                 *Lots of bits to shift
+                    LSR.L   D6,D7                  *Shift bits to the LSB
+                    MOVE.L  D7,A7                  *Move the size for display
 
-move_str    DC.B    'MOVE'
-            
-            
 
 
 
-               END   $400 
-
-
+                    END   $400
 *~Font name~Courier New~
 *~Font size~10~
 *~Tab type~1~
