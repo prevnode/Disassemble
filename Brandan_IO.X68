@@ -26,7 +26,9 @@ STARTHEX
             
             MOVE.B      #2,D0               ; read a string in from the keyboard
             TRAP        #15                 ; trap #15 I/O
-            MOVE.L      (A1),D2             ; store the starting address in D6
+            MOVE.L      (A1),D2             ; store the starting address in D2
+            
+            SUBA.L      A1,A1               ; clear A1
 
 * EndHex
 * prompt the user for a ending address in hex
@@ -40,6 +42,8 @@ ENDHEX
             MOVE.B      #2,D0               ; read a string in from the keyboard
             TRAP        #15                 ; trap #15 I/O
             MOVE.L      (A1),D3             ; store the starting address in D6
+            
+            SUBA.L      A1,A1               ; clear A1
 
 * PromptRunAgain
 * ask to run the program again, if Y then call MAIN
