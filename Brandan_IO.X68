@@ -26,7 +26,8 @@ STARTHEX
             
             MOVE.B      #2,D0               ; read a string in from the keyboard
             TRAP        #15                 ; trap #15 I/O
-            MOVE.L      (A1),D2             ; store the starting address in D2
+            JSR         ASCIITOHEX          ; convert string to hex address
+            *MOVE.L      (A1),D2             ; store the starting address in D2
             
             SUBA.L      A1,A1               ; clear A1
 
@@ -41,7 +42,8 @@ ENDHEX
             
             MOVE.B      #2,D0               ; read a string in from the keyboard
             TRAP        #15                 ; trap #15 I/O
-            MOVE.L      (A1),D3             ; store the starting address in D6
+            JSR         ASCIITOHEX          ; convert the string to hex address
+            *MOVE.L      (A1),D3             ; store the starting address in D6
             
             SUBA.L      A1,A1               ; clear A1
 
@@ -67,28 +69,37 @@ PROMPTRUNAGAIN
 * prep the program to run again
 *-----------------------------------------------------------
 RESET
-            MOVE.B      #11,D0
-            MOVE.W      #$FF00,D1
-            TRAP        #15
+            MOVE.B      #11,D0              ; clear the screen
+            MOVE.W      #$FF00,D1           ; clear the screen
+            TRAP        #15                 ; send trap task command
             
-            CLR         D0
-            CLR         D1
-            CLR         D2
-            CLR         D3
-            CLR         D4
-            CLR         D5
-            CLR         D6
-            CLR         D7
+            CLR         D0                  ; clear the data register
+            CLR         D1                  ; clear the data register
+            CLR         D2                  ; clear the data register
+            CLR         D3                  ; clear the data register
+            CLR         D4                  ; clear the data register
+            CLR         D5                  ; clear the data register
+            CLR         D6                  ; clear the data register
+            CLR         D7                  ; clear the data register
             
-            SUBA.L      A0,A0
-            SUBA.L      A1,A1
-            SUBA.L      A2,A2
-            SUBA.L      A3,A3
-            SUBA.L      A4,A4
-            SUBA.L      A5,A5
-            SUBA.L      A6,A6
+            SUBA.L      A0,A0               ; clear the acess register
+            SUBA.L      A1,A1               ; clear the acess register
+            SUBA.L      A2,A2               ; clear the acess register
+            SUBA.L      A3,A3               ; clear the acess register
+            SUBA.L      A4,A4               ; clear the acess register
+            SUBA.L      A5,A5               ; clear the acess register
+            SUBA.L      A6,A6               ; clear the acess register
 
-            BRA         START 
+            BRA         START               ; branch back to start
+            
+* AsciiToHex
+* turn the ascii letter in A1 to hex
+* result to added to D6
+*-----------------------------------------------------------
+ASCIITOHEX
+
+ASCIITOHEXQUIT
+            RTS                             ; return back
 
 * Put variables and constants here
 *-----------------------------------------------------------
