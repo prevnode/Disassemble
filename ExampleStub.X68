@@ -197,28 +197,33 @@ nop_str     DC.B    'NOP'
             RTS
 *-------------------------------------------------------------------------
 
+*------------------------------------ADD------------------------------------
+add_ea
+register_msk        EQU     %00001110000000000000000000000000
+opmode_msk          EQU     %00000001110000000000000000000000
+ea_mode_msk         EQU     %00000000001110000000000000000000
+ea_reg_msk          EQU     %00000000000001110000000000000000
+
+                    MOVE    
+
 
 
 *---------------------------------MOVE_EA----------------------------------
 *Parse the effective address of a move opcode
 move_ea
 move_str            DC.B    'MOVE'
-*test_msk            EQU     %00101010101010101010101010101000
-size_msk            EQU     %0011000000000000
+size_msk            EQU     %00110000000000000000000000000000
 destin_reg_msk      EQU     %00001110000000000000000000000000
 destin_mod_msk      EQU     %00000001110000000000000000000000
 source_mod_msk      EQU     %00000000001110000000000000000000
-source_reg_msk      EQU     %00000000000001110000000000000000
+source_reg_msk      EQU     %00000000000001110000000000000000                        
 
-                    *MOVE.L  #test_msk,D7
-                        
-
-                    MOVE.L  #$1C050000,$1600       *Test data that corresponds to MOVE.B D5,D6
-                    *MOVE.L  #$1C381400,$1600             *Test data corresponds to  MOVE.B    $1400,D6
+                    *MOVE.L  #$1C050000,$1600       *Test data that corresponds to MOVE.B D5,D6
+                    MOVE.L  #$1C381400,$1600       *Test data corresponds to  MOVE.B    $1400,D6
                     
                     MOVE.L  $1600,$1610            *Make a copy
                     MOVE.L  #size_msk,D7           *Load the mask
-                    AND     D7,$1610               *Apply the mask to the copy
+                    AND.L   D7,$1610               *Apply the mask to the copy
                     MOVE.L  $1610,D7               *Move the remaining bits into a reg to be shifted
                     MOVE.L  #27,D6                 *Lots of bits to shift
                     LSR.L   D6,D7                  *Shift bits to the LSB
@@ -226,7 +231,7 @@ source_reg_msk      EQU     %00000000000001110000000000000000
                   
                     MOVE.L  $1600,$1610            *Make a copy
                     MOVE.L  #destin_reg_msk,D7     *Load the mask                   
-                    AND     D7,$1610               *Apply the mask to the copy
+                    AND.L   D7,$1610               *Apply the mask to the copy
                     MOVE.L  $1610,D7               *Move the remaining bits into a register to be shifted
                     MOVE.L  #25,D6                 *Going to shift a lot of bits
                     LSR.L   D6,D7                  *Move the bits to the LSB
@@ -234,7 +239,7 @@ source_reg_msk      EQU     %00000000000001110000000000000000
                     
                     MOVE.L  $1600,$1610            *Make a copy
                     MOVE.L  #destin_mod_msk,D7     *Load the mask
-                    AND     D7,$1610               *Apply the mask to the copy
+                    AND.L   D7,$1610               *Apply the mask to the copy
                     MOVE.L  $1610,D7               *Move the remaining bits into a reg to be shifted
                     MOVE.L  #24,D6                 *Lots of bits to shift
                     LSR.L   D6,D7                  *Shift bits to the LSB
@@ -242,7 +247,7 @@ source_reg_msk      EQU     %00000000000001110000000000000000
                     
                     MOVE.L  $1600,$1610            *Make a copy
                     MOVE.L  #source_mod_msk,D7     *Load the mask
-                    AND     D7,$1610               *Apply the mask to the copy
+                    AND.L   D7,$1610               *Apply the mask to the copy
                     MOVE.L  $1610,D7               *Move the remaining bits into a reg to be shifted
                     MOVE.L  #21,D6                 *Lots of bits to shift
                     LSR.L   D6,D7                  *Shift bits to the LSB
@@ -250,18 +255,16 @@ source_reg_msk      EQU     %00000000000001110000000000000000
                     
                     MOVE.L  $1600,$1610            *Make a copy
                     MOVE.L  #source_reg_msk,D7     *Load the mask
-                    AND     D7,$1610               *Apply the mask to the copy
+                    AND.L   D7,$1610               *Apply the mask to the copy
                     MOVE.L  $1610,D7               *Move the remaining bits into a reg to be shifted
                     MOVE.L  #16,D6                 *Lots of bits to shift
                     LSR.L   D6,D7                  *Shift bits to the LSB
                     MOVE.L  D7,A7                  *Move the reg num for display
-                    
-                    RTS
-
-
-
 
                     END   $400
+*--------------------------------------------------------------------------------------------------------
+                    
+
 
 
 *~Font name~Courier New~
