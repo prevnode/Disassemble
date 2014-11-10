@@ -43,6 +43,8 @@ word_str        DC.B    '.W'                 *Word sized
 
 long_str        DC.B    '.L'                 *Long sized
 
+num_expan_wrds  DS.B    0
+
 
 
 *-----------------------------------------------------------
@@ -204,7 +206,8 @@ opmode_msk          EQU     %00000001110000000000000000000000
 ea_mode_msk         EQU     %00000000001110000000000000000000
 ea_reg_msk          EQU     %00000000000001110000000000000000
 
-                    MOVE    
+                    MOVE.L  #$DA430000,$1600    *Test data corresponds to ADD D3,D5
+                    
 
 
 
@@ -216,10 +219,14 @@ size_msk            EQU     %00110000000000000000000000000000
 destin_reg_msk      EQU     %00001110000000000000000000000000
 destin_mod_msk      EQU     %00000001110000000000000000000000
 source_mod_msk      EQU     %00000000001110000000000000000000
-source_reg_msk      EQU     %00000000000001110000000000000000                        
+source_reg_msk      EQU     %00000000000001110000000000000000
+
+                    CLR     num_expan_wrds         *Zero out number of expansion words                
 
                     *MOVE.L  #$1C050000,$1600       *Test data that corresponds to MOVE.B D5,D6
-                    MOVE.L  #$1C381400,$1600       *Test data corresponds to  MOVE.B    $1400,D6
+                    *MOVE.L  #$1C381400,$1600       *Test data corresponds to  MOVE.B    $1400,D6
+                    MOVE.L  #$23C30165,$1600         *Test data corresponds to MOVE.L D3,$16500000
+                    MOVE.W  #0000,$1604              *Completes test data
                     
                     MOVE.L  $1600,$1610            *Make a copy
                     MOVE.L  #size_msk,D7           *Load the mask
@@ -234,8 +241,12 @@ source_reg_msk      EQU     %00000000000001110000000000000000
                     AND.L   D7,$1610               *Apply the mask to the copy
                     MOVE.L  $1610,D7               *Move the remaining bits into a register to be shifted
                     MOVE.L  #25,D6                 *Going to shift a lot of bits
-                    LSR.L   D6,D7                  *Move the bits to the LSB
+                    LSR.L   D6,D7                  *Move the bits to the LSB                    
                     MOVE.L  D7,A4                  *Move the finished destination reg in place for display
+
+                    *Destination reg adds 1 word if long
+                    CMP.B   #1,D7                    
+                    
                     
                     MOVE.L  $1600,$1610            *Make a copy
                     MOVE.L  #destin_mod_msk,D7     *Load the mask
@@ -244,6 +255,13 @@ source_reg_msk      EQU     %00000000000001110000000000000000
                     MOVE.L  #24,D6                 *Lots of bits to shift
                     LSR.L   D6,D7                  *Shift bits to the LSB
                     MOVE.L  D7,A5                  *Move the mode for display
+                    
+                    *Destination mode determines number of expansion words
+                    CMP.B   #1,D7
+                    
+                    
+add_exp_wrd         ADD     #1,num_expan_wrds
+                    
                     
                     MOVE.L  $1600,$1610            *Make a copy
                     MOVE.L  #source_mod_msk,D7     *Load the mask
@@ -264,6 +282,7 @@ source_reg_msk      EQU     %00000000000001110000000000000000
                     END   $400
 *--------------------------------------------------------------------------------------------------------
                     
+
 
 
 

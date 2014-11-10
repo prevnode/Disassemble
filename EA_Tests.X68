@@ -9,12 +9,16 @@ START:                  ; first instruction of program
 
 * Put program code here
     MOVE.B    D5,D6
-    MOVE.W    D2,A2    
+    MOVE.W    D2,A2
+    MOVE.L    D3,$1650000
+    ADD       D3,D5    
     SIMHALT             ; halt simulator
 
 * Put variables and constants here
 
     END    START        ; last line of source
+
+
 
 *~Font name~Courier New~
 *~Font size~10~
