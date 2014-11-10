@@ -26,10 +26,10 @@ STARTHEX
             
             MOVE.B      #2,D0               ; read a string in from the keyboard
             TRAP        #15                 ; trap #15 I/O
-            JSR         ASCIITOHEX          ; convert string to hex address
-            *MOVE.L      (A1),D2             ; store the starting address in D2
             
-            SUBA.L      A1,A1               ; clear A1
+            MOVE.L      A1,$6000            ; store the starting address in D2
+            JSR         ASCIITOHEX          ; convert string to hex address
+            BRA         ENDHEX
 
 * EndHex
 * prompt the user for a ending address in hex
@@ -42,10 +42,12 @@ ENDHEX
             
             MOVE.B      #2,D0               ; read a string in from the keyboard
             TRAP        #15                 ; trap #15 I/O
+
+            MOVE.L      A1,$600A            ; store the starting address in D6
             JSR         ASCIITOHEX          ; convert the string to hex address
-            *MOVE.L      (A1),D3             ; store the starting address in D6
+            BRA         PROMPTRUNAGAIN      
             
-            SUBA.L      A1,A1               ; clear A1
+            *CLR         A1                  ; clear A1
 
 * PromptRunAgain
 * ask to run the program again, if Y then call MAIN
@@ -56,13 +58,13 @@ PROMPTRUNAGAIN
             MOVE        #14,D0              ; trap task #14 to print the message to screen
             TRAP        #15                 ; trap #15 I/O
             
-            MOVE.B      #5,D0               ; trap task 5 grabs a single character
+            MOVE.B      #2,D0               ; trap task 5 grabs a single character
             TRAP        #15                 ; trap #15 I/O
             CMP.L       #$59,D1             ; compare Y to D1
-            BEQ         RESET               ; brach to Reset if D1 == Y
+            BEQ         START               ; brach to Reset if D1 == Y
             
             CMP.B       #$79,D1             ; compare y to D1
-            BEQ         RESET               ; brach to Reset if D1 == y
+            BEQ         START               ; brach to Reset if D1 == y
             BRA         ENDPROGRAM          ; else branch to end
 
 * Reset
@@ -97,6 +99,9 @@ RESET
 * result to added to D6
 *-----------------------------------------------------------
 ASCIITOHEX
+            LEA         EXEASCII,A1         ; put message into A1
+            MOVE        #14,D0              ; trap task #14 to print the message to screen
+            TRAP        #15                 ; trap #15 I/O
 
 ASCIITOHEXQUIT
             RTS                             ; return back
@@ -105,6 +110,11 @@ ASCIITOHEXQUIT
 *-----------------------------------------------------------
 CR          EQU         $0D                 ; Carriage Return
 LF          EQU         $0A                 ; Line Feed
+BS          EQU         $08                 ; Backspace
+HT          EQU         $09                 ; Tab (horizontal 5 characters)
+LF          EQU         $0A                  ;New line (line feed)
+VT          EQU         $0B                  ;Vertical tab (4 lines)
+FF          EQU         $0C                 ; Form Feed (Always end printing with a Form Feed.)
 
 * Main Splash Screen to be displayed at begining of program
 *-----------------------------------------------------------
@@ -128,11 +138,13 @@ GETENDHEX   DC.B        'Enter Ending Hex Address Of Program: ',CR,LF,0
 RUNAGAIN    DC.B        'Would You Like To Dissasmble Anouther Program? (Y/N): ',CR,LF,0
 CONFIRMSRT  DC.B        'Starting address is stored',CR,LF,0
 CONFIRMEND  DC.B        'Ending address is stored',CR,LF,0
+EXEASCII    DC.B        'Executing ASCII',CR,LF,0
 
 * EndProgram
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
