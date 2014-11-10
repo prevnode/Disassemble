@@ -242,11 +242,7 @@ source_reg_msk      EQU     %00000000000001110000000000000000
                     MOVE.L  $1610,D7               *Move the remaining bits into a register to be shifted
                     MOVE.L  #25,D6                 *Going to shift a lot of bits
                     LSR.L   D6,D7                  *Move the bits to the LSB                    
-                    MOVE.L  D7,A4                  *Move the finished destination reg in place for display
-
-                    *Destination reg adds 1 word if long
-                    CMP.B   #1,D7                    
-                    
+                    MOVE.L  D7,A4                  *Move the finished destination reg in place for display                    
                     
                     MOVE.L  $1600,$1610            *Make a copy
                     MOVE.L  #destin_mod_msk,D7     *Load the mask
@@ -254,14 +250,7 @@ source_reg_msk      EQU     %00000000000001110000000000000000
                     MOVE.L  $1610,D7               *Move the remaining bits into a reg to be shifted
                     MOVE.L  #24,D6                 *Lots of bits to shift
                     LSR.L   D6,D7                  *Shift bits to the LSB
-                    MOVE.L  D7,A5                  *Move the mode for display
-                    
-                    *Destination mode determines number of expansion words
-                    CMP.B   #1,D7
-                    
-                    
-add_exp_wrd         ADD     #1,num_expan_wrds
-                    
+                    MOVE.L  D7,A5                  *Move the mode for display                  
                     
                     MOVE.L  $1600,$1610            *Make a copy
                     MOVE.L  #source_mod_msk,D7     *Load the mask
@@ -278,10 +267,32 @@ add_exp_wrd         ADD     #1,num_expan_wrds
                     MOVE.L  #16,D6                 *Lots of bits to shift
                     LSR.L   D6,D7                  *Shift bits to the LSB
                     MOVE.L  D7,A7                  *Move the reg num for display
+                    
+                    *Calculate number of expansion words
+                    *Destination side
+                    CMP.W   #7,A5                  *Destination modes below 7 do not have expansion words 
+                    BLT     src_expansion
+                    CMP.W   #1,A4                  *001 in destination register
+                    *BNE     no_inc
+                    *JSR     increment_exp_cnt
+                    
+src_expansion       CMP.W   #7,A6           
+                    BLT     *      
+                    
+                      
 
                     END   $400
 *--------------------------------------------------------------------------------------------------------
+
+*----------------------------------------------Increment Expansion Word Count-----------------------------------------
+increment_exp_cnt   ADD     #1,num_expan_wrds
+                    RTS
+
+
+
+*----------------------------------------------------------------------------------------------------------------------
                     
+
 
 
 
