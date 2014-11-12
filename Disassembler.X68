@@ -190,6 +190,7 @@ destin_reg_msk      EQU     %00001110000000000000000000000000
 destin_mod_msk      EQU     %00000001110000000000000000000000
 source_mod_msk      EQU     %00000000001110000000000000000000
 source_reg_msk      EQU     %00000000000001110000000000000000
+DECODED_EA          DCB.B   6,$0
 
                     CLR     NUM_EXP_WRDS         *Zero out number of expansion words
                     *JSR     INCREMENT_WRD_CNT                
@@ -261,9 +262,7 @@ src_expansion       CMP.W   #7,D3
                     CMP.W   #2,D0                   *If immediate then look at the size
                     BNE     fin_move_ea             *Less than 2 means a single word and we've already added that
                     JSR     INCREMENT_WRD_CNT       *Size is 2 (cant be greater) so add additonal word 
-fin_move_ea
-                    
-*--------------------------------------------------------------------------------------------------------
+fin_move_ea                    
 
 
 * EndProgram
