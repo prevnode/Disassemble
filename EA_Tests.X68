@@ -4,20 +4,19 @@
 * Date       :
 * Description:
 *-----------------------------------------------------------
-    ORG    $1000
+    ORG    $8888
 START:                  ; first instruction of program
 
 * Put program code here
-    MOVE.B      D5,D6       *Data Register Direct
-    MOVE.B      A5,A6       *Address Register Direct
-    MOVE.B      (A5),A6     *Address Register Indirect
-    MOVE.B      #256,D6     *Immediate Data
-    MOVE.B      (A5)+,D6    *Address Register with Postincrement
-    MOVE.B      -(A5),D6    *Address Register with Predecrement
+    MOVE.B      D5,D6           *Data Register Direct
+    *MOVE.B      A5,A6           *Address Register Direct
+    *MOVE.B      (A5),A6         *Address Register Indirect
+    MOVE.B      #255,D6         *Immediate Data
+    MOVE.B      (A5)+,D6        *Address Register with Postincrement
+    MOVE.B      -(A5),D6        *Address Register with Predecrement
+    MOVE.B      D5,$19001234    *Absolute Long Address
+    MOVE.B      D5,$1900        *Absolute Word Address
     
-
-
-
     MOVE.W    D2,A2
     MOVE.L    D3,$1650000
     MOVE.B    #14,D6
@@ -25,7 +24,6 @@ START:                  ; first instruction of program
     MOVE.L    #1455,D6
     MOVE.L    #1455,A6
     MOVE.L    #145555,D6
-
 
     ADD       D3,D5    
     SIMHALT             ; halt simulator
