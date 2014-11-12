@@ -59,7 +59,11 @@ MAIN
                  TRAP   #15
                  
                 
-                 
+*----------------------------------------------Increment Expansion Word Count-----------------------------------------
+INCREMENT_WRD_CNT       
+                    ADD     #1,num_expan_wrds
+                    RTS
+
                
                  
 *----------------------------------Begining of Example code from project addendem---------------------------- 
@@ -186,7 +190,7 @@ inv_operand DC.B    '$WXYZ'
             MOVE.L  inv_code,A2
             MOVE.L  inv_operand,A3
             RTS
-  
+
 
 *-----------------------------------NOP_EA------------------------------ 
 *NOP doesn't actually have an ea but hey you gotta start somewhere
@@ -208,7 +212,6 @@ ea_reg_msk          EQU     %00000000000001110000000000000000
 
                     MOVE.L  #$DA430000,$1600    *Test data corresponds to ADD D3,D5
                     
-
 
 
 *---------------------------------MOVE_EA----------------------------------
@@ -268,30 +271,34 @@ source_reg_msk      EQU     %00000000000001110000000000000000
                     LSR.L   D6,D7                  *Shift bits to the LSB
                     MOVE.L  D7,A7                  *Move the reg num for display
                     
-                    *Calculate number of expansion words
+*Calculate number of expansion words
                     *Destination side
                     CMP.W   #7,A5                  *Destination modes below 7 do not have expansion words 
                     BLT     src_expansion
+                    JSR     INCREMENT_WRD_CNT
                     CMP.W   #1,A4                  *001 in destination register
-                    *BNE     no_inc
-                    *JSR     increment_exp_cnt
+                    BNE     src_expansion
+                    JSR     INCREMENT_WRD_CNT
                     
+*Calculate number of expansion words
+                    *Source Side
 src_expansion       CMP.W   #7,A6           
-                    BLT     *      
-                    
+                    BLT     fin_move_ea            *Mode less than 7 don't have expansion words
+                    JSR     INCREMENT_WRD_CNT      *At lease one more word
+                    CMP.W   #1,A7                  *Reg 1 means long word
+                    BLT     fin_move_ea
+                    *CMP.W      
                       
-
+fin_move_ea
                     END   $400
 *--------------------------------------------------------------------------------------------------------
 
-*----------------------------------------------Increment Expansion Word Count-----------------------------------------
-increment_exp_cnt   ADD     #1,num_expan_wrds
-                    RTS
 
 
 
 *----------------------------------------------------------------------------------------------------------------------
                     
+
 
 
 
