@@ -8,6 +8,39 @@
     
 START:      ORG         $1000            ; first instruction of program
 
+* Put variables and constants here
+*-----------------------------------------------------------
+
+CR          EQU         $0D                 ; Carriage Return
+LF          EQU         $0A                 ; Line Feed
+BS          EQU         $08                 ; Backspace
+HT          EQU         $09                 ; Tab (horizontal 5 characters)
+LF          EQU         $0A                  ;New line (line feed)
+VT          EQU         $0B                  ;Vertical tab (4 lines)
+FF          EQU         $0C                 ; Form Feed (Always end printing with a Form Feed.)
+NUM_EXP_WRDS    DC.B    0                   ; Number of expansion words after the opcode
+
+SPLASH      DC.B        '        ____ ___  __ __                        ',CR,LF
+            DC.B        '       / __/( _ )/ //_/                        ',CR,LF
+            DC.B        '      / _ \/ _  / ,<                           ',CR,LF
+            DC.B        '      \___/\___/_/|_|  __      _               ',CR,LF
+            DC.B        '        / __/ /__ ____/ /_____(_)___           ',CR,LF
+            DC.B        '       / _// / -_) __/ __/ __/ / __/           ',CR,LF
+            DC.B        '      /___/_/\__/\__/\__/_/_/_/\__/        __  ',CR,LF
+            DC.B        '        / __/ /  ___ ___  / /  ___ _______/ /__',CR,LF
+            DC.B        '       _\ \/ _ \/ -_) _ \/ _ \/ -_) __/ _  (_-<',CR,LF
+            DC.B        '      /___/_//_/\__/ .__/_//_/\__/_/  \_,_/___/',CR,LF
+            DC.B        '                  /_/                          ',CR,LF
+            DC.B        'Brandan Heaertel' ,CR,LF
+            DC.B        'Erick House'      ,CR,LF
+            DC.B        'Gary Mixson'      ,CR,LF,CR,LF,0
+
+GETSRTHEX   DC.B        'Enter Starting Hex Address Of Program: ',CR,LF,0
+GETENDHEX   DC.B        'Enter Ending Hex Address Of Program: ',CR,LF,0
+RUNAGAIN    DC.B        'Would You Like To Dissasmble Anouther Program? (Y/N): ',CR,LF,0
+CONFIRMSRT  DC.B        'Starting address is stored',CR,LF,0
+CONFIRMEND  DC.B        'Ending address is stored',CR,LF,0
+EXEASCII    DC.B        'Executing ASCII',CR,LF,0
 
 *--------------------MAIN-----------------------------------
 * Put program code here
@@ -107,44 +140,6 @@ ASCIITOHEX
 
 ASCIITOHEXQUIT
             RTS                             ; return back
-
-* Put variables and constants here
-*-----------------------------------------------------------
-
-CR          EQU         $0D                 ; Carriage Return
-LF          EQU         $0A                 ; Line Feed
-BS          EQU         $08                 ; Backspace
-HT          EQU         $09                 ; Tab (horizontal 5 characters)
-LF          EQU         $0A                  ;New line (line feed)
-VT          EQU         $0B                  ;Vertical tab (4 lines)
-FF          EQU         $0C                 ; Form Feed (Always end printing with a Form Feed.)
-NUM_EXP_WRDS    DC.B    0                   ; Number of expansion words after the opcode
-
-
-*-------------------SPLASH-----------------------------------
-* Main Splash Screen to be displayed at begining of program
-
-SPLASH      DC.B        '        ____ ___  __ __                        ',CR,LF
-            DC.B        '       / __/( _ )/ //_/                        ',CR,LF
-            DC.B        '      / _ \/ _  / ,<                           ',CR,LF
-            DC.B        '      \___/\___/_/|_|  __      _               ',CR,LF
-            DC.B        '        / __/ /__ ____/ /_____(_)___           ',CR,LF
-            DC.B        '       / _// / -_) __/ __/ __/ / __/           ',CR,LF
-            DC.B        '      /___/_/\__/\__/\__/_/_/_/\__/        __  ',CR,LF
-            DC.B        '        / __/ /  ___ ___  / /  ___ _______/ /__',CR,LF
-            DC.B        '       _\ \/ _ \/ -_) _ \/ _ \/ -_) __/ _  (_-<',CR,LF
-            DC.B        '      /___/_//_/\__/ .__/_//_/\__/_/  \_,_/___/',CR,LF
-            DC.B        '                  /_/                          ',CR,LF
-            DC.B        'Brandan Heaertel' ,CR,LF
-            DC.B        'Erick House'      ,CR,LF
-            DC.B        'Gary Mixson'      ,CR,LF,CR,LF,0
-
-GETSRTHEX   DC.B        'Enter Starting Hex Address Of Program: ',CR,LF,0
-GETENDHEX   DC.B        'Enter Ending Hex Address Of Program: ',CR,LF,0
-RUNAGAIN    DC.B        'Would You Like To Dissasmble Anouther Program? (Y/N): ',CR,LF,0
-CONFIRMSRT  DC.B        'Starting address is stored',CR,LF,0
-CONFIRMEND  DC.B        'Ending address is stored',CR,LF,0
-EXEASCII    DC.B        'Executing ASCII',CR,LF,0
 
 *----------------------------------------------Increment Expansion Word Count-----------------------------------------
 INCREMENT_WRD_CNT       
