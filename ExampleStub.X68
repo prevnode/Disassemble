@@ -224,7 +224,8 @@ destin_mod_msk      EQU     %00000001110000000000000000000000
 source_mod_msk      EQU     %00000000001110000000000000000000
 source_reg_msk      EQU     %00000000000001110000000000000000
 
-                    CLR     num_expan_wrds         *Zero out number of expansion words                
+                    CLR     num_expan_wrds         *Zero out number of expansion words
+                    *JSR     INCREMENT_WRD_CNT                
 
                     *MOVE.L  #$1C050000,$1600       *Test data that corresponds to MOVE.B D5,D6
                     *MOVE.L  #$1C381400,$1600       *Test data corresponds to  MOVE.B    $1400,D6
@@ -235,9 +236,9 @@ source_reg_msk      EQU     %00000000000001110000000000000000
                     MOVE.L  #size_msk,D7           *Load the mask
                     AND.L   D7,$1610               *Apply the mask to the copy
                     MOVE.L  $1610,D7               *Move the remaining bits into a reg to be shifted
-                    MOVE.L  #27,D6                 *Lots of bits to shift
+                    MOVE.L  #28,D6                 *Lots of bits to shift
                     LSR.L   D6,D7                  *Shift bits to the LSB
-                    MOVE.L  D7,A3                  *Move the size for display
+                    MOVE.L  D7,D0                  *Move the size for display
                   
                     MOVE.L  $1600,$1610            *Make a copy
                     MOVE.L  #destin_reg_msk,D7     *Load the mask                   
@@ -245,23 +246,23 @@ source_reg_msk      EQU     %00000000000001110000000000000000
                     MOVE.L  $1610,D7               *Move the remaining bits into a register to be shifted
                     MOVE.L  #25,D6                 *Going to shift a lot of bits
                     LSR.L   D6,D7                  *Move the bits to the LSB                    
-                    MOVE.L  D7,A4                  *Move the finished destination reg in place for display                    
+                    MOVE.L  D7,D1                  *Move the finished destination reg in place for display                    
                     
                     MOVE.L  $1600,$1610            *Make a copy
                     MOVE.L  #destin_mod_msk,D7     *Load the mask
                     AND.L   D7,$1610               *Apply the mask to the copy
                     MOVE.L  $1610,D7               *Move the remaining bits into a reg to be shifted
-                    MOVE.L  #24,D6                 *Lots of bits to shift
+                    MOVE.L  #22,D6                 *Lots of bits to shift
                     LSR.L   D6,D7                  *Shift bits to the LSB
-                    MOVE.L  D7,A5                  *Move the mode for display                  
+                    MOVE.L  D7,D2                  *Move the mode for display                  
                     
                     MOVE.L  $1600,$1610            *Make a copy
                     MOVE.L  #source_mod_msk,D7     *Load the mask
                     AND.L   D7,$1610               *Apply the mask to the copy
                     MOVE.L  $1610,D7               *Move the remaining bits into a reg to be shifted
-                    MOVE.L  #21,D6                 *Lots of bits to shift
+                    MOVE.L  #19,D6                 *Lots of bits to shift
                     LSR.L   D6,D7                  *Shift bits to the LSB
-                    MOVE.L  D7,A6                  *Move the mode for display
+                    MOVE.L  D7,D3                  *Move the mode for display
                     
                     MOVE.L  $1600,$1610            *Make a copy
                     MOVE.L  #source_reg_msk,D7     *Load the mask
@@ -269,33 +270,46 @@ source_reg_msk      EQU     %00000000000001110000000000000000
                     MOVE.L  $1610,D7               *Move the remaining bits into a reg to be shifted
                     MOVE.L  #16,D6                 *Lots of bits to shift
                     LSR.L   D6,D7                  *Shift bits to the LSB
-                    MOVE.L  D7,A7                  *Move the reg num for display
+                    MOVE.L  D7,D4                  *Move the reg num for display
                     
 *Calculate number of expansion words
                     *Destination side
-                    CMP.W   #7,A5                  *Destination modes below 7 do not have expansion words 
+                    CMP.W   #7,D2                  *Destination modes below 7 do not have expansion words 
                     BLT     src_expansion
                     JSR     INCREMENT_WRD_CNT
-                    CMP.W   #1,A4                  *001 in destination register
+                    CMP.W   #1,D1                  *001 in destination register
                     BNE     src_expansion
                     JSR     INCREMENT_WRD_CNT
                     
 *Calculate number of expansion words
                     *Source Side
-src_expansion       CMP.W   #7,A6           
-                    BLT     fin_move_ea            *Mode less than 7 don't have expansion words
-                    JSR     INCREMENT_WRD_CNT      *At lease one more word
-                    CMP.W   #1,A7                  *Reg 1 means long word
-                    BLT     fin_move_ea
-                    *CMP.W      
-                      
+src_expansion       CMP.W   #7,D3                   
+                    BLT     fin_move_ea             *Mode less than 7 don't have expansion words
+                    JSR     INCREMENT_WRD_CNT       *At lease one more word
+                    CMP.W   #1,D4                   *Reg 1 means long word
+                    BLT     fin_move_ea             *Reg 0 is single word
+                    JSR     INCREMENT_WRD_CNT
+                    CMP.W   #4,D4                   *Register 4 indicates immediate data     
+                    BNE     fin_move_ea             *If not immediate data then wer're done
+                    CMP.W   #2,D0                   *If immediate then look at the size
+                    BNE     fin_move_ea             *Less than 2 means a single word and we've already added that
+                    JSR     INCREMENT_WRD_CNT       *Size is 2 (cant be greater) so add additonal word 
 fin_move_ea
                     END   $400
 *--------------------------------------------------------------------------------------------------------
 
+*----------------------------------------Format Mode----------------------------------------------------
+*Builds a string describing the EA expect to come here via jsr
+*D1 spcifies the register value, D2 specifies the mode, A1 specifies the destination 
+FORMAT_MODE
 
-
-
+    DC.B    '('     OPEN_PAR
+    DC.B    ')'     CLOSE_PAR
+    DC.W    '-('    PRE_DEC
+    DC.W    ')+'    POS_INC
+    DC.B    '#'     IMMEDIATE
+    
+    RTS
 *----------------------------------------------------------------------------------------------------------------------
                     
 
