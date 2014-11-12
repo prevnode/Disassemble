@@ -8,17 +8,19 @@
     
 START:      ORG         $1000            ; first instruction of program
 
+
+*--------------------MAIN-----------------------------------
 * Put program code here
-*-----------------------------------------------------------
+
 MAIN        
             LEA         SPLASH,A1           ; put the GETSRTHEX message into A1
             MOVE        #14,D0              ; trap task #14 to print the message to screen
             TRAP        #15                 ; trap #15 I/O
 
-* StartHex
+*--------------------STARTHEX-------------------------------
 * prompt the user for a starting address in hex
 * this does not error check!
-*-----------------------------------------------------------
+
 STARTHEX
             LEA         GETSRTHEX,A1        ; put the GETSRTHEX message into A1
             MOVE.B      #14,D0              ; trap task #14 to print the message to screen
@@ -31,10 +33,10 @@ STARTHEX
             JSR         ASCIITOHEX          ; convert string to hex address
             BRA         ENDHEX
 
-* EndHex
+*---------------------ENDHEX--------------------------------
 * prompt the user for a ending address in hex
 * this does not error check!
-*-----------------------------------------------------------
+
 ENDHEX
             LEA         GETENDHEX,A1        ; put the GETENDHEX message into A1
             MOVE.B      #14,D0              ; trap task #14 to print the message to screen
@@ -49,10 +51,10 @@ ENDHEX
             
             *CLR         A1                  ; clear A1
 
-* PromptRunAgain
+*---------------------PROMPTRUNAGAIN-------------------------
 * ask to run the program again, if Y then call MAIN
 * if N then END program
-*-----------------------------------------------------------
+
 PROMPTRUNAGAIN     
             LEA         RUNAGAIN,A1         ; put message into A1
             MOVE        #14,D0              ; trap task #14 to print the message to screen
@@ -67,9 +69,9 @@ PROMPTRUNAGAIN
             BEQ         START               ; brach to Reset if D1 == y
             BRA         ENDPROGRAM          ; else branch to end
 
-* Reset
+*----------------------RESET--------------------------------
 * prep the program to run again
-*-----------------------------------------------------------
+
 RESET
             MOVE.B      #11,D0              ; clear the screen
             MOVE.W      #$FF00,D1           ; clear the screen
@@ -94,10 +96,10 @@ RESET
 
             BRA         START               ; branch back to start
             
-* AsciiToHex
+*-------------------ASCIITOHEX------------------------------
 * turn the ascii letter in A1 to hex
 * result to added to D6
-*-----------------------------------------------------------
+
 ASCIITOHEX
             LEA         EXEASCII,A1         ; put message into A1
             MOVE        #14,D0              ; trap task #14 to print the message to screen
@@ -108,6 +110,7 @@ ASCIITOHEXQUIT
 
 * Put variables and constants here
 *-----------------------------------------------------------
+
 CR          EQU         $0D                 ; Carriage Return
 LF          EQU         $0A                 ; Line Feed
 BS          EQU         $08                 ; Backspace
@@ -117,8 +120,10 @@ VT          EQU         $0B                  ;Vertical tab (4 lines)
 FF          EQU         $0C                 ; Form Feed (Always end printing with a Form Feed.)
 NUM_EXP_WRDS    DC.B    0                   ; Number of expansion words after the opcode
 
+
+*-------------------SPLASH-----------------------------------
 * Main Splash Screen to be displayed at begining of program
-*-----------------------------------------------------------
+
 SPLASH      DC.B        '        ____ ___  __ __                        ',CR,LF
             DC.B        '       / __/( _ )/ //_/                        ',CR,LF
             DC.B        '      / _ \/ _  / ,<                           ',CR,LF
