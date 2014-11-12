@@ -2,144 +2,143 @@
 * Title      :  DISSEMBLER PROTOTYPE I/O
 * Written by :  BRANDAN HAERTEL, ERICK HOUSE, GARY MIXSON
 * Date       :  10/5/2014
-* Description:  SPLASH SCREEN AND SIMPLE LOOP THROUGH 10
-*               10 MEMORY LOCATIONS
+* Description:  MAIN PROGRAM <- NEED A BETTER DESCRIPTION!
 *-----------------------------------------------------------
     
-START:      ORG         $1000            ; first instruction of program
-
-* Put program code here
-*-----------------------------------------------------------
-MAIN        
-            LEA         SPLASH,A1           ; put the GETSRTHEX message into A1
-            MOVE        #14,D0              ; trap task #14 to print the message to screen
-            TRAP        #15                 ; trap #15 I/O
-
-* StartHex
-* prompt the user for a starting address in hex
-* this does not error check!
-*-----------------------------------------------------------
-STARTHEX
-            LEA         GETSRTHEX,A1        ; put the GETSRTHEX message into A1
-            MOVE.B      #14,D0              ; trap task #14 to print the message to screen
-            TRAP        #15                 ; trap #15 I/O
-            
-            MOVE.B      #2,D0               ; read a string in from the keyboard
-            TRAP        #15                 ; trap #15 I/O
-            
-            MOVE.L      A1,$6000            ; store the starting address in D2
-            JSR         ASCIITOHEX          ; convert string to hex address
-            BRA         ENDHEX
-
-* EndHex
-* prompt the user for a ending address in hex
-* this does not error check!
-*-----------------------------------------------------------
-ENDHEX
-            LEA         GETENDHEX,A1        ; put the GETENDHEX message into A1
-            MOVE.B      #14,D0              ; trap task #14 to print the message to screen
-            TRAP        #15                 ; trap #15 I/O
-            
-            MOVE.B      #2,D0               ; read a string in from the keyboard
-            TRAP        #15                 ; trap #15 I/O
-
-            MOVE.L      A1,$600A            ; store the starting address in D6
-            JSR         ASCIITOHEX          ; convert the string to hex address
-            BRA         PROMPTRUNAGAIN      
-            
-            *CLR         A1                  ; clear A1
-
-* PromptRunAgain
-* ask to run the program again, if Y then call MAIN
-* if N then END program
-*-----------------------------------------------------------
-PROMPTRUNAGAIN     
-            LEA         RUNAGAIN,A1         ; put message into A1
-            MOVE        #14,D0              ; trap task #14 to print the message to screen
-            TRAP        #15                 ; trap #15 I/O
-            
-            MOVE.B      #2,D0               ; trap task 5 grabs a single character
-            TRAP        #15                 ; trap #15 I/O
-            CMP.L       #$59,D1             ; compare Y to D1
-            BEQ         START               ; brach to Reset if D1 == Y
-            
-            CMP.B       #$79,D1             ; compare y to D1
-            BEQ         START               ; brach to Reset if D1 == y
-            BRA         ENDPROGRAM          ; else branch to end
-
-* Reset
-* prep the program to run again
-*-----------------------------------------------------------
-RESET
-            MOVE.B      #11,D0              ; clear the screen
-            MOVE.W      #$FF00,D1           ; clear the screen
-            TRAP        #15                 ; send trap task command
-            
-            CLR         D0                  ; clear the data register
-            CLR         D1                  ; clear the data register
-            CLR         D2                  ; clear the data register
-            CLR         D3                  ; clear the data register
-            CLR         D4                  ; clear the data register
-            CLR         D5                  ; clear the data register
-            CLR         D6                  ; clear the data register
-            CLR         D7                  ; clear the data register
-            
-            SUBA.L      A0,A0               ; clear the acess register
-            SUBA.L      A1,A1               ; clear the acess register
-            SUBA.L      A2,A2               ; clear the acess register
-            SUBA.L      A3,A3               ; clear the acess register
-            SUBA.L      A4,A4               ; clear the acess register
-            SUBA.L      A5,A5               ; clear the acess register
-            SUBA.L      A6,A6               ; clear the acess register
-
-            BRA         START               ; branch back to start
-            
-* AsciiToHex
-* turn the ascii letter in A1 to hex
-* result to added to D6
-*-----------------------------------------------------------
-ASCIITOHEX
-            LEA         EXEASCII,A1         ; put message into A1
-            MOVE        #14,D0              ; trap task #14 to print the message to screen
-            TRAP        #15                 ; trap #15 I/O
-
-ASCIITOHEXQUIT
-            RTS                             ; return back
+START:              ORG         $1000            ; first instruction of program
 
 * Put variables and constants here
 *-----------------------------------------------------------
-CR          EQU         $0D                 ; Carriage Return
-LF          EQU         $0A                 ; Line Feed
-BS          EQU         $08                 ; Backspace
-HT          EQU         $09                 ; Tab (horizontal 5 characters)
-LF          EQU         $0A                  ;New line (line feed)
-VT          EQU         $0B                  ;Vertical tab (4 lines)
-FF          EQU         $0C                 ; Form Feed (Always end printing with a Form Feed.)
-NUM_EXP_WRDS    DC.B    0                   ; Number of expansion words after the opcode
 
-* Main Splash Screen to be displayed at begining of program
-*-----------------------------------------------------------
-SPLASH      DC.B        '        ____ ___  __ __                        ',CR,LF
-            DC.B        '       / __/( _ )/ //_/                        ',CR,LF
-            DC.B        '      / _ \/ _  / ,<                           ',CR,LF
-            DC.B        '      \___/\___/_/|_|  __      _               ',CR,LF
-            DC.B        '        / __/ /__ ____/ /_____(_)___           ',CR,LF
-            DC.B        '       / _// / -_) __/ __/ __/ / __/           ',CR,LF
-            DC.B        '      /___/_/\__/\__/\__/_/_/_/\__/        __  ',CR,LF
-            DC.B        '        / __/ /  ___ ___  / /  ___ _______/ /__',CR,LF
-            DC.B        '       _\ \/ _ \/ -_) _ \/ _ \/ -_) __/ _  (_-<',CR,LF
-            DC.B        '      /___/_//_/\__/ .__/_//_/\__/_/  \_,_/___/',CR,LF
-            DC.B        '                  /_/                          ',CR,LF
-            DC.B        'Brandan Heaertel' ,CR,LF
-            DC.B        'Erick House'      ,CR,LF
-            DC.B        'Gary Mixson'      ,CR,LF,CR,LF,0
+CR                  EQU         $0D                 ; Carriage Return
+LF                  EQU         $0A                 ; Line Feed
+BS                  EQU         $08                 ; Backspace
+HT                  EQU         $09                 ; Tab (horizontal 5 characters)
+LF                  EQU         $0A                  ;New line (line feed)
+VT                  EQU         $0B                  ;Vertical tab (4 lines)
+FF                  EQU         $0C                 ; Form Feed (Always end printing with a Form Feed.)
+NUM_EXP_WRDS        DC.B    0                   ; Number of expansion words after the opcode
 
-GETSRTHEX   DC.B        'Enter Starting Hex Address Of Program: ',CR,LF,0
-GETENDHEX   DC.B        'Enter Ending Hex Address Of Program: ',CR,LF,0
-RUNAGAIN    DC.B        'Would You Like To Dissasmble Anouther Program? (Y/N): ',CR,LF,0
-CONFIRMSRT  DC.B        'Starting address is stored',CR,LF,0
-CONFIRMEND  DC.B        'Ending address is stored',CR,LF,0
-EXEASCII    DC.B        'Executing ASCII',CR,LF,0
+SPLASH              DC.B        '        ____ ___  __ __                        ',CR,LF
+                    DC.B        '       / __/( _ )/ //_/                        ',CR,LF
+                    DC.B        '      / _ \/ _  / ,<                           ',CR,LF
+                    DC.B        '      \___/\___/_/|_|  __      _               ',CR,LF
+                    DC.B        '        / __/ /__ ____/ /_____(_)___           ',CR,LF
+                    DC.B        '       / _// / -_) __/ __/ __/ / __/           ',CR,LF
+                    DC.B        '      /___/_/\__/\__/\__/_/_/_/\__/        __  ',CR,LF
+                    DC.B        '        / __/ /  ___ ___  / /  ___ _______/ /__',CR,LF
+                    DC.B        '       _\ \/ _ \/ -_) _ \/ _ \/ -_) __/ _  (_-<',CR,LF
+                    DC.B        '      /___/_//_/\__/ .__/_//_/\__/_/  \_,_/___/',CR,LF
+                    DC.B        '                  /_/                          ',CR,LF
+                    DC.B        'Brandan Heaertel' ,CR,LF
+                    DC.B        'Erick House'      ,CR,LF
+                    DC.B        'Gary Mixson'      ,CR,LF,CR,LF,0
+
+GETSRTHEX           DC.B        'Enter Starting Hex Address Of Program: ',CR,LF,0
+GETENDHEX           DC.B        'Enter Ending Hex Address Of Program: ',CR,LF,0
+RUNAGAIN            DC.B        'Would You Like To Dissasmble Anouther Program? (Y/N): ',CR,LF,0
+CONFIRMSRT          DC.B        'Starting address is stored',CR,LF,0
+CONFIRMEND          DC.B        'Ending address is stored',CR,LF,0
+EXEASCII            DC.B        'Executing ASCII',CR,LF,0
+
+*--------------------MAIN-----------------------------------
+* Put program code here
+
+MAIN        
+                    LEA         SPLASH,A1           ; put the GETSRTHEX message into A1
+                    MOVE        #14,D0              ; trap task #14 to print the message to screen
+                    TRAP        #15                 ; trap #15 I/O
+
+*--------------------STARTHEX-------------------------------
+* prompt the user for a starting address in hex
+* this does not error check!
+
+STARTHEX
+                    LEA         GETSRTHEX,A1        ; put the GETSRTHEX message into A1
+                    MOVE.B      #14,D0              ; trap task #14 to print the message to screen
+                    TRAP        #15                 ; trap #15 I/O
+            
+                    MOVE.B      #2,D0               ; read a string in from the keyboard
+                    TRAP        #15                 ; trap #15 I/O
+            
+                    MOVE.L      A1,$6000            ; store the starting address in D2
+                    JSR         ASCIITOHEX          ; convert string to hex address
+                    BRA         ENDHEX
+
+*---------------------ENDHEX--------------------------------
+* prompt the user for a ending address in hex
+* this does not error check!
+
+ENDHEX
+                    LEA         GETENDHEX,A1        ; put the GETENDHEX message into A1
+                    MOVE.B      #14,D0              ; trap task #14 to print the message to screen
+                    TRAP        #15                 ; trap #15 I/O
+            
+                    MOVE.B      #2,D0               ; read a string in from the keyboard
+                    TRAP        #15                 ; trap #15 I/O
+
+                    MOVE.L      A1,$600A            ; store the starting address in D6
+                    JSR         ASCIITOHEX          ; convert the string to hex address
+                    BRA         PROMPTRUNAGAIN      
+            
+                    *CLR         A1                  ; clear A1
+
+*---------------------PROMPTRUNAGAIN-------------------------
+* ask to run the program again, if Y then call MAIN
+* if N then END program
+
+PROMPTRUNAGAIN     
+                    LEA         RUNAGAIN,A1         ; put message into A1
+                    MOVE        #14,D0              ; trap task #14 to print the message to screen
+                    TRAP        #15                 ; trap #15 I/O
+                
+                    MOVE.B      #2,D0               ; trap task 5 grabs a single character
+                    TRAP        #15                 ; trap #15 I/O
+                    CMP.L       #$59,D1             ; compare Y to D1
+                    BEQ         START               ; brach to Reset if D1 == Y
+                    
+                    CMP.B       #$79,D1             ; compare y to D1
+                    BEQ         START               ; brach to Reset if D1 == y
+                    BRA         ENDPROGRAM          ; else branch to end
+
+*----------------------RESET--------------------------------
+* prep the program to run again
+
+RESET
+                    MOVE.B      #11,D0              ; clear the screen
+                    MOVE.W      #$FF00,D1           ; clear the screen
+                    TRAP        #15                 ; send trap task command
+            
+                    CLR         D0                  ; clear the data register
+                    CLR         D1                  ; clear the data register
+                    CLR         D2                  ; clear the data register
+                    CLR         D3                  ; clear the data register
+                    CLR         D4                  ; clear the data register
+                    CLR         D5                  ; clear the data register
+                    CLR         D6                  ; clear the data register
+                    CLR         D7                  ; clear the data register
+            
+                    SUBA.L      A0,A0               ; clear the acess register
+                    SUBA.L      A1,A1               ; clear the acess register
+                    SUBA.L      A2,A2               ; clear the acess register
+                    SUBA.L      A3,A3               ; clear the acess register
+                    SUBA.L      A4,A4               ; clear the acess register
+                    SUBA.L      A5,A5               ; clear the acess register
+                    SUBA.L      A6,A6               ; clear the acess register
+
+                    BRA         START               ; branch back to start
+            
+*-------------------ASCIITOHEX------------------------------
+* turn the ascii letter in A1 to hex
+* result to added to D6
+
+ASCIITOHEX
+                    LEA         EXEASCII,A1         ; put message into A1
+                    MOVE        #14,D0              ; trap task #14 to print the message to screen
+                    TRAP        #15                 ; trap #15 I/O
+
+ASCIITOHEXQUIT
+                    RTS                             ; return back
 
 *----------------------------------------------Increment Expansion Word Count-----------------------------------------
 INCREMENT_WRD_CNT       
@@ -150,25 +149,25 @@ INCREMENT_WRD_CNT
 *Used when the word read in is garbage/unsupported opcode/invalid ea 
 invalid_opcode
 
-inv_mem     DC.B    '1000'
-inv_code    DC.B    'DATA'
-inv_operand DC.B    '$WXYZ'
+inv_mem             DC.B    '1000'
+inv_code            DC.B    'DATA'
+inv_operand         DC.B    '$WXYZ'
 
-            MOVE.L  inv_mem,A1
-            MOVE.L  inv_code,A2
-            MOVE.L  inv_operand,A3
-            RTS
+                    MOVE.L  inv_mem,A1
+                    MOVE.L  inv_code,A2
+                    MOVE.L  inv_operand,A3
+                    RTS
 
 
 *-----------------------------------NOP_EA------------------------------ 
 *NOP doesn't actually have an ea but hey you gotta start somewhere
 nop_ea
 
-nop_str     DC.B    'NOP'
+nop_str             DC.B    'NOP'
 
-            MOVE.L  nop_str,A1
+                    MOVE.L  nop_str,A1
 
-            RTS
+                    RTS
 
 *------------------------------------ADD EA------------------------------------
 add_ea
