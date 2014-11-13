@@ -12,10 +12,10 @@ CR                  EQU         $0D                 ; Carriage Return
 LF                  EQU         $0A                 ; Line Feed
 BS                  EQU         $08                 ; Backspace
 HT                  EQU         $09                 ; Tab (horizontal 5 characters)
-LF                  EQU         $0A                  ;New line (line feed)
-VT                  EQU         $0B                  ;Vertical tab (4 lines)
+LF                  EQU         $0A                 ;New line (line feed)
+VT                  EQU         $0B                 ;Vertical tab (4 lines)
 FF                  EQU         $0C                 ; Form Feed (Always end printing with a Form Feed.)
-NUM_EXP_WRDS        DC.B    0                   ; Number of expansion words after the opcode
+NUM_EXP_WRDS        DC.B        0                   ; Number of expansion words after the opcode
 
 SPLASH              DC.B        '        ____ ___  __ __                        ',CR,LF
                     DC.B        '       / __/( _ )/ //_/                        ',CR,LF
@@ -56,10 +56,11 @@ START:              ORG         $1000            ; first instruction of program
 * Put program code here
 
 MAIN        
-                    BRA         CMP_EA
                     LEA         SPLASH,A1           ; put the GETSRTHEX message into A1
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
-                    TRAP        #15                 ; trap #15 I/O                    
+                    TRAP        #15                 ; trap #15 I/O  
+
+                    BRA         CMP_EA                  
                    
 
 *--------------------STARTHEX-------------------------------
@@ -93,8 +94,6 @@ ENDHEX
                     MOVE.L      A1,$600A            ; store the starting address in D6
                     JSR         ASCIITOHEX          ; convert the string to hex address
                     BRA         PROMPTRUNAGAIN      
-            
-                    *CLR         A1                  ; clear A1
 
 *---------------------PROMPTRUNAGAIN-------------------------
 * ask to run the program again, if Y then call MAIN
@@ -114,9 +113,38 @@ PROMPTRUNAGAIN
                     BEQ         START               ; brach to Reset if D1 == y
                     BRA         ENDPROGRAM          ; else branch to end
 
+*----------------------CLEAR_D--------------------------------
+* prep the program to run again
+CLEAR_D
+                    CLR         D0                  ; clear the data register
+                    CLR         D1                  ; clear the data register
+                    CLR         D2                  ; clear the data register
+                    CLR         D3                  ; clear the data register
+                    CLR         D4                  ; clear the data register
+                    CLR         D5                  ; clear the data register
+                    CLR         D6                  ; clear the data register
+                    CLR         D7                  ; clear the data register
+                    
+*----------------------CLEAR_A--------------------------------
+* prep the program to run again
+CLEAR_A
+                    SUBA.L      A0,A0               ; clear the acess register
+                    SUBA.L      A1,A1               ; clear the acess register
+                    SUBA.L      A2,A2               ; clear the acess register
+                    SUBA.L      A3,A3               ; clear the acess register
+                    SUBA.L      A4,A4               ; clear the acess register
+                    SUBA.L      A5,A5               ; clear the acess register
+                    SUBA.L      A6,A6               ; clear the acess register
+
+*----------------------CLEAR_SCREEN--------------------------------
+* prep the program to run again
+CLEAR_SCREEN
+                    MOVE.B      #11,D0              ; clear the screen
+                    MOVE.W      #$FF00,D1           ; clear the screen
+                    TRAP        #15                 ; send trap task command
+
 *----------------------RESET--------------------------------
 * prep the program to run again
-
 RESET
                     MOVE.B      #11,D0              ; clear the screen
                     MOVE.W      #$FF00,D1           ; clear the screen
@@ -289,6 +317,7 @@ fin_move_ea
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
