@@ -15,7 +15,7 @@ HT                  EQU         $09                 ; Tab (horizontal 5 characte
 LF                  EQU         $0A                  ;New line (line feed)
 VT                  EQU         $0B                  ;Vertical tab (4 lines)
 FF                  EQU         $0C                 ; Form Feed (Always end printing with a Form Feed.)
-NUM_EXP_WRDS        DC.B    0                   ; Number of expansion words after the opcode
+NUM_EXP_WRDS        DC.B        0                   ; Number of expansion words after the opcode
 
 SPLASH              DC.B        '        ____ ___  __ __                        ',CR,LF
                     DC.B        '       / __/( _ )/ //_/                        ',CR,LF
@@ -198,13 +198,47 @@ CMP_EA
                 CLR     NUM_EXP_WRDS
                 MOVE.L  #$B441,$1600    ;Test data corresponds to cmp D1,D2
                 
-                MOVE.L  $1600,$1610     ;Make a copy
-                MOVE.L  #MASK_11_9,D7   ;Load the mask for data register
-                AND.L   D7,$1610        ;Apply the mask to the copy
-                MOVE.L  $1610,D7        ;Move the remaining bits into a reg to be shifted
-                MOVE.L  #25,D6          ;Number of bits to be shifted
-                LSR.L   D6,D7           ;Shift bits to the least sig bit
-                MOVE.L  D7,D0           ;Move the data register for display
+                MOVE.L  $1600,$1610         ;Make a copy
+                MOVE.L  #MASK_11_9,D7       ;Load the mask for data register
+                AND.L   D7,$1610            ;Apply the mask to the copy
+                MOVE.L  $1610,D7            ;Move the remaining bits into a reg to be shifted
+                MOVE.L  #25,D6              ;Number of bits to be shifted
+                LSR.L   D6,D7               ;Shift bits to the least sig bit
+                MOVE.L  D7,D1               ;Move the data register for display
+                
+                MOVE.L  $1600,$1610         ;Make a copy
+                MOVE.L  #MASK_8_6,D7        ;Load the mask for opmode
+                AND.L   D7,$1610            ;Apply the mask to the copy
+                MOVE.L  $1610,D7            ;Move the remaining bits into a reg to be shifted
+                MOVE.L  #22,D6              ;Number of bits to be shifted
+                LSR.L   D6,D7               ;Shift bits to the least sig bit
+                MOVE.L  D7,D0               ;Move the opmode for display
+                
+                MOVE.L  $1600,$1610         ;Make a copy
+                MOVE.L  #MASK_5_3,D7        ;Load the mask for ea mode
+                AND.L   D7,$1610            ;Apply the mask to the copy
+                MOVE.L  $1610,D7            ;Move the remaining bits into a reg to be shifted
+                MOVE.L  #19,D6              ;Number of bits to be shifted
+                LSR.L   D6,D7               ;Shift bits to the least sig bit
+                MOVE.L  D7,D3               ;Move the ea mode for display
+                
+                MOVE.L  $1600,$1610         ;Make a copy
+                MOVE.L  #MASK_11_9,D7       ;Load the mask for ea register
+                AND.L   D7,$1610            ;Apply the mask to the copy
+                MOVE.L  $1610,D7            ;Move the remaining bits into a reg to be shifted
+                MOVE.L  #16,D6              ;Number of bits to be shifted
+                LSR.L   D6,D7               ;Shift bits to the least sig bit
+                MOVE.L  D7,D4               ;Move the ea register for display
+                
+*Calculate the number of expansion words
+                CMP     #7,D3               ;Source mode determines if expansion words needed
+                BLT     fin_cmp_ea          ;Modes less than 7 don't have words
+                JSR     INCREMENT_WRD_CNT   ;Mode 7 has at least 1 expansion word
+                CMP     #1,D4               ;Source register of 1 is long word address mode
+                BLT     fin_cmp_ea          ;Source register of 0 is short word so already incremented once
+                CMP     #2,D4               ;Source register of 4 is imediate data need to look at atribute (opmode)
+                BLT     fin_cmp_ea          ;
+fin_cmp_ea
 
 
 *---------------------------------MOVE_EA----------------------------------
@@ -289,6 +323,7 @@ fin_move_ea
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
