@@ -234,10 +234,16 @@ CMP_EA
                 CMP     #7,D3               ;Source mode determines if expansion words needed
                 BLT     fin_cmp_ea          ;Modes less than 7 don't have words
                 JSR     INCREMENT_WRD_CNT   ;Mode 7 has at least 1 expansion word
-                CMP     #1,D4               ;Source register of 1 is long word address mode
-                BLT     fin_cmp_ea          ;Source register of 0 is short word so already incremented once
-                CMP     #2,D4               ;Source register of 4 is imediate data need to look at atribute (opmode)
-                BLT     fin_cmp_ea          ;
+                CMP     #0,D4               ;
+                BEQ     fin_cmp_ea          ;Source register of 0 is short word so already incremented once
+                CMP     #1,D4               ;Source register of 4 is imediate data need to look at atribute (opmode)
+                BNE     chk_op_mod          ;If register is not one (earlier checked 0) then it is 4 which means immediate
+                JSR     INCREMENT_WRD_CNT   ;Register 1 means long word add one expansion
+                BRA     fin_cmp_ea          ;Thats all folks
+chk_op_mod      CMP     #2,D0               ;Register 4 immediate data need to check attribute (opmode)
+                BNE     fin_cmp_ea          ;Byte or Word only add a single word already done when we hit mode 7 so done
+                JSR     INCREMENT_WRD_CNT   ;Opmode 2 eauals long word so one more expansion
+                
 fin_cmp_ea
 
 
@@ -323,6 +329,7 @@ fin_move_ea
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
