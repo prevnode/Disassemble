@@ -4,8 +4,6 @@
 * Date       :  10/5/2014
 * Description:  MAIN PROGRAM <- NEED A BETTER DESCRIPTION!
 *-----------------------------------------------------------
-    
-START:              ORG         $1000            ; first instruction of program
 
 * Put variables and constants here
 *-----------------------------------------------------------
@@ -41,13 +39,28 @@ CONFIRMSRT          DC.B        'Starting address is stored',CR,LF,0
 CONFIRMEND          DC.B        'Ending address is stored',CR,LF,0
 EXEASCII            DC.B        'Executing ASCII',CR,LF,0
 
+MASK_13_12          EQU     %00110000000000000000000000000000
+MASK_11_9           EQU     %00001110000000000000000000000000
+MASK_8_6            EQU     %00000001110000000000000000000000
+MASK_5_3            EQU     %00000000001110000000000000000000
+MASK_2_0            EQU     %00000000000001110000000000000000
+
+
+    
+START:              ORG         $1000            ; first instruction of program
+
+
+
+
 *--------------------MAIN-----------------------------------
 * Put program code here
 
 MAIN        
+                    BRA         CMP_EA
                     LEA         SPLASH,A1           ; put the GETSRTHEX message into A1
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
-                    TRAP        #15                 ; trap #15 I/O
+                    TRAP        #15                 ; trap #15 I/O                    
+                   
 
 *--------------------STARTHEX-------------------------------
 * prompt the user for a starting address in hex
@@ -170,37 +183,45 @@ nop_str             DC.B    'NOP'
                     RTS
 
 *------------------------------------ADD EA------------------------------------
-add_ea
+ADD_EA
 register_msk        EQU     %00001110000000000000000000000000
 opmode_msk          EQU     %00000001110000000000000000000000
 ea_mode_msk         EQU     %00000000001110000000000000000000
 ea_reg_msk          EQU     %00000000000001110000000000000000
 
+
                     MOVE.L  #$DA430000,$1600    *Test data corresponds to ADD D3,D5
                     
+*---------------------------------CMP_EA-----------------------------------------
+*Parse the effective address of a cmp opcode
+CMP_EA
+                CLR     NUM_EXP_WRDS
+                MOVE.L  #$B441,$1600    ;Test data corresponds to cmp D1,D2
+                
+                MOVE.L  $1600,$1610     ;Make a copy
+                MOVE.L  #MASK_11_9,D7   ;Load the mask for data register
+                AND.L   D7,$1610        ;Apply the mask to the copy
+                MOVE.L  $1610,D7        ;Move the remaining bits into a reg to be shifted
+                MOVE.L  #25,D6          ;Number of bits to be shifted
+                LSR.L   D6,D7           ;Shift bits to the least sig bit
+                MOVE.L  D7,D0           ;Move the data register for display
 
 
 *---------------------------------MOVE_EA----------------------------------
 *Parse the effective address of a move opcode
 move_ea
 move_str            DC.B    'MOVE'
-size_msk            EQU     %00110000000000000000000000000000
-destin_reg_msk      EQU     %00001110000000000000000000000000
-destin_mod_msk      EQU     %00000001110000000000000000000000
-source_mod_msk      EQU     %00000000001110000000000000000000
-source_reg_msk      EQU     %00000000000001110000000000000000
 DECODED_EA          DCB.B   6,$0
 
                     CLR     NUM_EXP_WRDS         *Zero out number of expansion words
-                    *JSR     INCREMENT_WRD_CNT                
-
+                    
                     *MOVE.L  #$1C050000,$1600       *Test data that corresponds to MOVE.B D5,D6
                     *MOVE.L  #$1C381400,$1600       *Test data corresponds to  MOVE.B    $1400,D6
                     MOVE.L  #$23C30165,$1600         *Test data corresponds to MOVE.L D3,$16500000
                     MOVE.W  #0000,$1604              *Completes test data
                     
                     MOVE.L  $1600,$1610            *Make a copy
-                    MOVE.L  #size_msk,D7           *Load the mask
+                    MOVE.L  #MASK_13_12,D7         *Load the mask for size
                     AND.L   D7,$1610               *Apply the mask to the copy
                     MOVE.L  $1610,D7               *Move the remaining bits into a reg to be shifted
                     MOVE.L  #28,D6                 *Lots of bits to shift
@@ -208,7 +229,7 @@ DECODED_EA          DCB.B   6,$0
                     MOVE.L  D7,D0                  *Move the size for display
                   
                     MOVE.L  $1600,$1610            *Make a copy
-                    MOVE.L  #destin_reg_msk,D7     *Load the mask                   
+                    MOVE.L  #MASK_11_9,D7          *Load the mask for destination register                  
                     AND.L   D7,$1610               *Apply the mask to the copy
                     MOVE.L  $1610,D7               *Move the remaining bits into a register to be shifted
                     MOVE.L  #25,D6                 *Going to shift a lot of bits
@@ -216,7 +237,7 @@ DECODED_EA          DCB.B   6,$0
                     MOVE.L  D7,D1                  *Move the finished destination reg in place for display                    
                     
                     MOVE.L  $1600,$1610            *Make a copy
-                    MOVE.L  #destin_mod_msk,D7     *Load the mask
+                    MOVE.L  #MASK_8_6,D7           *Load the mask destination register
                     AND.L   D7,$1610               *Apply the mask to the copy
                     MOVE.L  $1610,D7               *Move the remaining bits into a reg to be shifted
                     MOVE.L  #22,D6                 *Lots of bits to shift
@@ -224,7 +245,7 @@ DECODED_EA          DCB.B   6,$0
                     MOVE.L  D7,D2                  *Move the mode for display                  
                     
                     MOVE.L  $1600,$1610            *Make a copy
-                    MOVE.L  #source_mod_msk,D7     *Load the mask
+                    MOVE.L  #MASK_5_3,D7           *Load the mask for the source mode
                     AND.L   D7,$1610               *Apply the mask to the copy
                     MOVE.L  $1610,D7               *Move the remaining bits into a reg to be shifted
                     MOVE.L  #19,D6                 *Lots of bits to shift
@@ -232,7 +253,7 @@ DECODED_EA          DCB.B   6,$0
                     MOVE.L  D7,D3                  *Move the mode for display
                     
                     MOVE.L  $1600,$1610            *Make a copy
-                    MOVE.L  #source_reg_msk,D7     *Load the mask
+                    MOVE.L  #MASK_2_0,D7           *Load the mask source register
                     AND.L   D7,$1610               *Apply the mask to the copy
                     MOVE.L  $1610,D7               *Move the remaining bits into a reg to be shifted
                     MOVE.L  #16,D6                 *Lots of bits to shift
@@ -268,6 +289,7 @@ fin_move_ea
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 

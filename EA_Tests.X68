@@ -6,11 +6,11 @@
 *-----------------------------------------------------------
     ORG    $8888
 START:                  ; first instruction of program
-
-* Put program code here
+    
+*----------------------MOVE VARIANTS--------------------------
     MOVE.B      D5,D6           *Data Register Direct
-    *MOVE.B      A5,A6           *Address Register Direct
-    *MOVE.B      (A5),A6         *Address Register Indirect
+    MOVE.L      A5,A4           *Address Register Direct
+    MOVE.B      (A5),D6         *Address Register Indirect
     MOVE.B      #255,D6         *Immediate Data
     MOVE.B      (A5)+,D6        *Address Register with Postincrement
     MOVE.B      -(A5),D6        *Address Register with Predecrement
@@ -25,12 +25,19 @@ START:                  ; first instruction of program
     MOVE.L    #1455,A6
     MOVE.L    #145555,D6
 
-    ADD       D3,D5    
+*----------------------CMP VARIANTS--------------------------
+CMPVARIANTS
+    CMP         D1,D2
+    
+    
+    
+ 
     SIMHALT             ; halt simulator
 
 * Put variables and constants here
 
     END    START        ; last line of source
+
 
 
 
