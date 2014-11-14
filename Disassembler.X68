@@ -12,8 +12,8 @@ CR                  EQU         $0D                 ; Carriage Return
 LF                  EQU         $0A                 ; Line Feed
 BS                  EQU         $08                 ; Backspace
 HT                  EQU         $09                 ; Tab (horizontal 5 characters)
-LF                  EQU         $0A                 ;New line (line feed)
-VT                  EQU         $0B                 ;Vertical tab (4 lines)
+LF                  EQU         $0A                  ;New line (line feed)
+VT                  EQU         $0B                  ;Vertical tab (4 lines)
 FF                  EQU         $0C                 ; Form Feed (Always end printing with a Form Feed.)
 NUM_EXP_WRDS        DC.B        0                   ; Number of expansion words after the opcode
 
@@ -56,11 +56,10 @@ START:              ORG         $1000            ; first instruction of program
 * Put program code here
 
 MAIN        
+                    BRA         CMP_EA
                     LEA         SPLASH,A1           ; put the GETSRTHEX message into A1
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
-                    TRAP        #15                 ; trap #15 I/O  
-
-                    BRA         CMP_EA                  
+                    TRAP        #15                 ; trap #15 I/O                    
                    
 
 *--------------------STARTHEX-------------------------------
@@ -94,6 +93,8 @@ ENDHEX
                     MOVE.L      A1,$600A            ; store the starting address in D6
                     JSR         ASCIITOHEX          ; convert the string to hex address
                     BRA         PROMPTRUNAGAIN      
+            
+                    *CLR         A1                  ; clear A1
 
 *---------------------PROMPTRUNAGAIN-------------------------
 * ask to run the program again, if Y then call MAIN
@@ -113,38 +114,9 @@ PROMPTRUNAGAIN
                     BEQ         START               ; brach to Reset if D1 == y
                     BRA         ENDPROGRAM          ; else branch to end
 
-*----------------------CLEAR_D--------------------------------
-* prep the program to run again
-CLEAR_D
-                    CLR         D0                  ; clear the data register
-                    CLR         D1                  ; clear the data register
-                    CLR         D2                  ; clear the data register
-                    CLR         D3                  ; clear the data register
-                    CLR         D4                  ; clear the data register
-                    CLR         D5                  ; clear the data register
-                    CLR         D6                  ; clear the data register
-                    CLR         D7                  ; clear the data register
-                    
-*----------------------CLEAR_A--------------------------------
-* prep the program to run again
-CLEAR_A
-                    SUBA.L      A0,A0               ; clear the acess register
-                    SUBA.L      A1,A1               ; clear the acess register
-                    SUBA.L      A2,A2               ; clear the acess register
-                    SUBA.L      A3,A3               ; clear the acess register
-                    SUBA.L      A4,A4               ; clear the acess register
-                    SUBA.L      A5,A5               ; clear the acess register
-                    SUBA.L      A6,A6               ; clear the acess register
-
-*----------------------CLEAR_SCREEN--------------------------------
-* prep the program to run again
-CLEAR_SCREEN
-                    MOVE.B      #11,D0              ; clear the screen
-                    MOVE.W      #$FF00,D1           ; clear the screen
-                    TRAP        #15                 ; send trap task command
-
 *----------------------RESET--------------------------------
 * prep the program to run again
+
 RESET
                     MOVE.B      #11,D0              ; clear the screen
                     MOVE.W      #$FF00,D1           ; clear the screen
@@ -224,7 +196,8 @@ ea_reg_msk          EQU     %00000000000001110000000000000000
 *Parse the effective address of a cmp opcode
 CMP_EA
                 CLR     NUM_EXP_WRDS
-                MOVE.L  #$B441,$1600    ;Test data corresponds to cmp D1,D2
+                ;MOVE.L  #$B4410000,$1600    ;Test data corresponds to cmp D1,D2
+                MOVE.L  #$B4BC,1600         ;Test data corresponds to CMP.L #$12345,D2
                 
                 MOVE.L  $1600,$1610         ;Make a copy
                 MOVE.L  #MASK_11_9,D7       ;Load the mask for data register
@@ -232,7 +205,7 @@ CMP_EA
                 MOVE.L  $1610,D7            ;Move the remaining bits into a reg to be shifted
                 MOVE.L  #25,D6              ;Number of bits to be shifted
                 LSR.L   D6,D7               ;Shift bits to the least sig bit
-                MOVE.L  D7,D1               ;Move the data register for display
+                MOVE.L  D7,D0               ;Move the data register for display
                 
                 MOVE.L  $1600,$1610         ;Make a copy
                 MOVE.L  #MASK_8_6,D7        ;Load the mask for opmode
@@ -240,7 +213,7 @@ CMP_EA
                 MOVE.L  $1610,D7            ;Move the remaining bits into a reg to be shifted
                 MOVE.L  #22,D6              ;Number of bits to be shifted
                 LSR.L   D6,D7               ;Shift bits to the least sig bit
-                MOVE.L  D7,D0               ;Move the opmode for display
+                MOVE.L  D7,D1               ;Move the opmode for display
                 
                 MOVE.L  $1600,$1610         ;Make a copy
                 MOVE.L  #MASK_5_3,D7        ;Load the mask for ea mode
@@ -248,32 +221,32 @@ CMP_EA
                 MOVE.L  $1610,D7            ;Move the remaining bits into a reg to be shifted
                 MOVE.L  #19,D6              ;Number of bits to be shifted
                 LSR.L   D6,D7               ;Shift bits to the least sig bit
-                MOVE.L  D7,D3               ;Move the ea mode for display
+                MOVE.L  D7,D2               ;Move the ea mode for display
                 
                 MOVE.L  $1600,$1610         ;Make a copy
-                MOVE.L  #MASK_11_9,D7       ;Load the mask for ea register
+                MOVE.L  #MASK_2_0,D7        ;Load the mask for ea register
                 AND.L   D7,$1610            ;Apply the mask to the copy
                 MOVE.L  $1610,D7            ;Move the remaining bits into a reg to be shifted
                 MOVE.L  #16,D6              ;Number of bits to be shifted
                 LSR.L   D6,D7               ;Shift bits to the least sig bit
-                MOVE.L  D7,D4               ;Move the ea register for display
+                MOVE.L  D7,D3               ;Move the ea register for display
                 
 *Calculate the number of expansion words
-                CMP     #7,D3               ;Source mode determines if expansion words needed
+                CMP     #7,D2               ;Source mode determines if expansion words needed
                 BLT     fin_cmp_ea          ;Modes less than 7 don't have words
                 JSR     INCREMENT_WRD_CNT   ;Mode 7 has at least 1 expansion word
-                CMP     #0,D4               ;
+                CMP     #0,D3               ;
                 BEQ     fin_cmp_ea          ;Source register of 0 is short word so already incremented once
-                CMP     #1,D4               ;Source register of 4 is imediate data need to look at atribute (opmode)
+                CMP     #1,D3               ;Source register of 4 is imediate data need to look at atribute (opmode)
                 BNE     chk_op_mod          ;If register is not one (earlier checked 0) then it is 4 which means immediate
                 JSR     INCREMENT_WRD_CNT   ;Register 1 means long word add one expansion
                 BRA     fin_cmp_ea          ;Thats all folks
-chk_op_mod      CMP     #2,D0               ;Register 4 immediate data need to check attribute (opmode)
+chk_op_mod      CMP     #2,D3               ;Register 4 immediate data need to check attribute (opmode)
                 BNE     fin_cmp_ea          ;Byte or Word only add a single word already done when we hit mode 7 so done
                 JSR     INCREMENT_WRD_CNT   ;Opmode 2 eauals long word so one more expansion
                 
 fin_cmp_ea
-
+                BRA     ENDPROGRAM
 
 *---------------------------------MOVE_EA----------------------------------
 *Parse the effective address of a move opcode
@@ -366,10 +339,8 @@ ENDPROGRAM
 
 
 
-<<<<<<< HEAD
 
-=======
->>>>>>> c6882abdf4595682ff86066c0d368fefd492aff8
+
 *~Font name~Courier New~
 *~Font size~10~
 *~Tab type~1~

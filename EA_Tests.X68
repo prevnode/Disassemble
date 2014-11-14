@@ -28,7 +28,11 @@ START:                  ; first instruction of program
 *----------------------CMP VARIANTS--------------------------
 CMPVARIANTS
     CMP         D1,D2
-    
+    CMP         A1,D2
+    CMP         $0010,D2
+    CMP         $1234FFFF,D2
+    CMP         #14,D2
+    CMP.L       #$12345,D2
     
     
  
@@ -37,6 +41,7 @@ CMPVARIANTS
 * Put variables and constants here
 
     END    START        ; last line of source
+
 
 
 
