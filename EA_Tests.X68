@@ -7,6 +7,17 @@
     ORG    $8888
 START:                  ; first instruction of program
     
+*--------------------MOVEA VARIANTS---------------------------
+    MOVEA.W     D1,A2
+    MOVEA.L     D1,A2
+    MOVEA.W     -(A6),A2
+    MOVEA.L     -(A6),A2
+    MOVEA.W     #$1600,A2
+    MOVEA.L     #$16001234,A2
+    MOVEA.W     #14,A2
+    MOVEA.L     #14,A2
+    
+    
 *----------------------MOVE VARIANTS--------------------------
     MOVE.B      D5,D6           *Data Register Direct
     MOVE.L      A5,A4           *Address Register Direct
@@ -44,6 +55,7 @@ CMPVARIANTS
 * Put variables and constants here
 
     END    START        ; last line of source
+
 
 
 
