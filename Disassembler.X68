@@ -78,7 +78,8 @@ STARTHEX
             
                     JSR         CALLCONVERTASCII
                     MOVEA.L     D3,A5               ; move converted address to A5(start address)
-                    BRA         ENDHEX
+                    MOVE.L      #$0,D3              ; reset D3
+                    BRA         ENDHEX              ; branch to get and convert the ending address
 
 *---------------------ENDHEX--------------------------------
 * prompt the user for a ending address in hex
@@ -94,37 +95,31 @@ ENDHEX
 
                     JSR         CALLCONVERTASCII
                     MOVEA.L     D3,A6               ; move converted address to A6(end address)
-                    *BRA         PROMPTRUNAGAIN   
-                    BRA         ENDPROGRAM          ;BEGINOPCODE      
-            
-                    *CLR         A1                  ; clear A1
+                    MOVE.L      #$0,D3              ; reset D3
+                    *BRA         MAIN_LOOP           ; branch to main loop
+                    BRA         ENDPROGRAM          ; branch to end program (TESTING)
                     
 *---------------------CALLCONVERTASCII--------------------------------
 * prompt the user for a ending address in hex
 * this does not error check!
 
 CALLCONVERTASCII
-                    MOVE.L      #$5,D1
+                    MOVE.L      #$4,D1              ; convert 1 word
                     JSR         ASCIITOHEX          ; convert the string to hex address
-                    RTS
+                    RTS                             ; return
              
 *-------------------ASCIITOHEX------------------------------
 * turn the ascii letter in A1 to hex
-* result to added to D6
+* A1 = FULL STRING TO CONVERT
+* D1 = CONVERSION COUNT
+* D2 = DIGIT TO CONVERT
+* D3 = CONVERTED NUMBER
 
 ASCIITOHEX
                     MOVE.B      (A1)+,D2            ; move number to data reg for conversion
                     CMPI.B      #$39,D2             ; check if number
                     BLE         NUMTOHEX            ; branch to convert number
-                    CMPI.B      #$5A,D2             ; check if letter
-                    BLE         STRINGTOHEX         ; branch to conver letter
-                    BRA         BADASCII            ; branch to BADASCII for invalid address
-BADASCII
-                    LEA         BADASCII,A1         ; put mesage into A1
-                    MOVE        #14,D0              ; trap task #14 to print the message to screen 
-                    TRAP        #15                 ; trap #15 I/O
-                    MOVE.L      #$0,D3              ; zero out D3
-                    RTS                             ; return
+                    BRA         STRINGTOHEX
 STRINGTOHEX
                     SUBI.B      #$37,D2             ; convert to number (ASCII $40-#10)
                     BRA         ASCIINEXT           ; go to next number
@@ -134,7 +129,7 @@ NUMTOHEX
 ASCIINEXT
                     ADD.B       D2,D3               ; add converted number to address
                     SUBI.B      #$1,D1              ; decrement counter
-                    CMPI.B      #$0,D3              ; check to see if done
+                    CMPI.B      #$0,D1              ; check to see if done
                     BEQ         ASCIITOHEXQUIT      ; branch to finished sub routine
                     ROL.L       #4,D3               ; shift 4 left
                     BRA         ASCIITOHEX          ; loop back to ASCIITOHEX
@@ -602,22 +597,6 @@ fin_move_ea
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 *~Font name~Courier New~
