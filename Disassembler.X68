@@ -166,10 +166,10 @@ inv_mem             DC.B    '1000'
 inv_code            DC.B    'DATA'
 inv_operand         DC.B    '$WXYZ'
 
-                    MOVE.L  inv_mem,DO
-                    MOVE.L  inv_code,D1
-                    MOVE.L  inv_operand,D2
-                    RTS
+                    ;MOVE.L  inv_mem,DO
+                    ;MOVE.L  inv_code,D1
+                    ;MOVE.L  inv_operand,D2
+                    ;RTS
 
 
 *-----------------------------------NOP_EA------------------------------ 
@@ -250,6 +250,53 @@ fin_cmp_ea
                 
 *-------------------------------EOR_EA-------------------------------------
                 CLR     NUM_EXP_WRDS
+                
+                MOVE.L  #$B342,$1600        ;Test data corresponds to EOR D1,D2
+                
+                MOVE.L  $1600,$1610         ;Make a copy    
+                MOVE.L  #MASK_11_9,D7       ;Load the mask for destination register
+                AND.L   D7,$1610            ;Apply the mask to the copy 
+                MOVE    $1610,D7            ;Move the remaining bits into register to be shifted
+                MOVE.L  #25,D6              ;Number of bits to shift by
+                LSR.L   D6,D7               ;Shift bits to LSB
+                MOVE.L  D7,D0               ;Move the destination register to be displayed
+                
+                MOVE.L  $1600,$1610         ;Make a copy    
+                MOVE.L  #MASK_8_6,D7        ;Load the mask for opmode register
+                AND.L   D7,$1610            ;Apply the mask to the copy 
+                MOVE    $1610,D7            ;Move the remaining bits into register to be shifted
+                MOVE.L  #22,D6              ;Number of bits to shift by
+                LSR.L   D6,D7               ;Shift bits to LSB
+                MOVE.L  D7,D1               ;Move the opmode to be displayed
+                
+                MOVE.L  $1600,$1610         ;Make a copy    
+                MOVE.L  #MASK_5_3,D7        ;Load the mask for EA mode
+                AND.L   D7,$1610            ;Apply the mask to the copy 
+                MOVE    $1610,D7            ;Move the remaining bits into register to be shifted
+                MOVE.L  #19,D6              ;Number of bits to shift by
+                LSR.L   D6,D7               ;Shift bits to LSB
+                MOVE.L  D7,D2               ;Move the EA mode to be displayed
+                
+                MOVE.L  $1600,$1610         ;Make a copy    
+                MOVE.L  #MASK_2_0,D7        ;Load the mask for EA register
+                AND.L   D7,$1610            ;Apply the mask to the copy 
+                MOVE    $1610,D7            ;Move the remaining bits into register to be shifted
+                MOVE.L  #16,D6              ;Number of bits to shift by
+                LSR.L   D6,D7               ;Shift bits to LSB
+                MOVE.L  D7,D3               ;Move the EA register to be displayed
+                
+                CMP.W   #7,D2
+                BLT     fin_eor_ea
+                JSR     INCREMENT_WRD_CNT   
+                CMP.W   #1,D3
+                BLT     fin_eor_ea
+                JSR     INCREMENT_WRD_CNT
+                
+                
+fin_eor_ea
+
+
+
                 
 
 *---------------------------------MOVE_EA----------------------------------
@@ -334,6 +381,7 @@ fin_move_ea
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
