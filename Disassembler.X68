@@ -95,7 +95,7 @@ ENDHEX
                     JSR         CALLCONVERTASCII
                     MOVEA.L     D3,A6               ; move converted address to A6(end address)
                     *BRA         PROMPTRUNAGAIN   
-                    BRA         ENDPROGRAM   
+                    BRA         ENDPROGRAM          ;BEGINOPCODE      
             
                     *CLR         A1                  ; clear A1
                     
@@ -197,7 +197,7 @@ RESET
             
 
 *------------------------------Begin OpCode----------------------------------
-
+BEGINOPCODE
 *                CMPM (A0)+,(A1)+ *B348       
 *                CMP.W D0,D1 *B240
 *                CMP.B D0,D1 *B001
@@ -212,6 +212,7 @@ RESET
                  MOVE.W  (A5),D0     *We'll play with it here
 
                  *MOVE.B  #shift,D1       *Shift 12 bits to the right  
+
 
                  LSR.W   D1,D0           *Move the bits
  
@@ -601,6 +602,7 @@ fin_move_ea
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 

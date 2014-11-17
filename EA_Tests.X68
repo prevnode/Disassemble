@@ -6,6 +6,7 @@
 *-----------------------------------------------------------
     ORG    $8888
 START:                  ; first instruction of program
+    CMP.B   D1,D2
     
 *--------------------MOVEA VARIANTS---------------------------
     MOVEA.W     D1,A2
@@ -55,6 +56,7 @@ CMPVARIANTS
 * Put variables and constants here
 
     END    START        ; last line of source
+
 
 
 
