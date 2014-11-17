@@ -131,8 +131,8 @@ ASCIITOHEXQUIT
 * adress, if so run MINI_LOOP, else prompt to run again.
 
 MAIN_LOOP
-                    CMPI.L      A5,A6               ; check if starting address and ending address are equal
-                    BEQ         PROMPTRUNAGAIN      ; if equal end program by prompting to run again
+                    *CMPI.L      A5,A6               ; check if starting address and ending address are equal
+                    *BEQ         PROMPTRUNAGAIN      ; if equal end program by prompting to run again
                     
                         
 *---------------------PROMPTRUNAGAIN-------------------------
@@ -410,6 +410,7 @@ MOVEA_EA
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
