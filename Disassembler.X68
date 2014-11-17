@@ -35,10 +35,6 @@ SPLASH              DC.B        '        ____ ___  __ __                        
 GETSRTHEX           DC.B        'Enter Starting Hex Address Of Program: ',CR,LF,0
 GETENDHEX           DC.B        'Enter Ending Hex Address Of Program: ',CR,LF,0
 RUNAGAIN            DC.B        'Would You Like To Dissasmble Anouther Program? (Y/N): ',CR,LF,0
-CONFIRMSRT          DC.B        'Starting address is stored',CR,LF,0
-CONFIRMEND          DC.B        'Ending address is stored',CR,LF,0
-EXEASCII            DC.B        'Executing ASCII',CR,LF,0
-BADADDRESS          DC.B        'Bad address...',CR,LF,0
 
 MASK_13_12          EQU     %00110000000000000000000000000000
 MASK_11_9           EQU     %00001110000000000000000000000000
@@ -46,12 +42,7 @@ MASK_8_6            EQU     %00000001110000000000000000000000
 MASK_5_3            EQU     %00000000001110000000000000000000
 MASK_2_0            EQU     %00000000000001110000000000000000
 
-
-    
 START:              ORG         $1000            ; first instruction of program
-
-
-
 
 *--------------------MAIN-----------------------------------
 * Put program code here
@@ -62,7 +53,6 @@ MAIN
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O                    
                    
-
 *--------------------STARTHEX-------------------------------
 * prompt the user for a starting address in hex
 * this does not error check!
@@ -78,7 +68,7 @@ STARTHEX
                     JSR         CALLCONVERTASCII
                     MOVEA.L     D3,A5               ; move converted address to A5(start address)
                     MOVE.L      #$0,D3              ; reset D3
-                    BRA         ENDHEX
+                    BRA         ENDHEX              ; branch to get and convert the ending address
 
 *---------------------ENDHEX--------------------------------
 * prompt the user for a ending address in hex
@@ -95,19 +85,17 @@ ENDHEX
                     JSR         CALLCONVERTASCII
                     MOVEA.L     D3,A6               ; move converted address to A6(end address)
                     MOVE.L      #$0,D3              ; reset D3
-                    *BRA         PROMPTRUNAGAIN   
-                    BRA         ENDPROGRAM   
-            
-                    *CLR         A1                  ; clear A1
+                    *BRA         MAIN_LOOP           ; branch to main loop
+                    BRA         ENDPROGRAM          ; branch to end program (TESTING)
                     
 *---------------------CALLCONVERTASCII--------------------------------
 * prompt the user for a ending address in hex
 * this does not error check!
 
 CALLCONVERTASCII
-                    MOVE.L      #$4,D1
+                    MOVE.L      #$4,D1              ; convert 1 word
                     JSR         ASCIITOHEX          ; convert the string to hex address
-                    RTS
+                    RTS                             ; return
              
 *-------------------ASCIITOHEX------------------------------
 * turn the ascii letter in A1 to hex
@@ -137,6 +125,16 @@ ASCIINEXT
 ASCIITOHEXQUIT
                     RTS                             ; return back
                     
+*-------------------MAIN LOOP------------------------------
+* main program loop
+* check to see if the starting address is before the ending
+* adress, if so run MINI_LOOP, else prompt to run again.
+
+MAIN_LOOP
+                    CMPI.L      A5,A6               ; check if starting address and ending address are equal
+                    BEQ         PROMPTRUNAGAIN      ; if equal end program by prompting to run again
+                    
+                        
 *---------------------PROMPTRUNAGAIN-------------------------
 * ask to run the program again, if Y then call MAIN
 * if N then END program
@@ -148,10 +146,10 @@ PROMPTRUNAGAIN
                 
                     MOVE.B      #2,D0               ; trap task 5 grabs a single character
                     TRAP        #15                 ; trap #15 I/O
-                    CMP.L       #$59,D1             ; compare Y to D1
+                    CMPI.L      #$59,D1             ; compare Y to D1
                     BEQ         START               ; brach to Reset if D1 == Y
                     
-                    CMP.B       #$79,D1             ; compare y to D1
+                    CMPI.B      #$79,D1             ; compare y to D1
                     BEQ         START               ; brach to Reset if D1 == y
                     BRA         ENDPROGRAM          ; else branch to end
 
@@ -182,8 +180,6 @@ RESET
 
                     BRA         START               ; branch back to start
             
-
-
 *----------------------------------------------Increment Expansion Word Count-----------------------------------------
 INCREMENT_WRD_CNT       
                     ADD     #1,NUM_EXP_WRDS
