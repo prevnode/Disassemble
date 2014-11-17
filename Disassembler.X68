@@ -228,8 +228,9 @@ ea_reg_msk          EQU     %00000000000001110000000000000000
 CMP_EA
                 CLR     NUM_EXP_WRDS
                 ;MOVE.L  #$B4410000,$1600    ;Test data corresponds to cmp D1,D2
-                MOVE.L  #$B4BC0000,$1600         ;Test data corresponds to CMP.L #$12345,D2
-                
+                ;MOVE.L  #$B4BC0000,$1600         ;Test data corresponds to CMP.L #$12345,D2
+                MOVE.L   (A5),$1600
+                    
                 MOVE.L  $1600,$1610         ;Make a copy
                 MOVE.L  #MASK_11_9,D7       ;Load the mask for data register
                 AND.L   D7,$1610            ;Apply the mask to the copy
