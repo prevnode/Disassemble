@@ -17,6 +17,7 @@ VT                  EQU         $0B                  ;Vertical tab (4 lines)
 FF                  EQU         $0C                 ; Form Feed (Always end printing with a Form Feed.)
 NUM_EXP_WRDS        DC.B        0                   ; Number of expansion words after the opcode
 NUM_OPERANDS        DC.B        0                   ; Number of operands for the current instruction valid range: 1 or 2
+MOVE_OP             DC.B        'MOVE',0
 
 SPLASH              DC.B        '        ____ ___  __ __                        ',CR,LF
                     DC.B        '       / __/( _ )/ //_/                        ',CR,LF
@@ -47,7 +48,10 @@ MASK_8_6            EQU     %00000001110000000000000000000000
 MASK_5_3            EQU     %00000000001110000000000000000000
 MASK_2_0            EQU     %00000000000001110000000000000000
 
-
+    *Attributes
+BYTE                DC.B    '.B',0
+WORD                DC.B    '.W',0
+LONG                DC.B    '.L',0
     
 START:              ORG         $1000            ; first instruction of program
 
@@ -353,14 +357,6 @@ code1110       STOP        #$2700
 
 code1111       STOP        #$2700
 
-
-
-
-
-
-
-
-
 *----------------------------------------------Increment Expansion Word Count-----------------------------------------
 INCREMENT_WRD_CNT       
                     ADD     #1,NUM_EXP_WRDS
@@ -461,19 +457,45 @@ CMP_EA
                 
 *Calculate the number of expansion words
                 CMP     #7,D2               ;Source mode determines if expansion words needed
-                BLT     fin_cmp_ea          ;Modes less than 7 don't have words
+                BLT     output              ;Modes less than 7 don't have words
                 JSR     INCREMENT_WRD_CNT   ;Mode 7 has at least 1 expansion word
                 CMP     #0,D3               ;Look at register
-                BEQ     fin_cmp_ea          ;Source register of 0 is short word so already incremented once
+                BEQ     output              ;Source register of 0 is short word so already incremented once
                 CMP     #1,D3               ;Source register of 4 is imediate data need to look at atribute (opmode)
                 BNE     chk_op_mod          ;If register is not one (earlier checked 0) then it is 4 which means immediate
                 JSR     INCREMENT_WRD_CNT   ;Register 1 means long word add one expansion
-                BRA     fin_cmp_ea          ;Thats all folks
+                BRA     output              ;Thats all folks
 chk_op_mod      CMP     #2,D1               ;Register 4 immediate data need to check attribute (opmode)
-                BNE     fin_cmp_ea          ;Byte or Word only add a single word already done when we hit mode 7 so done
+                BNE     output              ;Byte or Word only add a single word already done when we hit mode 7 so done
                 JSR     INCREMENT_WRD_CNT   ;Opmode 2 eauals long word so one more expansion
                 
-fin_cmp_ea
+output
+                *Print opcode
+                LEA     MOVE_OP,A1
+                MOVE.B  #14,D0
+                TRAP    #15
+                *Print attribute
+                CMP     #0,D4               ;Destination mode (opmode) determines attribute
+                BEQ     print_byte          ;Mode 0 is equal to byte
+                CMP     #1,D4               
+                BEQ     print_word          ;Mode 1 is equal to word
+                CMP     #2,D4
+                BEQ     print_long          ;Mode 2 is equal to long
+                
+                
+print_byte      LEA     BYTE,A1
+                TRAP    #15
+                BRA     fin_cmp_ea
+                
+print_word      LEA     WORD,A1
+                TRAP    #15
+                BRA     fin_cmp_ea
+                
+print_long      LEA     LONG,A1
+                TRAP    #15
+                BRA     fin_cmp_ea
+    
+fin_cmp_ea      
                 BRA     ENDPROGRAM
                 
 *-------------------------------EOR_EA-------------------------------------
@@ -509,13 +531,10 @@ fin_eor_ea
 
 *---------------------------------MOVE_EA----------------------------------
 *Parse the effective address of a move opcode
-move_ea
-move_str            DC.B    'MOVE'
-DECODED_EA          DCB.B   6,$0
+MOVE_EA
 
                     CLR     NUM_EXP_WRDS            *Zero out number of expansion words
-                    MOVE.B  #2,NUM_OPERANDS         ;Move always has 2 operands
-                    
+                    MOVE.B  #2,NUM_OPERANDS         ;Move always has 2 operands                    
                     
                     MOVE.L  #MASK_13_12,D7         *Load the mask for size
                     JSR     APPLYMASK
@@ -560,12 +579,14 @@ src_expansion       CMP.W   #7,D3
                     CMP.W   #2,D0                   *If immediate then look at the size
                     BNE     fin_move_ea             *Less than 2 means a single word and we've already added that
                     JSR     INCREMENT_WRD_CNT       *Size is 2 (cant be greater) so add additonal word 
-fin_move_ea                    
+fin_move_ea         
+                    
+                                        
 
 *------------------------------------------MOVEA_EA----------------------------------------------------------
 MOVEA_EA
 
-    
+            
 
 
 * EndProgram
