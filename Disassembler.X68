@@ -316,18 +316,15 @@ fin_cmp_ea
                 LSR.L   D6,D7               ;Shift bits to LSB
                 MOVE.L  D7,D3               ;Move the EA register to be displayed
                 
-                CMP.W   #7,D2
-                BLT     fin_eor_ea
-                JSR     INCREMENT_WRD_CNT   
-                CMP.W   #1,D3
-                BLT     fin_eor_ea
-                JSR     INCREMENT_WRD_CNT
+                CMP.W   #7,D2               ;EA Mode less than 7 don't have expansion words
+                BLT     fin_eor_ea          ;No words
+                JSR     INCREMENT_WRD_CNT   ;EA Mode 7 has at least 1 expansion word
+                CMP.W   #1,D3               ;EA register determines need for second word
+                BLT     fin_eor_ea          ;EA 0 only single expansion word
+                JSR     INCREMENT_WRD_CNT   ;EA 1 indicates second word
                 
                 
 fin_eor_ea
-
-
-
                 
 
 *---------------------------------MOVE_EA----------------------------------
@@ -407,11 +404,17 @@ src_expansion       CMP.W   #7,D3
                     JSR     INCREMENT_WRD_CNT       *Size is 2 (cant be greater) so add additonal word 
 fin_move_ea                    
 
+*-----------------------------------------MOVEA_EA-----------------------------------------------
+MOVEA_EA
+                CLR     NUM_EXP_WRDS         *Zero out number of expansion words
+
+
 
 * EndProgram
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
