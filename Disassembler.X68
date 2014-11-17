@@ -39,6 +39,7 @@ RUNAGAIN            DC.B        'Would You Like To Dissasmble Anouther Program? 
 CONFIRMSRT          DC.B        'Starting address is stored',CR,LF,0
 CONFIRMEND          DC.B        'Ending address is stored',CR,LF,0
 EXEASCII            DC.B        'Executing ASCII',CR,LF,0
+BADADDRESS          DC.B        'Bad address...',CR,LF,0
 
 MASK_13_12          EQU     %00110000000000000000000000000000
 MASK_11_9           EQU     %00001110000000000000000000000000
@@ -57,7 +58,7 @@ START:              ORG         $1000            ; first instruction of program
 * Put program code here
 
 MAIN        
-                    BRA         CMP_EA
+                    *BRA         CMP_EA
                     LEA         SPLASH,A1           ; put the GETSRTHEX message into A1
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O                    
@@ -75,8 +76,8 @@ STARTHEX
                     MOVE.B      #2,D0               ; read a string in from the keyboard
                     TRAP        #15                 ; trap #15 I/O
             
-                    MOVE.L      A1,$6000            ; store the starting address in D2
-                    JSR         ASCIITOHEX          ; convert string to hex address
+                    JSR         CALLCONVERTASCII
+                    MOVEA.L     D3,A5               ; move converted address to A5(start address)
                     BRA         ENDHEX
 
 *---------------------ENDHEX--------------------------------
@@ -91,12 +92,55 @@ ENDHEX
                     MOVE.B      #2,D0               ; read a string in from the keyboard
                     TRAP        #15                 ; trap #15 I/O
 
-                    MOVE.L      A1,$600A            ; store the starting address in D6
-                    JSR         ASCIITOHEX          ; convert the string to hex address
-                    BRA         PROMPTRUNAGAIN      
+                    JSR         CALLCONVERTASCII
+                    MOVEA.L     D3,A6               ; move converted address to A6(end address)
+                    *BRA         PROMPTRUNAGAIN   
+                    BRA         ENDPROGRAM   
             
                     *CLR         A1                  ; clear A1
+                    
+*---------------------CALLCONVERTASCII--------------------------------
+* prompt the user for a ending address in hex
+* this does not error check!
 
+CALLCONVERTASCII
+                    MOVE.L      #$5,D1
+                    JSR         ASCIITOHEX          ; convert the string to hex address
+                    RTS
+             
+*-------------------ASCIITOHEX------------------------------
+* turn the ascii letter in A1 to hex
+* result to added to D6
+
+ASCIITOHEX
+                    MOVE.B      (A1)+,D2            ; move number to data reg for conversion
+                    CMPI.B      #$39,D2             ; check if number
+                    BLE         NUMTOHEX            ; branch to convert number
+                    CMPI.B      #$5A,D2             ; check if letter
+                    BLE         STRINGTOHEX         ; branch to conver letter
+                    BRA         BADASCII            ; branch to BADASCII for invalid address
+BADASCII
+                    LEA         BADASCII,A1         ; put mesage into A1
+                    MOVE        #14,D0              ; trap task #14 to print the message to screen 
+                    TRAP        #15                 ; trap #15 I/O
+                    MOVE.L      #$0,D3              ; zero out D3
+                    RTS                             ; return
+STRINGTOHEX
+                    SUBI.B      #$37,D2             ; convert to number (ASCII $40-#10)
+                    BRA         ASCIINEXT           ; go to next number
+NUMTOHEX
+                    SUBI.B      #$30,D2             ; convert to number
+                    BRA         ASCIINEXT           ; go to next number
+ASCIINEXT
+                    ADD.B       D2,D3               ; add converted number to address
+                    SUBI.B      #$1,D1              ; decrement counter
+                    CMPI.B      #$0,D3              ; check to see if done
+                    BEQ         ASCIITOHEXQUIT      ; branch to finished sub routine
+                    ROL.L       #4,D3               ; shift 4 left
+                    BRA         ASCIITOHEX          ; loop back to ASCIITOHEX
+ASCIITOHEXQUIT
+                    RTS                             ; return back
+                    
 *---------------------PROMPTRUNAGAIN-------------------------
 * ask to run the program again, if Y then call MAIN
 * if N then END program
@@ -142,17 +186,7 @@ RESET
 
                     BRA         START               ; branch back to start
             
-*-------------------ASCIITOHEX------------------------------
-* turn the ascii letter in A1 to hex
-* result to added to D6
 
-ASCIITOHEX
-                    LEA         EXEASCII,A1         ; put message into A1
-                    MOVE        #14,D0              ; trap task #14 to print the message to screen
-                    TRAP        #15                 ; trap #15 I/O
-
-ASCIITOHEXQUIT
-                    RTS                             ; return back
 
 *----------------------------------------------Increment Expansion Word Count-----------------------------------------
 INCREMENT_WRD_CNT       
@@ -387,6 +421,7 @@ fin_move_ea
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
