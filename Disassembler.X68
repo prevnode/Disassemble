@@ -16,6 +16,7 @@ LF                  EQU         $0A                  ;New line (line feed)
 VT                  EQU         $0B                  ;Vertical tab (4 lines)
 FF                  EQU         $0C                 ; Form Feed (Always end printing with a Form Feed.)
 NUM_EXP_WRDS        DC.B        0                   ; Number of expansion words after the opcode
+NUM_OPERANDS        DC.B        0                   ; Number of operands for the current instruction valid range: 1 or 2
 
 SPLASH              DC.B        '        ____ ___  __ __                        ',CR,LF
                     DC.B        '       / __/( _ )/ //_/                        ',CR,LF
@@ -35,6 +36,10 @@ SPLASH              DC.B        '        ____ ___  __ __                        
 GETSRTHEX           DC.B        'Enter Starting Hex Address Of Program: ',CR,LF,0
 GETENDHEX           DC.B        'Enter Ending Hex Address Of Program: ',CR,LF,0
 RUNAGAIN            DC.B        'Would You Like To Dissasmble Anouther Program? (Y/N): ',CR,LF,0
+CONFIRMSRT          DC.B        'Starting address is stored',CR,LF,0
+CONFIRMEND          DC.B        'Ending address is stored',CR,LF,0
+EXEASCII            DC.B        'Executing ASCII',CR,LF,0
+BADADDRESS          DC.B        'Bad address...',CR,LF,0
 
 MASK_13_12          EQU     %00110000000000000000000000000000
 MASK_11_9           EQU     %00001110000000000000000000000000
@@ -42,7 +47,12 @@ MASK_8_6            EQU     %00000001110000000000000000000000
 MASK_5_3            EQU     %00000000001110000000000000000000
 MASK_2_0            EQU     %00000000000001110000000000000000
 
+
+    
 START:              ORG         $1000            ; first instruction of program
+
+
+
 
 *--------------------MAIN-----------------------------------
 * Put program code here
@@ -53,6 +63,7 @@ MAIN
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O                    
                    
+
 *--------------------STARTHEX-------------------------------
 * prompt the user for a starting address in hex
 * this does not error check!
@@ -67,8 +78,7 @@ STARTHEX
             
                     JSR         CALLCONVERTASCII
                     MOVEA.L     D3,A5               ; move converted address to A5(start address)
-                    MOVE.L      #$0,D3              ; reset D3
-                    BRA         ENDHEX              ; branch to get and convert the ending address
+                    BRA         ENDHEX
 
 *---------------------ENDHEX--------------------------------
 * prompt the user for a ending address in hex
@@ -84,31 +94,37 @@ ENDHEX
 
                     JSR         CALLCONVERTASCII
                     MOVEA.L     D3,A6               ; move converted address to A6(end address)
-                    MOVE.L      #$0,D3              ; reset D3
-                    *BRA         MAIN_LOOP           ; branch to main loop
-                    BRA         ENDPROGRAM          ; branch to end program (TESTING)
+                    *BRA         PROMPTRUNAGAIN   
+                    BRA         ENDPROGRAM   
+            
+                    *CLR         A1                  ; clear A1
                     
 *---------------------CALLCONVERTASCII--------------------------------
 * prompt the user for a ending address in hex
 * this does not error check!
 
 CALLCONVERTASCII
-                    MOVE.L      #$4,D1              ; convert 1 word
+                    MOVE.L      #$5,D1
                     JSR         ASCIITOHEX          ; convert the string to hex address
-                    RTS                             ; return
+                    RTS
              
 *-------------------ASCIITOHEX------------------------------
 * turn the ascii letter in A1 to hex
-* A1 = FULL STRING TO CONVERT
-* D1 = CONVERSION COUNT
-* D2 = DIGIT TO CONVERT
-* D3 = CONVERTED NUMBER
+* result to added to D6
 
 ASCIITOHEX
                     MOVE.B      (A1)+,D2            ; move number to data reg for conversion
                     CMPI.B      #$39,D2             ; check if number
                     BLE         NUMTOHEX            ; branch to convert number
-                    BRA         STRINGTOHEX
+                    CMPI.B      #$5A,D2             ; check if letter
+                    BLE         STRINGTOHEX         ; branch to conver letter
+                    BRA         BADASCII            ; branch to BADASCII for invalid address
+BADASCII
+                    LEA         BADASCII,A1         ; put mesage into A1
+                    MOVE        #14,D0              ; trap task #14 to print the message to screen 
+                    TRAP        #15                 ; trap #15 I/O
+                    MOVE.L      #$0,D3              ; zero out D3
+                    RTS                             ; return
 STRINGTOHEX
                     SUBI.B      #$37,D2             ; convert to number (ASCII $40-#10)
                     BRA         ASCIINEXT           ; go to next number
@@ -118,7 +134,7 @@ NUMTOHEX
 ASCIINEXT
                     ADD.B       D2,D3               ; add converted number to address
                     SUBI.B      #$1,D1              ; decrement counter
-                    CMPI.B      #$0,D1              ; check to see if done
+                    CMPI.B      #$0,D3              ; check to see if done
                     BEQ         ASCIITOHEXQUIT      ; branch to finished sub routine
                     ROL.L       #4,D3               ; shift 4 left
                     BRA         ASCIITOHEX          ; loop back to ASCIITOHEX
@@ -134,7 +150,6 @@ MAIN_LOOP
                     *CMPI.L      A5,A6               ; check if starting address and ending address are equal
                     *BEQ         PROMPTRUNAGAIN      ; if equal end program by prompting to run again
                     
-                        
 *---------------------PROMPTRUNAGAIN-------------------------
 * ask to run the program again, if Y then call MAIN
 * if N then END program
@@ -146,10 +161,10 @@ PROMPTRUNAGAIN
                 
                     MOVE.B      #2,D0               ; trap task 5 grabs a single character
                     TRAP        #15                 ; trap #15 I/O
-                    CMPI.L      #$59,D1             ; compare Y to D1
+                    CMP.L       #$59,D1             ; compare Y to D1
                     BEQ         START               ; brach to Reset if D1 == Y
                     
-                    CMPI.B      #$79,D1             ; compare y to D1
+                    CMP.B       #$79,D1             ; compare y to D1
                     BEQ         START               ; brach to Reset if D1 == y
                     BRA         ENDPROGRAM          ; else branch to end
 
@@ -180,11 +195,184 @@ RESET
 
                     BRA         START               ; branch back to start
             
+
+*------------------------------Begin OpCode----------------------------------
+
+*                CMPM (A0)+,(A1)+ *B348       
+*                CMP.W D0,D1 *B240
+*                CMP.B D0,D1 *B001
+*                EOR.W D0,D1 *B141
+*                EOR.L D0,D1 *B181
+
+
+                 LEA     jmp_table,A0    *Index into the table
+
+                 CLR.L   D0              *Zero it
+
+                 MOVE.W  (A5),D0     *We'll play with it here
+
+                 MOVE.B  #shift,D1       *Shift 12 bits to the right  
+
+                 LSR.W   D1,D0           *Move the bits
+ 
+
+                 MULU        #6,D0       *Form offset     
+
+                 JSR          0(A0,D0)   *Jump indirect with index
+
+*----------------------Initial jmp table----------------------------------                    
+
+jmp_table      JMP         code0000
+
+               JMP         code0001
+
+               JMP         code0010
+
+               JMP         code0011
+
+               JMP         code0100
+
+               JMP         code0101
+
+               JMP         code0110
+
+               JMP         code0111
+
+               JMP         code1000
+
+               JMP         code1001
+
+               JMP         code1010
+
+               JMP         code1011
+
+               JMP         code1100
+
+               JMP         code1101
+
+               JMP         code1110
+
+               JMP         code1111
+
+        
+
+ 
+
+* ------------------------ end initial jmp table----------------------------
+
+ 
+
+ 
+
+code0000       STOP        #$2700
+
+code0001       STOP        #$2700
+
+code0010       STOP        #$2700
+
+code0011       STOP        #$2700
+
+code0100       STOP        #$2700
+
+code0101       STOP        #$2700
+
+code0110       STOP        #$2700
+
+code0111       STOP        #$2700
+
+code1000       STOP        #$2700
+
+code1001       STOP        #$2700
+
+code1010       STOP        #$2700
+
+
+
+*------------------------------------Begin Bucket 1011---------------------------------------------------
+
+code1011         LEA     jmp_table_1011_XXX,A0    *Index into the table
+
+                 CLR.L   D0              *Zero it
+                 
+                 CLR.L   D1
+                 
+                 MOVE.W  (A5),D0
+                       
+                 ANDI #%0000000111000000, D0
+                 
+                 MOVE.W #6,D1
+                 
+                 LSR D1,D0
+
+                 MULU  #6,D0          
+
+                 JSR   0(A0,D0)   
+                 
+                 
+                 
+jmp_table_1011_XXX      JMP code_1011_XXX_000
+
+                        JMP code_1011_XXX_001
+
+                        JMP code_1011_XXX_010
+
+                        JMP code_1011_XXX_011
+
+                        JMP code_1011_XXX_100
+
+                        JMP code_1011_XXX_101
+
+                        JMP code_1011_XXX_110
+
+                        JMP code_1011_XXX_111
+  
+
+          
+code_1011_XXX_000  BRA CMP_EA
+            
+code_1011_XXX_001  STOP        #$2700
+
+code_1011_XXX_010  STOP        #$2700
+
+code_1011_XXX_011  STOP        #$2700
+
+code_1011_XXX_100  STOP        #$2700
+
+code_1011_XXX_101  STOP        #$2700
+
+code_1011_XXX_110  STOP        #$2700
+
+code_1011_XXX_111  STOP        #$2700
+
+
+*-----------------------------End Bucket 1011--------------------------------------------------------
+
+
+
+  
+
+code1100       STOP        #$2700
+
+code1101       STOP        #$2700
+
+code1110       STOP        #$2700
+
+code1111       STOP        #$2700
+
+
+
+
+
+
+
+
+
 *----------------------------------------------Increment Expansion Word Count-----------------------------------------
 INCREMENT_WRD_CNT       
                     ADD     #1,NUM_EXP_WRDS
                     RTS
-                    
+ 
+                  
 *-----------------------------Invalid Opcode---------------------------
 *Used when the word read in is garbage/unsupported opcode/invalid ea 
 invalid_opcode
@@ -223,6 +411,8 @@ ea_reg_msk          EQU     %00000000000001110000000000000000
 *Parse the effective address of a cmp opcode
 CMP_EA
                 CLR     NUM_EXP_WRDS
+                MOVE.B  #2,NUM_OPERANDS
+                
                 ;MOVE.L  #$B4410000,$1600    ;Test data corresponds to cmp D1,D2
                 MOVE.L  #$B4BC0000,$1600         ;Test data corresponds to CMP.L #$12345,D2
                 
@@ -277,6 +467,7 @@ fin_cmp_ea
                 
 *-------------------------------EOR_EA-------------------------------------
                 CLR     NUM_EXP_WRDS
+                MOVE.B  #2,NUM_OPERANDS     ;Eor always has 2 operands
                 
                 MOVE.L  #$B342,$1600        ;Test data corresponds to EOR D1,D2
                 
@@ -312,15 +503,19 @@ fin_cmp_ea
                 LSR.L   D6,D7               ;Shift bits to LSB
                 MOVE.L  D7,D3               ;Move the EA register to be displayed
                 
-                CMP.W   #7,D2               ;EA Mode less than 7 don't have expansion words
-                BLT     fin_eor_ea          ;No words
-                JSR     INCREMENT_WRD_CNT   ;EA Mode 7 has at least 1 expansion word
-                CMP.W   #1,D3               ;EA register determines need for second word
-                BLT     fin_eor_ea          ;EA 0 only single expansion word
-                JSR     INCREMENT_WRD_CNT   ;EA 1 indicates second word
+                *Count Expansion words
+                CMP.W   #7,D2               ;Mode 7 has at least one expansion word
+                BLT     fin_eor_ea          ;Modes below 7 do not have expansion words
+                JSR     INCREMENT_WRD_CNT   ;Mode is 7
+                CMP.W   #1,D3               ;Register determines if a second expansion is needed
+                BLT     fin_eor_ea          ;Register 0 only has one word
+                JSR     INCREMENT_WRD_CNT   ;Register 1 needs a second word
                 
                 
 fin_eor_ea
+
+
+
                 
 
 *---------------------------------MOVE_EA----------------------------------
@@ -329,7 +524,8 @@ move_ea
 move_str            DC.B    'MOVE'
 DECODED_EA          DCB.B   6,$0
 
-                    CLR     NUM_EXP_WRDS         *Zero out number of expansion words
+                    CLR     NUM_EXP_WRDS            *Zero out number of expansion words
+                    MOVE.B  #2,NUM_OPERANDS         ;Move always has 2 operands
                     
                     *MOVE.L  #$1C050000,$1600       *Test data that corresponds to MOVE.B D5,D6
                     *MOVE.L  #$1C381400,$1600       *Test data corresponds to  MOVE.B    $1400,D6
@@ -400,16 +596,12 @@ src_expansion       CMP.W   #7,D3
                     JSR     INCREMENT_WRD_CNT       *Size is 2 (cant be greater) so add additonal word 
 fin_move_ea                    
 
-*-----------------------------------------MOVEA_EA-----------------------------------------------
-MOVEA_EA
-                CLR     NUM_EXP_WRDS         *Zero out number of expansion words
-
-
 
 * EndProgram
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
