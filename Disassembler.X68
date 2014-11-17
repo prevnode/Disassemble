@@ -166,9 +166,9 @@ inv_mem             DC.B    '1000'
 inv_code            DC.B    'DATA'
 inv_operand         DC.B    '$WXYZ'
 
-                    MOVE.L  inv_mem,A1
-                    MOVE.L  inv_code,A2
-                    MOVE.L  inv_operand,A3
+                    MOVE.L  inv_mem,DO
+                    MOVE.L  inv_code,D1
+                    MOVE.L  inv_operand,D2
                     RTS
 
 
@@ -247,6 +247,10 @@ chk_op_mod      CMP     #2,D1               ;Register 4 immediate data need to c
                 
 fin_cmp_ea
                 BRA     ENDPROGRAM
+                
+*-------------------------------EOR_EA-------------------------------------
+                CLR     NUM_EXP_WRDS
+                
 
 *---------------------------------MOVE_EA----------------------------------
 *Parse the effective address of a move opcode
@@ -330,6 +334,7 @@ fin_move_ea
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
