@@ -211,7 +211,7 @@ RESET
 
                  MOVE.W  (A5),D0     *We'll play with it here
 
-                 MOVE.B  #shift,D1       *Shift 12 bits to the right  
+                 *MOVE.B  #shift,D1       *Shift 12 bits to the right  
 
                  LSR.W   D1,D0           *Move the bits
  
