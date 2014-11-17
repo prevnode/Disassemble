@@ -16,7 +16,6 @@ LF                  EQU         $0A                  ;New line (line feed)
 VT                  EQU         $0B                  ;Vertical tab (4 lines)
 FF                  EQU         $0C                 ; Form Feed (Always end printing with a Form Feed.)
 NUM_EXP_WRDS        DC.B        0                   ; Number of expansion words after the opcode
-NUM_OPERANDS        DC.B        0                   ; Number of operands for the current instruction valid range: 1 or 2
 
 SPLASH              DC.B        '        ____ ___  __ __                        ',CR,LF
                     DC.B        '       / __/( _ )/ //_/                        ',CR,LF
@@ -78,6 +77,7 @@ STARTHEX
             
                     JSR         CALLCONVERTASCII
                     MOVEA.L     D3,A5               ; move converted address to A5(start address)
+                    MOVE.L      #$0,D3              ; reset D3
                     BRA         ENDHEX
 
 *---------------------ENDHEX--------------------------------
@@ -94,6 +94,7 @@ ENDHEX
 
                     JSR         CALLCONVERTASCII
                     MOVEA.L     D3,A6               ; move converted address to A6(end address)
+                    MOVE.L      #$0,D3              ; reset D3
                     *BRA         PROMPTRUNAGAIN   
                     BRA         ENDPROGRAM   
             
@@ -104,27 +105,22 @@ ENDHEX
 * this does not error check!
 
 CALLCONVERTASCII
-                    MOVE.L      #$5,D1
+                    MOVE.L      #$4,D1
                     JSR         ASCIITOHEX          ; convert the string to hex address
                     RTS
              
 *-------------------ASCIITOHEX------------------------------
 * turn the ascii letter in A1 to hex
-* result to added to D6
+* A1 = FULL STRING TO CONVERT
+* D1 = CONVERSION COUNT
+* D2 = DIGIT TO CONVERT
+* D3 = CONVERTED NUMBER
 
 ASCIITOHEX
                     MOVE.B      (A1)+,D2            ; move number to data reg for conversion
                     CMPI.B      #$39,D2             ; check if number
                     BLE         NUMTOHEX            ; branch to convert number
-                    CMPI.B      #$5A,D2             ; check if letter
-                    BLE         STRINGTOHEX         ; branch to conver letter
-                    BRA         BADASCII            ; branch to BADASCII for invalid address
-BADASCII
-                    LEA         BADASCII,A1         ; put mesage into A1
-                    MOVE        #14,D0              ; trap task #14 to print the message to screen 
-                    TRAP        #15                 ; trap #15 I/O
-                    MOVE.L      #$0,D3              ; zero out D3
-                    RTS                             ; return
+                    BRA         STRINGTOHEX
 STRINGTOHEX
                     SUBI.B      #$37,D2             ; convert to number (ASCII $40-#10)
                     BRA         ASCIINEXT           ; go to next number
@@ -134,7 +130,7 @@ NUMTOHEX
 ASCIINEXT
                     ADD.B       D2,D3               ; add converted number to address
                     SUBI.B      #$1,D1              ; decrement counter
-                    CMPI.B      #$0,D3              ; check to see if done
+                    CMPI.B      #$0,D1              ; check to see if done
                     BEQ         ASCIITOHEXQUIT      ; branch to finished sub routine
                     ROL.L       #4,D3               ; shift 4 left
                     BRA         ASCIITOHEX          ; loop back to ASCIITOHEX
@@ -231,8 +227,6 @@ ea_reg_msk          EQU     %00000000000001110000000000000000
 *Parse the effective address of a cmp opcode
 CMP_EA
                 CLR     NUM_EXP_WRDS
-                MOVE.B  #2,NUM_OPERANDS
-                
                 ;MOVE.L  #$B4410000,$1600    ;Test data corresponds to cmp D1,D2
                 MOVE.L  #$B4BC0000,$1600         ;Test data corresponds to CMP.L #$12345,D2
                 
@@ -287,7 +281,6 @@ fin_cmp_ea
                 
 *-------------------------------EOR_EA-------------------------------------
                 CLR     NUM_EXP_WRDS
-                MOVE.B  #2,NUM_OPERANDS     ;Eor always has 2 operands
                 
                 MOVE.L  #$B342,$1600        ;Test data corresponds to EOR D1,D2
                 
@@ -323,13 +316,12 @@ fin_cmp_ea
                 LSR.L   D6,D7               ;Shift bits to LSB
                 MOVE.L  D7,D3               ;Move the EA register to be displayed
                 
-                *Count Expansion words
-                CMP.W   #7,D2               ;Mode 7 has at least one expansion word
-                BLT     fin_eor_ea          ;Modes below 7 do not have expansion words
-                JSR     INCREMENT_WRD_CNT   ;Mode is 7
-                CMP.W   #1,D3               ;Register determines if a second expansion is needed
-                BLT     fin_eor_ea          ;Register 0 only has one word
-                JSR     INCREMENT_WRD_CNT   ;Register 1 needs a second word
+                CMP.W   #7,D2
+                BLT     fin_eor_ea
+                JSR     INCREMENT_WRD_CNT   
+                CMP.W   #1,D3
+                BLT     fin_eor_ea
+                JSR     INCREMENT_WRD_CNT
                 
                 
 fin_eor_ea
@@ -344,8 +336,7 @@ move_ea
 move_str            DC.B    'MOVE'
 DECODED_EA          DCB.B   6,$0
 
-                    CLR     NUM_EXP_WRDS            *Zero out number of expansion words
-                    MOVE.B  #2,NUM_OPERANDS         ;Move always has 2 operands
+                    CLR     NUM_EXP_WRDS         *Zero out number of expansion words
                     
                     *MOVE.L  #$1C050000,$1600       *Test data that corresponds to MOVE.B D5,D6
                     *MOVE.L  #$1C381400,$1600       *Test data corresponds to  MOVE.B    $1400,D6
@@ -421,7 +412,6 @@ fin_move_ea
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
-
 
 
 
