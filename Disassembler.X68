@@ -197,7 +197,7 @@ ea_reg_msk          EQU     %00000000000001110000000000000000
 CMP_EA
                 CLR     NUM_EXP_WRDS
                 ;MOVE.L  #$B4410000,$1600    ;Test data corresponds to cmp D1,D2
-                MOVE.L  #$B4BC,1600         ;Test data corresponds to CMP.L #$12345,D2
+                MOVE.L  #$B4BC0000,$1600         ;Test data corresponds to CMP.L #$12345,D2
                 
                 MOVE.L  $1600,$1610         ;Make a copy
                 MOVE.L  #MASK_11_9,D7       ;Load the mask for data register
@@ -235,13 +235,13 @@ CMP_EA
                 CMP     #7,D2               ;Source mode determines if expansion words needed
                 BLT     fin_cmp_ea          ;Modes less than 7 don't have words
                 JSR     INCREMENT_WRD_CNT   ;Mode 7 has at least 1 expansion word
-                CMP     #0,D3               ;
+                CMP     #0,D3               ;Look at register
                 BEQ     fin_cmp_ea          ;Source register of 0 is short word so already incremented once
                 CMP     #1,D3               ;Source register of 4 is imediate data need to look at atribute (opmode)
                 BNE     chk_op_mod          ;If register is not one (earlier checked 0) then it is 4 which means immediate
                 JSR     INCREMENT_WRD_CNT   ;Register 1 means long word add one expansion
                 BRA     fin_cmp_ea          ;Thats all folks
-chk_op_mod      CMP     #2,D3               ;Register 4 immediate data need to check attribute (opmode)
+chk_op_mod      CMP     #2,D1               ;Register 4 immediate data need to check attribute (opmode)
                 BNE     fin_cmp_ea          ;Byte or Word only add a single word already done when we hit mode 7 so done
                 JSR     INCREMENT_WRD_CNT   ;Opmode 2 eauals long word so one more expansion
                 
