@@ -18,6 +18,7 @@ FF                  EQU         $0C                 ; Form Feed (Always end prin
 NUM_EXP_WRDS        DC.B        0                   ; Number of expansion words after the opcode
 NUM_OPERANDS        DC.B        0                   ; Number of operands for the current instruction valid range: 1 or 2
 MOVE_OP             DC.B        'MOVE',0
+CMP_OP              DC.B        'CMP',0
 
 SPLASH              DC.B        '        ____ ___  __ __                        ',CR,LF
                     DC.B        '       / __/( _ )/ //_/                        ',CR,LF
@@ -78,8 +79,8 @@ START:              ORG         $1000            ; first instruction of program
 * Put program code here
 
 MAIN
-                    MOVE.B      #$3,D2
-                    BRA         PRINT_OPMODE_PRE        
+                    ;MOVE.B      #$3,D2
+                    ;BRA         PRINT_OPMODE_PRE        
                     LEA         SPLASH,A1           ; put the GETSRTHEX message into A1
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O                    
@@ -605,7 +606,7 @@ chk_op_mod      CMP     #2,D1               ;Register 4 immediate data need to c
                 
 output
                 *Print opcode
-                LEA     MOVE_OP,A1
+                LEA     CMP_OP,A1
                 MOVE.B  #14,D0
                 TRAP    #15
                 *Print attribute
@@ -727,6 +728,7 @@ MOVEA_EA
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
