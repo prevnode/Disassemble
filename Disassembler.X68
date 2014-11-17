@@ -97,7 +97,7 @@ ENDHEX
                     MOVEA.L     D3,A6               ; move converted address to A6(end address)
                     MOVE.L      #$0,D3              ; reset D3
                     *BRA         MAIN_LOOP           ; branch to main loop
-                    BRA         ENDPROGRAM          ; branch to end program (TESTING)
+                    BRA         BEGINOPCODE         ;ENDPROGRAM          ; branch to end program (TESTING)
                     
 *---------------------CALLCONVERTASCII--------------------------------
 * prompt the user for a ending address in hex
@@ -204,12 +204,13 @@ BEGINOPCODE
 
                  CLR.L   D0              *Zero it
 
-                 MOVE.W  (A5),D0     *We'll play with it here
-
-                 *MOVE.B  #shift,D1       *Shift 12 bits to the right  
-
-
-                 LSR.W   D1,D0           *Move the bits
+                 MOVE.W  (A5),D0
+                       
+                 ANDI #%1111000000000000, D0
+                 
+                 MOVE.W #12,D1
+                 
+                 LSR D1,D0         *Move the bits
  
 
                  MULU        #6,D0       *Form offset     
@@ -410,7 +411,8 @@ CMP_EA
                 MOVE.B  #2,NUM_OPERANDS
                 
                 ;MOVE.L  #$B4410000,$1600    ;Test data corresponds to cmp D1,D2
-                MOVE.L  #$B4BC0000,$1600         ;Test data corresponds to CMP.L #$12345,D2
+                ;MOVE.L  #$B4BC0000,$1600         ;Test data corresponds to CMP.L #$12345,D2
+                MOVE.L  (A5),$1600
                 
                 MOVE.L  $1600,$1610         ;Make a copy
                 MOVE.L  #MASK_11_9,D7       ;Load the mask for data register
@@ -418,7 +420,7 @@ CMP_EA
                 MOVE.L  $1610,D7            ;Move the remaining bits into a reg to be shifted
                 MOVE.L  #25,D6              ;Number of bits to be shifted
                 LSR.L   D6,D7               ;Shift bits to the least sig bit
-                MOVE.L  D7,D0               ;Move the data register for display
+                MOVE.L  D7,D5               ;Move the data register for display
                 
                 MOVE.L  $1600,$1610         ;Make a copy
                 MOVE.L  #MASK_8_6,D7        ;Load the mask for opmode
@@ -426,7 +428,7 @@ CMP_EA
                 MOVE.L  $1610,D7            ;Move the remaining bits into a reg to be shifted
                 MOVE.L  #22,D6              ;Number of bits to be shifted
                 LSR.L   D6,D7               ;Shift bits to the least sig bit
-                MOVE.L  D7,D1               ;Move the opmode for display
+                MOVE.L  D7,D4               ;Move the opmode for display
                 
                 MOVE.L  $1600,$1610         ;Make a copy
                 MOVE.L  #MASK_5_3,D7        ;Load the mask for ea mode
@@ -597,6 +599,7 @@ fin_move_ea
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 *~Font name~Courier New~
