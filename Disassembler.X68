@@ -141,6 +141,15 @@ ASCIINEXT
 ASCIITOHEXQUIT
                     RTS                             ; return back
                     
+*-------------------MAIN LOOP------------------------------
+* main program loop
+* check to see if the starting address is before the ending
+* adress, if so run MINI_LOOP, else prompt to run again.
+
+MAIN_LOOP
+                    *CMPI.L      A5,A6               ; check if starting address and ending address are equal
+                    *BEQ         PROMPTRUNAGAIN      ; if equal end program by prompting to run again
+                    
 *---------------------PROMPTRUNAGAIN-------------------------
 * ask to run the program again, if Y then call MAIN
 * if N then END program
