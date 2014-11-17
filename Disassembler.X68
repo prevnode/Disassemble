@@ -52,13 +52,10 @@ MASK_2_0            EQU     %00000000000001110000000000000000
 START:              ORG         $1000            ; first instruction of program
 
 
-
-
 *--------------------MAIN-----------------------------------
 * Put program code here
 
 MAIN        
-                    *BRA         CMP_EA
                     LEA         SPLASH,A1           ; put the GETSRTHEX message into A1
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O                    
@@ -368,6 +365,42 @@ code1111       STOP        #$2700
 INCREMENT_WRD_CNT       
                     ADD     #1,NUM_EXP_WRDS
                     RTS
+                    
+*-----------------------------------------------APPLYMASK-----------------------------------
+*Caller should move a bit mask from the global variables into D7
+*This SR will apply the mask to data currently pointed at by A5
+*The result will be shifted to the LSB and stored in D7
+*Errors will terminate program
+APPLYMASK
+        MOVE.L  (A5),D0             ;Get a copy of the data to work on
+        AND.L   D7,D0               ;Apply the mask and store remaining bits in d0
+        
+        *Determine the mask being used to know how many bits need to be shifted off
+        CMP.L   #MASK_13_12,D7
+        BNE     msk11
+        MOVE    #28,D1
+        BRA     shift
+msk11   CMP.L   #MASK_11_9,D7
+        BNE     msk8
+        MOVE    #25,D1
+        BRA     shift   
+msk8    CMP.L   #MASK_8_6,D7
+        BNE     msk5
+        MOVE    #22,D1
+        BRA     shift   
+msk5    CMP.L   #MASK_5_3,D7
+        BNE     msk2
+        MOVE    #19,D1
+        BRA     shift   
+msk2    CMP.L   #MASK_2_0,D7
+        BNE     ENDPROGRAM      ;D7 doesn't match any mask in the global variables
+        MOVE    #16,D1
+        BRA     shift
+        
+shift   LSR.L   D1,D0               ;Shift bits to the least sig bit
+        MOVE.L  D0,D7               ;Move the data register for display
+        
+        RTS
  
                   
 *-----------------------------Invalid Opcode---------------------------
@@ -412,15 +445,19 @@ CMP_EA
                 
                 ;MOVE.L  #$B4410000,$1600    ;Test data corresponds to cmp D1,D2
                 ;MOVE.L  #$B4BC0000,$1600         ;Test data corresponds to CMP.L #$12345,D2
-                MOVE.L  (A5),$1600
+                ;MOVE.L  (A5),$1600
                 
-                MOVE.L  $1600,$1610         ;Make a copy
-                MOVE.L  #MASK_11_9,D7       ;Load the mask for data register
-                AND.L   D7,$1610            ;Apply the mask to the copy
-                MOVE.L  $1610,D7            ;Move the remaining bits into a reg to be shifted
-                MOVE.L  #25,D6              ;Number of bits to be shifted
-                LSR.L   D6,D7               ;Shift bits to the least sig bit
-                MOVE.L  D7,D5               ;Move the data register for display
+                ;MOVE.L  $1600,$1610         ;Make a copy
+                ;MOVE.L  #MASK_11_9,D7       ;Load the mask for data register
+                ;AND.L   D7,$1610            ;Apply the mask to the copy
+                ;MOVE.L  $1610,D7            ;Move the remaining bits into a reg to be shifted
+                ;MOVE.L  #25,D6              ;Number of bits to be shifted
+                ;LSR.L   D6,D7               ;Shift bits to the least sig bit
+                ;MOVE.L  D7,D5               ;Move the data register for display
+                MOVE.L  #MASK_11_9,D7
+                JSR     APPLYMASK
+                MOVE.L  D7,D5
+                
                 
                 MOVE.L  $1600,$1610         ;Make a copy
                 MOVE.L  #MASK_8_6,D7        ;Load the mask for opmode
@@ -599,6 +636,7 @@ fin_move_ea
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
