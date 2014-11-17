@@ -503,13 +503,8 @@ fin_cmp_ea
                 JSR     INCREMENT_WRD_CNT   ;Mode is 7
                 CMP.W   #1,D3               ;Register determines if a second expansion is needed
                 BLT     fin_eor_ea          ;Register 0 only has one word
-                JSR     INCREMENT_WRD_CNT   ;Register 1 needs a second word
-                
-                
+                JSR     INCREMENT_WRD_CNT   ;Register 1 needs a second word                
 fin_eor_ea
-
-
-
                 
 
 *---------------------------------MOVE_EA----------------------------------
@@ -521,50 +516,27 @@ DECODED_EA          DCB.B   6,$0
                     CLR     NUM_EXP_WRDS            *Zero out number of expansion words
                     MOVE.B  #2,NUM_OPERANDS         ;Move always has 2 operands
                     
-                    *MOVE.L  #$1C050000,$1600       *Test data that corresponds to MOVE.B D5,D6
-                    *MOVE.L  #$1C381400,$1600       *Test data corresponds to  MOVE.B    $1400,D6
-                    MOVE.L  #$23C30165,$1600         *Test data corresponds to MOVE.L D3,$16500000
-                    MOVE.W  #0000,$1604              *Completes test data
                     
-                    MOVE.L  $1600,$1610            *Make a copy
                     MOVE.L  #MASK_13_12,D7         *Load the mask for size
-                    AND.L   D7,$1610               *Apply the mask to the copy
-                    MOVE.L  $1610,D7               *Move the remaining bits into a reg to be shifted
-                    MOVE.L  #28,D6                 *Lots of bits to shift
-                    LSR.L   D6,D7                  *Shift bits to the LSB
-                    MOVE.L  D7,D0                  *Move the size for display
+                    JSR     APPLYMASK
+                    MOVE.L  D7,D0                 ;<-------------------------------------------------------------------Need to integrate with I/O now that I have attribute
                   
-                    MOVE.L  $1600,$1610            *Make a copy
                     MOVE.L  #MASK_11_9,D7          *Load the mask for destination register                  
-                    AND.L   D7,$1610               *Apply the mask to the copy
-                    MOVE.L  $1610,D7               *Move the remaining bits into a register to be shifted
-                    MOVE.L  #25,D6                 *Going to shift a lot of bits
-                    LSR.L   D6,D7                  *Move the bits to the LSB                    
-                    MOVE.L  D7,D1                  *Move the finished destination reg in place for display                    
+                    JSR     APPLYMASK                  
+                    MOVE.L  D7,D5                  *Move the finished destination reg in place for display                    
                     
-                    MOVE.L  $1600,$1610            *Make a copy
-                    MOVE.L  #MASK_8_6,D7           *Load the mask destination register
-                    AND.L   D7,$1610               *Apply the mask to the copy
-                    MOVE.L  $1610,D7               *Move the remaining bits into a reg to be shifted
-                    MOVE.L  #22,D6                 *Lots of bits to shift
-                    LSR.L   D6,D7                  *Shift bits to the LSB
-                    MOVE.L  D7,D2                  *Move the mode for display                  
+                    MOVE.L  #MASK_8_6,D7           *Load the mask destination mode
+                    JSR     APPLYMASK
+                    MOVE.L  D7,D4                  *Move the mode for display                  
                     
-                    MOVE.L  $1600,$1610            *Make a copy
+                    
                     MOVE.L  #MASK_5_3,D7           *Load the mask for the source mode
-                    AND.L   D7,$1610               *Apply the mask to the copy
-                    MOVE.L  $1610,D7               *Move the remaining bits into a reg to be shifted
-                    MOVE.L  #19,D6                 *Lots of bits to shift
-                    LSR.L   D6,D7                  *Shift bits to the LSB
-                    MOVE.L  D7,D3                  *Move the mode for display
+                    JSR     APPLYMASK              
+                    MOVE.L  D7,D2                  *Move the mode for display
                     
-                    MOVE.L  $1600,$1610            *Make a copy
                     MOVE.L  #MASK_2_0,D7           *Load the mask source register
-                    AND.L   D7,$1610               *Apply the mask to the copy
-                    MOVE.L  $1610,D7               *Move the remaining bits into a reg to be shifted
-                    MOVE.L  #16,D6                 *Lots of bits to shift
-                    LSR.L   D6,D7                  *Shift bits to the LSB
-                    MOVE.L  D7,D4                  *Move the reg num for display
+                    JSR     APPLYMASK   
+                    MOVE.L  D7,D3                  *Move the source reg num for display
                     
 *Calculate number of expansion words
                     *Destination side
@@ -589,6 +561,11 @@ src_expansion       CMP.W   #7,D3
                     BNE     fin_move_ea             *Less than 2 means a single word and we've already added that
                     JSR     INCREMENT_WRD_CNT       *Size is 2 (cant be greater) so add additonal word 
 fin_move_ea                    
+
+*------------------------------------------MOVEA_EA----------------------------------------------------------
+MOVEA_EA
+
+    
 
 
 * EndProgram
