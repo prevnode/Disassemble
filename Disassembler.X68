@@ -441,46 +441,22 @@ ea_reg_msk          EQU     %00000000000001110000000000000000
 *Parse the effective address of a cmp opcode
 CMP_EA
                 CLR     NUM_EXP_WRDS
-                MOVE.B  #2,NUM_OPERANDS
-                
-                ;MOVE.L  #$B4410000,$1600    ;Test data corresponds to cmp D1,D2
-                ;MOVE.L  #$B4BC0000,$1600         ;Test data corresponds to CMP.L #$12345,D2
-                ;MOVE.L  (A5),$1600
-                
-                ;MOVE.L  $1600,$1610         ;Make a copy
-                ;MOVE.L  #MASK_11_9,D7       ;Load the mask for data register
-                ;AND.L   D7,$1610            ;Apply the mask to the copy
-                ;MOVE.L  $1610,D7            ;Move the remaining bits into a reg to be shifted
-                ;MOVE.L  #25,D6              ;Number of bits to be shifted
-                ;LSR.L   D6,D7               ;Shift bits to the least sig bit
-                ;MOVE.L  D7,D5               ;Move the data register for display
-                MOVE.L  #MASK_11_9,D7
+                MOVE.B  #2,NUM_OPERANDS           
+               
+                MOVE.L  #MASK_11_9,D7       ;Mask out bits 11_9 for the destination register
                 JSR     APPLYMASK
-                MOVE.L  D7,D5
-                
-                
-                MOVE.L  $1600,$1610         ;Make a copy
+                MOVE.L  D7,D5               
+               
                 MOVE.L  #MASK_8_6,D7        ;Load the mask for opmode
-                AND.L   D7,$1610            ;Apply the mask to the copy
-                MOVE.L  $1610,D7            ;Move the remaining bits into a reg to be shifted
-                MOVE.L  #22,D6              ;Number of bits to be shifted
-                LSR.L   D6,D7               ;Shift bits to the least sig bit
+                JSR     APPLYMASK
                 MOVE.L  D7,D4               ;Move the opmode for display
-                
-                MOVE.L  $1600,$1610         ;Make a copy
+                                
                 MOVE.L  #MASK_5_3,D7        ;Load the mask for ea mode
-                AND.L   D7,$1610            ;Apply the mask to the copy
-                MOVE.L  $1610,D7            ;Move the remaining bits into a reg to be shifted
-                MOVE.L  #19,D6              ;Number of bits to be shifted
-                LSR.L   D6,D7               ;Shift bits to the least sig bit
-                MOVE.L  D7,D2               ;Move the ea mode for display
-                
-                MOVE.L  $1600,$1610         ;Make a copy
+                JSR     APPLYMASK
+                MOVE.L  D7,D2               ;Move the ea mode for display                
+              
                 MOVE.L  #MASK_2_0,D7        ;Load the mask for ea register
-                AND.L   D7,$1610            ;Apply the mask to the copy
-                MOVE.L  $1610,D7            ;Move the remaining bits into a reg to be shifted
-                MOVE.L  #16,D6              ;Number of bits to be shifted
-                LSR.L   D6,D7               ;Shift bits to the least sig bit
+                JSR     APPLYMASK
                 MOVE.L  D7,D3               ;Move the ea register for display
                 
 *Calculate the number of expansion words
@@ -504,39 +480,22 @@ fin_cmp_ea
                 CLR     NUM_EXP_WRDS
                 MOVE.B  #2,NUM_OPERANDS     ;Eor always has 2 operands
                 
-                MOVE.L  #$B342,$1600        ;Test data corresponds to EOR D1,D2
-                
-                MOVE.L  $1600,$1610         ;Make a copy    
+                    
                 MOVE.L  #MASK_11_9,D7       ;Load the mask for destination register
-                AND.L   D7,$1610            ;Apply the mask to the copy 
-                MOVE    $1610,D7            ;Move the remaining bits into register to be shifted
-                MOVE.L  #25,D6              ;Number of bits to shift by
-                LSR.L   D6,D7               ;Shift bits to LSB
-                MOVE.L  D7,D0               ;Move the destination register to be displayed
-                
-                MOVE.L  $1600,$1610         ;Make a copy    
+                JSR     APPLYMASK
+                MOVE.L  D7,D3               ;Move the destination register to be displayed
+                   
                 MOVE.L  #MASK_8_6,D7        ;Load the mask for opmode register
-                AND.L   D7,$1610            ;Apply the mask to the copy 
-                MOVE    $1610,D7            ;Move the remaining bits into register to be shifted
-                MOVE.L  #22,D6              ;Number of bits to shift by
-                LSR.L   D6,D7               ;Shift bits to LSB
-                MOVE.L  D7,D1               ;Move the opmode to be displayed
-                
-                MOVE.L  $1600,$1610         ;Make a copy    
+                JSR     APPLYMASK   
+                MOVE.L  D7,D2               ;Move the opmode to be displayed                
+                   
                 MOVE.L  #MASK_5_3,D7        ;Load the mask for EA mode
-                AND.L   D7,$1610            ;Apply the mask to the copy 
-                MOVE    $1610,D7            ;Move the remaining bits into register to be shifted
-                MOVE.L  #19,D6              ;Number of bits to shift by
-                LSR.L   D6,D7               ;Shift bits to LSB
-                MOVE.L  D7,D2               ;Move the EA mode to be displayed
+                JSR     APPLYMASK
+                MOVE.L  D7,D4               ;Move the EA mode to be displayed
                 
-                MOVE.L  $1600,$1610         ;Make a copy    
                 MOVE.L  #MASK_2_0,D7        ;Load the mask for EA register
-                AND.L   D7,$1610            ;Apply the mask to the copy 
-                MOVE    $1610,D7            ;Move the remaining bits into register to be shifted
-                MOVE.L  #16,D6              ;Number of bits to shift by
-                LSR.L   D6,D7               ;Shift bits to LSB
-                MOVE.L  D7,D3               ;Move the EA register to be displayed
+                JSR     APPLYMASK
+                MOVE.L  D7,D5               ;Move the EA register to be displayed
                 
                 *Count Expansion words
                 CMP.W   #7,D2               ;Mode 7 has at least one expansion word
