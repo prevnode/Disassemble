@@ -50,6 +50,15 @@ SP5                 DC.B        '#$',0
 SP6                 DC.B        '#WXYZ',0
 SP7                 DC.B        '$',0
 
+SE0                 DC.B        '',0
+SE1                 DC.B        '',0
+SE2                 DC.B        ')',0
+SE3                 DC.B        ')+',0
+SE4                 DC.B        ')',0
+SE5                 DC.B        '',0
+SE6                 DC.B        '',0
+SE7                 DC.B        '',0
+
 MASK_13_12          EQU     %00110000000000000000000000000000
 MASK_11_9           EQU     %00001110000000000000000000000000
 MASK_8_6            EQU     %00000001110000000000000000000000
@@ -65,13 +74,11 @@ START:              ORG         $1000            ; first instruction of program
 * Put program code here
 
 MAIN
-
-                    MOVE.B      #$7,D2
-                    BRA         PRINT_OPERAND1_MODE        
+                    MOVE.B      #$3,D2
+                    BRA         PRINT_OPMODE_PRE        
                     LEA         SPLASH,A1           ; put the GETSRTHEX message into A1
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O                    
-                   
 
 *--------------------STARTHEX-------------------------------
 * prompt the user for a starting address in hex
@@ -199,9 +206,11 @@ RESET
 
                     BRA         START               ; branch back to start
    
-*----------------------PRINT OPERAND1 MODE--------------------------------
-* print the preface operand mode
-PRINT_OPERAND1_MODE LEA         MODE_PRE,A0         ; Index into the table
+*----------------------PRINT OPMODE PRE--------------------------------
+* print the preface operand mode symbol(s)
+
+PRINT_OPMODE_PRE    LEA         MODE_PRE,A0         ; Index into the table
+                    CLR         D1
                     MOVE.B      D2,D1               ; copy the operand mode code to D1
                     MULU        #$6,D1              ; multiply the operand mode code by 6 bytes
                     JSR         0(A0,D1)            ; Jump indirect with index 
@@ -245,6 +254,58 @@ MODE_PRE110         LEA         SP6,A1
                     TRAP        #15                 ; trap #15 I/O
                     RTS
 MODE_PRE111         LEA         SP7,A1
+                    MOVE        #14,D0              ; trap task #14 to print the message to screen
+                    TRAP        #15                 ; trap #15 I/O
+                    RTS
+                    
+*----------------------PRINT OPMODE POST--------------------------------
+* print the post operand mode symbol(s)
+
+PRINT_OPMODE_POST   LEA         MODE_PRE,A0         ; Index into the table
+                    CLR         D1
+                    MOVE.B      D2,D1               ; copy the operand mode code to D1
+                    MULU        #$6,D1              ; multiply the operand mode code by 6 bytes
+                    JSR         0(A0,D1)            ; Jump indirect with index 
+                    BRA         ENDPROGRAM          ; branch to next part of program
+
+MODE_POST           JMP         MODE_PRE000         
+                    JMP         MODE_PRE001
+                    JMP         MODE_PRE010
+                    JMP         MODE_PRE011
+                    JMP         MODE_PRE100
+                    JMP         MODE_PRE101
+                    JMP         MODE_PRE110
+                    JMP         MODE_PRE111
+                    
+MODE_POST000        LEA         SE0,A1
+                    MOVE        #14,D0              ; trap task #14 to print the message to screen
+                    TRAP        #15                 ; trap #15 I/O
+                    RTS
+MODE_POST001        LEA         SE1,A1
+                    MOVE        #14,D0              ; trap task #14 to print the message to screen
+                    TRAP        #15                 ; trap #15 I/O
+                    RTS
+MODE_POST010        LEA         SE2,A1
+                    MOVE        #14,D0              ; trap task #14 to print the message to screen
+                    TRAP        #15                 ; trap #15 I/O
+                    RTS
+MODE_POST011        LEA         SE3,A1
+                    MOVE        #14,D0              ; trap task #14 to print the message to screen
+                    TRAP        #15                 ; trap #15 I/O
+                    RTS
+MODE_POST100        LEA         SE4,A1
+                    MOVE        #14,D0              ; trap task #14 to print the message to screen
+                    TRAP        #15                 ; trap #15 I/O
+                    RTS
+MODE_POST101        LEA         SE5,A1
+                    MOVE        #14,D0              ; trap task #14 to print the message to screen
+                    TRAP        #15                 ; trap #15 I/O
+                    RTS
+MODE_POST110        LEA         SE6,A1
+                    MOVE        #14,D0              ; trap task #14 to print the message to screen
+                    TRAP        #15                 ; trap #15 I/O
+                    RTS
+MODE_POST111        LEA         SE7,A1
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
@@ -709,6 +770,7 @@ fin_move_ea
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
