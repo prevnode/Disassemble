@@ -5,6 +5,33 @@
 * Description:  MAIN PROGRAM <- NEED A BETTER DESCRIPTION!
 *-----------------------------------------------------------
 
+* 000 Dn
+* 001 An
+* 010 (An)
+* 011 (An)+
+* 100 -(An)
+* 101 #$
+* 110 #WXYZ
+* 111 $
+
+* D0 IO TRAP TASK
+* D1 IO TRAP TASK
+* D2 OPERAND 1 MODE
+* D3 OPERAND 1 REGISTER
+* D4 OPERAND 2 MODE
+* D5 OPERAND 2 REGISTER
+* D6
+* D7
+
+* A0
+* A1 IO TRAP TASK
+* A2
+* A3
+* A4
+* A5 START/CURRENT ADDRESS
+* A6 ENDING ADDRESS
+* A7 STACK POINTER
+
 * Put variables and constants here
 *-----------------------------------------------------------
 
@@ -12,13 +39,16 @@ CR                  EQU         $0D                 ; Carriage Return
 LF                  EQU         $0A                 ; Line Feed
 BS                  EQU         $08                 ; Backspace
 HT                  EQU         $09                 ; Tab (horizontal 5 characters)
-LF                  EQU         $0A                  ;New line (line feed)
-VT                  EQU         $0B                  ;Vertical tab (4 lines)
+LF                  EQU         $0A                 ;New line (line feed)
+VT                  EQU         $0B                 ;Vertical tab (4 lines)
 FF                  EQU         $0C                 ; Form Feed (Always end printing with a Form Feed.)
 NUM_EXP_WRDS        DC.B        0                   ; Number of expansion words after the opcode
 NUM_OPERANDS        DC.B        0                   ; Number of operands for the current instruction valid range: 1 or 2
 MOVE_OP             DC.B        'MOVE',0
 CMP_OP              DC.B        'CMP',0
+EL                  DC.B        '',CR,LF,0          ; End Line
+OP_COMMA            DC.B        ',',0
+TAB                 DC.B        '',HT,0
 
 SPLASH              DC.B        '        ____ ___  __ __                        ',CR,LF
                     DC.B        '       / __/( _ )/ //_/                        ',CR,LF
@@ -68,22 +98,30 @@ MASK_5_3            EQU     %00000000001110000000000000000000
 MASK_2_0            EQU     %00000000000001110000000000000000
 
     *Attributes
-BYTE                DC.B    '.B',0
-WORD                DC.B    '.W',0
-LONG                DC.B    '.L',0
+BYTE                DC.B    '.B',HT,0
+WORD                DC.B    '.W',HT,0
+LONG                DC.B    '.L',HT,0
     
-START:              ORG         $1000            ; first instruction of program
+START:              ORG         $1000               ; first instruction of program
 
 
 *--------------------MAIN-----------------------------------
 * Put program code here
 
 MAIN
-                    ;MOVE.B      #$3,D2
-                    ;BRA         PRINT_OPMODE_PRE        
+                    BRA         IO_TEST       
                     LEA         SPLASH,A1           ; put the GETSRTHEX message into A1
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
-                    TRAP        #15                 ; trap #15 I/O                    
+                    TRAP        #15                 ; trap #15 I/O
+                    
+IO_TEST
+                    MOVE.B      #$7,D2
+                    MOVE.W      #$A,D3
+                    MOVE.B      #$3,D4
+                    MOVE.B      #$2,D5
+*                    MOVE.B      #2,NUM_EXP_WRDS
+                    MOVE.B      #$2,NUM_OPERANDS
+                    JSR         PRINT
 
 *--------------------STARTHEX-------------------------------
 * prompt the user for a starting address in hex
@@ -210,122 +248,266 @@ RESET
                     SUBA.L      A6,A6               ; clear the acess register
 
                     BRA         START               ; branch back to start
-   
+
+*----------------------PRINT------------------------------------------
+* print the operands
+
+PRINT               CMPI.B      #$0,NUM_OPERANDS    ; check to see if opcode has no operands
+                    BEQ         PRINT_RETURN        ; return to main loop if no operands
+                    
+                    LEA         TAB,A1              ; move TAB string to A1
+                    MOVE        #14,D0              ; trap task #14 to print the message to screen
+                    TRAP        #15                 ; trap #15 I/O
+                    
+                    JSR         PRINT_OPMODE1_PRE   ; print the first opmode preface symbol
+                    JSR         PRINT_OPREG1        ; print the first opmode register
+                    JSR         PRINT_OPMODE1_POST  ; print the first opmode post symbol
+                    CMPI.B      #$1,NUM_OPERANDS    ; check if opcode has 2 operands
+                    BEQ         PRINT_RETURN        ; return to main loop if opcode has 1 operand
+                    
+                    LEA         OP_COMMA,A1         ; move comma string to A1
+                    MOVE        #14,D0              ; trap task #14 to print the message to screen
+                    TRAP        #15                 ; trap #15 I/O
+                    
+                    JSR         PRINT_OPMODE2_PRE   ; print the second opmode preface symbol
+                    JSR         PRINT_OPREG2        ; print the second opmode register
+                    JSR         PRINT_OPMODE2_POST  ; print the second opmode post symbol
+                    BRA         PRINT_RETURN        ; return to main loop
+                    
+PRINT_RETURN        LEA         EL,A1               ; print end of line to screen
+                    MOVE        #14,D0              ; trap task #14 to print the message to screen
+                    TRAP        #15                 ; trap #15 I/O
+                    BRA         MAIN_LOOP           ; return to main loop
+                                        
 *----------------------PRINT OPMODE PRE--------------------------------
 * print the preface operand mode symbol(s)
 
-PRINT_OPMODE_PRE    LEA         MODE_PRE,A0         ; Index into the table
-                    CLR         D1
+PRINT_OPMODE1_PRE   LEA         MODE1_PRE,A0        ; Index into the table
+                    CLR         D1                  ; clear D1
+                    SUBA.L      A1,A1               ; clear A1
                     MOVE.B      D2,D1               ; copy the operand mode code to D1
                     MULU        #$6,D1              ; multiply the operand mode code by 6 bytes
                     JSR         0(A0,D1)            ; Jump indirect with index 
-                    BRA         ENDPROGRAM          ; branch to next part of program
+                    RTS                             ; return
 
-MODE_PRE            JMP         MODE_PRE000         
-                    JMP         MODE_PRE001
-                    JMP         MODE_PRE010
-                    JMP         MODE_PRE011
-                    JMP         MODE_PRE100
-                    JMP         MODE_PRE101
-                    JMP         MODE_PRE110
-                    JMP         MODE_PRE111
+MODE1_PRE           JMP         MODE1_PRE000         
+                    JMP         MODE1_PRE001
+                    JMP         MODE1_PRE010
+                    JMP         MODE1_PRE011
+                    JMP         MODE1_PRE100
+                    JMP         MODE1_PRE101
+                    JMP         MODE1_PRE110
+                    JMP         MODE1_PRE111
                     
-MODE_PRE000         LEA         SP0,A1
+MODE1_PRE000        LEA         SP0,A1
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
-MODE_PRE001         LEA         SP1,A1
+MODE1_PRE001        LEA         SP1,A1
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
-MODE_PRE010         LEA         SP2,A1
+MODE1_PRE010        LEA         SP2,A1
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
-MODE_PRE011         LEA         SP3,A1
+MODE1_PRE011        LEA         SP3,A1
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
-MODE_PRE100         LEA         SP4,A1
+MODE1_PRE100        LEA         SP4,A1
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
-MODE_PRE101         LEA         SP5,A1
+MODE1_PRE101        LEA         SP5,A1
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
-MODE_PRE110         LEA         SP6,A1
+MODE1_PRE110        LEA         SP6,A1
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
-MODE_PRE111         LEA         SP7,A1
+MODE1_PRE111        LEA         SP7,A1
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
+                    TRAP        #15                 ; trap #15 I/O
+                    RTS
+
+*----------------------PRINT OP REGISTER 1--------------------------------
+* print the REGISTER FOR OPMODE 1                   
+
+PRINT_OPREG1        CLR         D1                  ; clear D1
+                    SUBA.L      A1,A1               ; clear A1
+                    MOVE.L      D3,D1
+                    MOVE        #3,D0               ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
                     
 *----------------------PRINT OPMODE POST--------------------------------
 * print the post operand mode symbol(s)
 
-PRINT_OPMODE_POST   LEA         MODE_PRE,A0         ; Index into the table
+PRINT_OPMODE1_POST  LEA         MODE1_POST,A0       ; Index into the table
                     CLR         D1
                     MOVE.B      D2,D1               ; copy the operand mode code to D1
                     MULU        #$6,D1              ; multiply the operand mode code by 6 bytes
                     JSR         0(A0,D1)            ; Jump indirect with index 
-                    BRA         ENDPROGRAM          ; branch to next part of program
+                    RTS                             ; branch to next part of program
 
-MODE_POST           JMP         MODE_PRE000         
-                    JMP         MODE_PRE001
-                    JMP         MODE_PRE010
-                    JMP         MODE_PRE011
-                    JMP         MODE_PRE100
-                    JMP         MODE_PRE101
-                    JMP         MODE_PRE110
-                    JMP         MODE_PRE111
+MODE1_POST          JMP         MODE1_POST000         
+                    JMP         MODE1_POST001
+                    JMP         MODE1_POST010
+                    JMP         MODE1_POST011
+                    JMP         MODE1_POST100
+                    JMP         MODE1_POST101
+                    JMP         MODE1_POST110
+                    JMP         MODE1_POST111
                     
-MODE_POST000        LEA         SE0,A1
+MODE1_POST000       LEA         SE0,A1
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
-MODE_POST001        LEA         SE1,A1
+MODE1_POST001       LEA         SE1,A1
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
-MODE_POST010        LEA         SE2,A1
+MODE1_POST010       LEA         SE2,A1
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
-MODE_POST011        LEA         SE3,A1
+MODE1_POST011       LEA         SE3,A1
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
-MODE_POST100        LEA         SE4,A1
+MODE1_POST100       LEA         SE4,A1
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
-MODE_POST101        LEA         SE5,A1
+MODE1_POST101       LEA         SE5,A1
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
-MODE_POST110        LEA         SE6,A1
+MODE1_POST110       LEA         SE6,A1
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
-MODE_POST111        LEA         SE7,A1
+MODE1_POST111       LEA         SE7,A1
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
 
-*----------------------PRINT OPERAND1 REG--------------------------------
-* print the preface operand mode
-*PRINT_OPERAND1_REG
+*----------------------PRINT OPMODE PRE--------------------------------
+* print the preface operand mode symbol(s)
 
-*----------------------PRINT OPERAND2 MODE--------------------------------
-* print the preface operand mode
-*PRINT_OPERAND2_MODE
+PRINT_OPMODE2_PRE   LEA         MODE2_PRE,A0        ; Index into the table
+                    CLR         D1                  ; clear D1
+                    SUBA.L      A1,A1               ; clear A1
+                    MOVE.B      D4,D1               ; copy the operand mode code to D1
+                    MULU        #$6,D1              ; multiply the operand mode code by 6 bytes
+                    JSR         0(A0,D1)            ; Jump indirect with index 
+                    RTS                             ; return
 
-*----------------------PRINT OPERAND2 REG--------------------------------
-* print the preface operand mode
-*PRINT_OPERAND2_REG        
+MODE2_PRE           JMP         MODE2_PRE000         
+                    JMP         MODE2_PRE001
+                    JMP         MODE2_PRE010
+                    JMP         MODE2_PRE011
+                    JMP         MODE2_PRE100
+                    JMP         MODE2_PRE101
+                    JMP         MODE2_PRE110
+                    JMP         MODE2_PRE111
+                    
+MODE2_PRE000        LEA         SP0,A1
+                    MOVE        #14,D0              ; trap task #14 to print the message to screen
+                    TRAP        #15                 ; trap #15 I/O
+                    RTS
+MODE2_PRE001        LEA         SP1,A1
+                    MOVE        #14,D0              ; trap task #14 to print the message to screen
+                    TRAP        #15                 ; trap #15 I/O
+                    RTS
+MODE2_PRE010        LEA         SP2,A1
+                    MOVE        #14,D0              ; trap task #14 to print the message to screen
+                    TRAP        #15                 ; trap #15 I/O
+                    RTS
+MODE2_PRE011        LEA         SP3,A1
+                    MOVE        #14,D0              ; trap task #14 to print the message to screen
+                    TRAP        #15                 ; trap #15 I/O
+                    RTS
+MODE2_PRE100        LEA         SP4,A1
+                    MOVE        #14,D0              ; trap task #14 to print the message to screen
+                    TRAP        #15                 ; trap #15 I/O
+                    RTS
+MODE2_PRE101        LEA         SP5,A1
+                    MOVE        #14,D0              ; trap task #14 to print the message to screen
+                    TRAP        #15                 ; trap #15 I/O
+                    RTS
+MODE2_PRE110        LEA         SP6,A1
+                    MOVE        #14,D0              ; trap task #14 to print the message to screen
+                    TRAP        #15                 ; trap #15 I/O
+                    RTS
+MODE2_PRE111        LEA         SP7,A1
+                    MOVE        #14,D0              ; trap task #14 to print the message to screen
+                    TRAP        #15                 ; trap #15 I/O
+                    RTS
+
+*----------------------PRINT OP REGISTER 1--------------------------------
+* print the REGISTER FOR OPMODE 1                   
+
+PRINT_OPREG2        CLR         D1
+                    MOVE.L      D5,D1
+                    MOVE        #3,D0              ; trap task #14 to print the message to screen
+                    TRAP        #15                 ; trap #15 I/O
+                    RTS
+                    
+*----------------------PRINT OPMODE POST--------------------------------
+* print the post operand mode symbol(s)
+
+PRINT_OPMODE2_POST  LEA         MODE2_POST,A0       ; Index into the table
+                    CLR         D1                  ; clear D1
+                    SUBA.L      A1,A1               ; clear A1
+                    MOVE.B      D4,D1               ; copy the operand mode code to D1
+                    MULU        #$6,D1              ; multiply the operand mode code by 6 bytes
+                    JSR         0(A0,D1)            ; Jump indirect with index 
+                    RTS                             ; branch to next part of program
+
+MODE2_POST          JMP         MODE2_POST000         
+                    JMP         MODE2_POST001
+                    JMP         MODE2_POST010
+                    JMP         MODE2_POST011
+                    JMP         MODE2_POST100
+                    JMP         MODE2_POST101
+                    JMP         MODE2_POST110
+                    JMP         MODE2_POST111
+                    
+MODE2_POST000       LEA         SE0,A1
+                    MOVE        #14,D0              ; trap task #14 to print the message to screen
+                    TRAP        #15                 ; trap #15 I/O
+                    RTS
+MODE2_POST001       LEA         SE1,A1
+                    MOVE        #14,D0              ; trap task #14 to print the message to screen
+                    TRAP        #15                 ; trap #15 I/O
+                    RTS
+MODE2_POST010       LEA         SE2,A1
+                    MOVE        #14,D0              ; trap task #14 to print the message to screen
+                    TRAP        #15                 ; trap #15 I/O
+                    RTS
+MODE2_POST011       LEA         SE3,A1
+                    MOVE        #14,D0              ; trap task #14 to print the message to screen
+                    TRAP        #15                 ; trap #15 I/O
+                    RTS
+MODE2_POST100       LEA         SE4,A1
+                    MOVE        #14,D0              ; trap task #14 to print the message to screen
+                    TRAP        #15                 ; trap #15 I/O
+                    RTS
+MODE2_POST101       LEA         SE5,A1
+                    MOVE        #14,D0              ; trap task #14 to print the message to screen
+                    TRAP        #15                 ; trap #15 I/O
+                    RTS
+MODE2_POST110       LEA         SE6,A1
+                    MOVE        #14,D0              ; trap task #14 to print the message to screen
+                    TRAP        #15                 ; trap #15 I/O
+                    RTS
+MODE2_POST111       LEA         SE7,A1
+                    MOVE        #14,D0              ; trap task #14 to print the message to screen
+                    TRAP        #15                 ; trap #15 I/O
+                    RTS
 
 *------------------------------Begin OpCode----------------------------------
 BEGINOPCODE
@@ -797,13 +979,6 @@ movea_unsupported
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
-
-
-
-
-
-
-
 
 
 *~Font name~Courier New~
