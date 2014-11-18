@@ -109,10 +109,11 @@ START:              ORG         $1000               ; first instruction of progr
 * Put program code here
 
 MAIN
-                    BRA         IO_TEST       
+                    ;BRA         IO_TEST       
                     LEA         SPLASH,A1           ; put the GETSRTHEX message into A1
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
+                    BRA         BEGINOPCODE
                     
 IO_TEST
                     MOVE.B      #$7,D2
@@ -979,6 +980,7 @@ movea_unsupported
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 *~Font name~Courier New~
