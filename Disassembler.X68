@@ -613,25 +613,48 @@ output
                 CMP     #0,D4               ;Destination mode (opmode) determines attribute
                 BEQ     print_byte          ;Mode 0 is equal to byte
                 CMP     #1,D4               
-                BEQ     print_word          ;Mode 1 is equal to word
+                BEQ     print_word          ;MOde 1 is equal to word    
                 CMP     #2,D4
-                BEQ     print_long          ;Mode 2 is equal to long
-                
-                
-print_byte      LEA     BYTE,A1
-                TRAP    #15
+                BEQ     print_long          ;Mode 2 is equal to long   
+
+cmp_byte      
+                JSR     PRINT_BYTE
+                BRA     fin_cmp_ea
+cmp_word
+                JSR     PRINT_WORD
                 BRA     fin_cmp_ea
                 
-print_word      LEA     WORD,A1
-                TRAP    #15
+cmp_long  
+                JSR     PRINT_LONG     
                 BRA     fin_cmp_ea
                 
-print_long      LEA     LONG,A1
-                TRAP    #15
-                BRA     fin_cmp_ea
-    
 fin_cmp_ea      
-                BRA     ENDPROGRAM
+                BRA     ENDPROGRAM       ;<--------------------------------------------------------Replace with call to print
+                
+*-----------------------------PRINT_BYTE--------------------------------------
+*Prints the byte attribute
+PRINT_BYTE
+                MOVE.B  #14,D0
+                LEA     BYTE,A1
+                TRAP    #15
+                RTS
+ 
+*-------------------------------PRINT_WORD---------------------------------------------------------------
+*Prints the word attribute
+PRINT_WORD
+                MOVE.B  #14,D0
+                LEA     WORD,A1
+                TRAP    #15
+                RTS
+                
+*------------------------------------PRINT_LONG------------------------------------------------------
+*Prints the long attribute
+PRINT_LONG  
+
+                MOVE.B  #14,D0
+                LEA     LONG,A1
+                TRAP    #15
+                RTS
                 
 *-------------------------------EOR_EA-------------------------------------
                 CLR     NUM_EXP_WRDS
@@ -703,13 +726,13 @@ MOVE_EA
                     
 *Calculate number of expansion words
                     *Source Side
-src_expansion       CMP.W   #7,D3                   
+src_expansion       CMP.W   #7,D2                   
                     BLT     fin_move_ea             *Mode less than 7 don't have expansion words
                     JSR     INCREMENT_WRD_CNT       *At lease one more word
-                    CMP.W   #1,D4                   *Reg 1 means long word
+                    CMP.W   #1,D3                   *Reg 1 means long word
                     BLT     fin_move_ea             *Reg 0 is single word
                     JSR     INCREMENT_WRD_CNT
-                    CMP.W   #4,D4                   *Register 4 indicates immediate data     
+                    CMP.W   #4,D5                   *Register 4 indicates immediate data     
                     BNE     fin_move_ea             *If not immediate data then wer're done
                     CMP.W   #2,D0                   *If immediate then look at the size
                     BNE     fin_move_ea             *Less than 2 means a single word and we've already added that
@@ -720,6 +743,52 @@ fin_move_ea
 
 *------------------------------------------MOVEA_EA----------------------------------------------------------
 MOVEA_EA
+                CLR     NUM_EXP_WRDS
+                MOVE.B  #2,NUM_OPERANDS             ; MOVEA always has 2 operands
+                
+                MOVE    #1,D4                       ; MOVEA always has a destination address register
+                
+                MOVE.L  #MASK_13_12,D7              ; Mask for size
+                JSR     APPLYMASK
+                MOVE.L  D7,D0                       ; Move for exmpansion wrd and attribute calculations
+                
+                MOVE.L  #MASK_11_9,D7               ; Mask for destination register
+                JSR     APPLYMASK
+                MOVE.L  D7,D5                       ; Move for printing
+                
+                MOVE.L  #MASK_5_3,D7                ; Mask of source mode
+                JSR     APPLYMASK
+                MOVE.L  D7,D2                       ; Move for printing
+                
+                MOVE.L  #MASK_2_0,D7                ; Mask of source register
+                JSR     APPLYMASK
+                MOVE.L  D7,D3                       ; Move for printing
+                
+               
+                
+                *Calculate the number of expansion words
+                CMP.W   #7,D2
+                BLT     movea_attribute             ; Source mode less than 7 lack expansion words
+                JSR     INCREMENT_WRD_CNT
+                
+                CMP.W   #0,D3                       ; Source reg determines size of expansion
+                BEQ     movea_attribute             ; Source reg 0 has only 1 expansion word
+                
+                CMP.W   #1,D3                       ; Source reg 1 has second expansion word
+                BNE     chk_sreg_4                  ; Need to look at 
+                JSR     INCREMENT_WRD_CNT           ; Source Reg 1 has second word
+                BRA     movea_attribute             ; No more expansion words
+                
+                
+chk_sreg_4      CMP.W   #4,D3                       ; Source reg 4 with mode 7 is immediate
+                BNE     movea_unsupported
+                
+;chk_size_exp    CMP.W   
+
+movea_attribute              
+
+movea_unsupported
+                
 
             
 
@@ -728,6 +797,7 @@ MOVEA_EA
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
