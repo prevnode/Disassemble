@@ -113,7 +113,7 @@ MAIN
                     LEA         SPLASH,A1           ; put the GETSRTHEX message into A1
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
-                    BRA         BEGINOPCODE
+                    BRA         STARTHEX
                     
 IO_TEST
                     MOVE.B      #$7,D2
@@ -794,11 +794,11 @@ output
                 TRAP    #15
                 *Print attribute
                 CMP     #0,D4               ;Destination mode (opmode) determines attribute
-                BEQ     print_byte          ;Mode 0 is equal to byte
+                BEQ     cmp_byte          ;Mode 0 is equal to byte
                 CMP     #1,D4               
-                BEQ     print_word          ;MOde 1 is equal to word    
+                BEQ     cmp_word          ;MOde 1 is equal to word    
                 CMP     #2,D4
-                BEQ     print_long          ;Mode 2 is equal to long   
+                BEQ     cmp_long          ;Mode 2 is equal to long   
 
 cmp_byte      
                 JSR     PRINT_BYTE
@@ -812,7 +812,7 @@ cmp_long
                 BRA     fin_cmp_ea
                 
 fin_cmp_ea      
-                BRA     ENDPROGRAM       ;<--------------------------------------------------------Replace with call to print
+                BRA     PRINT       ;<--------------------------------------------------------Replace with call to print
                 
 *-----------------------------PRINT_BYTE--------------------------------------
 *Prints the byte attribute
