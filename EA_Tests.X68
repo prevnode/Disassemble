@@ -14,9 +14,14 @@ START:                  ; first instruction of program
     MOVEA.W     -(A6),A2
     MOVEA.L     -(A6),A2
     MOVEA.W     #$1600,A2
+    MOVEA.L     #$1600,A2
+    MOVEA.L     #$FFFF,A2
     MOVEA.L     #$16001234,A2
     MOVEA.W     #14,A2
     MOVEA.L     #14,A2
+    MOVEA.L     $1600,A2
+    MOVEA.W     $1600,A2
+    MOVEA.W     $16001234,A2
     
     
 *----------------------MOVE VARIANTS--------------------------
@@ -56,6 +61,7 @@ CMPVARIANTS
 * Put variables and constants here
 
     END    START        ; last line of source
+
 
 
 
