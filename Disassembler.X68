@@ -945,8 +945,7 @@ MOVEA_EA
                 
                 MOVE.L  #MASK_2_0,D7                ; Mask of source register
                 JSR     APPLYMASK
-                MOVE.L  D7,D3                       ; Move for printing
-                
+                MOVE.L  D7,D3                       ; Move for printing                
                
                 
                 *Calculate the number of expansion words
@@ -964,15 +963,30 @@ MOVEA_EA
                 
                 
 chk_sreg_4      CMP.W   #4,D3                       ; Source reg 4 with mode 7 is immediate
-                BNE     movea_unsupported
+                BNE     movea_unsupported           ; With source mode 7 supported registers are 0,1,4 only
+                CMP.W   #2,D0                       ; Size indicates numb of exp words with immediate
+                BNE     movea_word                  ; Size of 3 indicates word so only 1 expansion
+                JSR     INCREMENT_WRD_CNT           ; Size of 2 indicates long so need another expansion
+                BRA     movea_long
                 
-;chk_size_exp    CMP.W   
-
-movea_attribute              
+                *Calculate attribute
+movea_attribute
+                CMP.W   #2,D0                       ; Size determines attribute
+                BEQ     movea_long                  ; 2 is long
+                BRA     movea_word                  ; 3 is word (No check for invalid values)
+movea_word      
+                JSR     PRINT_WORD
+                BRA     fin_movea_ea
+movea_long
+                JSR     PRINT_LONG
+                BRA     fin_movea_ea
+              
 
 movea_unsupported
-                
+                ; Need to print invalid code here
 
+fin_movea_ea
+                BRA     PRINT
             
 
 
@@ -980,6 +994,7 @@ movea_unsupported
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
