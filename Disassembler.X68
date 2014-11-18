@@ -5,6 +5,33 @@
 * Description:  MAIN PROGRAM <- NEED A BETTER DESCRIPTION!
 *-----------------------------------------------------------
 
+* 000 Dn
+* 001 An
+* 010 (An)
+* 011 (An)+
+* 100 -(An)
+* 101 #$
+* 110 #WXYZ
+* 111 $
+
+* D0 IO TRAP TASK
+* D1 IO TRAP TASK
+* D2 OPERAND 1 MODE
+* D3 OPERAND 1 REGISTER
+* D4 OPERAND 2 MODE
+* D5 OPERAND 2 REGISTER
+* D6
+* D7
+
+* A0
+* A1 IO TRAP TASK
+* A2
+* A3
+* A4
+* A5 START/CURRENT ADDRESS
+* A6 ENDING ADDRESS
+* A7 STACK POINTER
+
 * Put variables and constants here
 *-----------------------------------------------------------
 
@@ -52,14 +79,14 @@ SP5                 DC.B        '#$',0
 SP6                 DC.B        '#WXYZ',0
 SP7                 DC.B        '$',0
 
-SE0                 DC.B        '',0
-SE1                 DC.B        '',0
-SE2                 DC.B        ')',0
-SE3                 DC.B        ')+',0
-SE4                 DC.B        ')',0
-SE5                 DC.B        '',0
-SE6                 DC.B        '',0
-SE7                 DC.B        '',0
+SE0                 DC.B        '',HT,0
+SE1                 DC.B        '',HT,0
+SE2                 DC.B        ')',HT,0
+SE3                 DC.B        ')+',HT,0
+SE4                 DC.B        ')',HT,0
+SE5                 DC.B        '',HT,0
+SE6                 DC.B        '',HT,0
+SE7                 DC.B        '',HT,0
 
 MASK_13_12          EQU     %00110000000000000000000000000000
 MASK_11_9           EQU     %00001110000000000000000000000000
@@ -68,9 +95,9 @@ MASK_5_3            EQU     %00000000001110000000000000000000
 MASK_2_0            EQU     %00000000000001110000000000000000
 
     *Attributes
-BYTE                DC.B    '.B',0
-WORD                DC.B    '.W',0
-LONG                DC.B    '.L',0
+BYTE                DC.B    '.B',HT,0
+WORD                DC.B    '.W',HT,0
+LONG                DC.B    '.L',HT,0
     
 START:              ORG         $1000            ; first instruction of program
 
@@ -79,8 +106,8 @@ START:              ORG         $1000            ; first instruction of program
 * Put program code here
 
 MAIN
-                    ;MOVE.B      #$3,D2
-                    ;BRA         PRINT_OPMODE_PRE        
+                    MOVE.B      #$0,D2
+                    BRA         PRINT_OPMODE_PRE        
                     LEA         SPLASH,A1           ; put the GETSRTHEX message into A1
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O                    
@@ -728,6 +755,7 @@ MOVEA_EA
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
