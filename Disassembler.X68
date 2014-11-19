@@ -119,11 +119,13 @@ MAIN
 * adress, if so run MINI_LOOP, else prompt to run again.
 
 MAIN_LOOP
-                    ADDA.L      #$8,A5              ; add 1 word to the start address to move over the opcode
-                    MOVE.L      NUM_OPERANDS,D1     ; copy the operands count to D1
-                    MULU       #8,D1               ; multiply 8bits be the number of operands to move over 
-                    ADDA.L      D1,A5               ; add operand displacment to the start adress to find
-                                                    ; the begining of the nexr opcode
+                    ADDA.L      #$2,A5              ; add 1 word to the start address to move over the opcode
+                    ADDA.L      #NUM_EXP_WRDS,A5
+                    ADDA.L      #NUM_EXP_WRDS,A5
+*                    MOVE.L      NUM_OPERANDS,D1     ; copy the operands count to D1
+*                    MULU        #8,D1               ; multiply 8bits be the number of operands to move over 
+*                    ADDA.L      D1,A5               ; add operand displacment to the start adress to find
+*                                                    ; the begining of the nexr opcode
                     BRA         MAIN_LOOP_RUN       ; branch to the main loop
 MAIN_LOOP_RUN
                     CMP.L       A5,A6               ; check if starting address and ending address are equal
@@ -637,19 +639,19 @@ jmp_table_1011_XXX      JMP code_1011_XXX_000
           
 code_1011_XXX_000  BRA CMP_EA
             
-code_1011_XXX_001  STOP        #$2700
+code_1011_XXX_001  BRA CMP_EA
 
-code_1011_XXX_010  STOP        #$2700
+code_1011_XXX_010  BRA CMP_EA
 
-code_1011_XXX_011  STOP        #$2700
+code_1011_XXX_011  BRA CMP_EA
 
-code_1011_XXX_100  STOP        #$2700
+code_1011_XXX_100  BRA EOR_EA
 
-code_1011_XXX_101  STOP        #$2700
+code_1011_XXX_101  BRA EOR_EA
 
-code_1011_XXX_110  STOP        #$2700
+code_1011_XXX_110  BRA EOR_EA
 
-code_1011_XXX_111  STOP        #$2700
+code_1011_XXX_111  BRA CMP_EA
 
 
 *-----------------------------End Bucket 1011--------------------------------------------------------
@@ -834,7 +836,8 @@ PRINT_LONG
                 TRAP    #15
                 RTS
                 
-*-------------------------------EOR_EA-------------------------------------
+*-------------------------------EOR_EA---------------------------------------------------------
+EOR_EA
                 CLR     NUM_EXP_WRDS
                 MOVE.B  #2,NUM_OPERANDS     ;Eor always has 2 operands
                 
@@ -989,6 +992,7 @@ fin_movea_ea
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
