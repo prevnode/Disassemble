@@ -39,8 +39,8 @@ CR                  EQU         $0D                 ; Carriage Return
 LF                  EQU         $0A                 ; Line Feed
 BS                  EQU         $08                 ; Backspace
 HT                  EQU         $09                 ; Tab (horizontal 5 characters)
-LF                  EQU         $0A                 ;New line (line feed)
-VT                  EQU         $0B                 ;Vertical tab (4 lines)
+LF                  EQU         $0A                 ; New line (line feed)
+VT                  EQU         $0B                 ; Vertical tab (4 lines)
 FF                  EQU         $0C                 ; Form Feed (Always end printing with a Form Feed.)
 NUM_EXP_WRDS        DC.B        0                   ; Number of expansion words after the opcode
 NUM_OPERANDS        DC.B        0                   ; Number of operands for the current instruction valid range: 1 or 2
@@ -156,8 +156,8 @@ ENDHEX
                     JSR         CALLCONVERTASCII
                     MOVEA.L     D3,A6               ; move converted address to A6(end address)
                     MOVE.L      #$0,D3              ; reset D3
-                    *BRA         MAIN_LOOP           ; branch to main loop
-                    BRA         BEGINOPCODE         ;ENDPROGRAM          ; branch to end program (TESTING)
+                    BRA         MAIN_LOOP_RUN           ; branch to main loop
+                    *BRA         BEGINOPCODE         ;ENDPROGRAM          ; branch to end program (TESTING)
                     
 *---------------------CALLCONVERTASCII--------------------------------
 * prompt the user for a ending address in hex
@@ -202,8 +202,23 @@ ASCIITOHEXQUIT
 * adress, if so run MINI_LOOP, else prompt to run again.
 
 MAIN_LOOP
-                    *CMPI.L      A5,A6               ; check if starting address and ending address are equal
-                    *BEQ         PROMPTRUNAGAIN      ; if equal end program by prompting to run again
+                    ADDA.L      #$8,A5              ; add 1 word to the start address to move over the opcode
+                    MOVE.L      NUM_OPERANDS,D1     ; copy the operands count to D1
+                    ROL.L       #8,D1               ; multiply 8bits be the number of operands to move over 
+                    ADDA.L      D1,A5               ; add operand displacment to the start adress to find
+                                                    ; the begining of the nexr opcode
+                    BRA         MAIN_LOOP_RUN       ; branch to the main loop
+
+MAIN_LOOP_RUN
+*                    CMP.L       A5,A6               ; check if starting address and ending address are equal
+*                    BEQ         PROMPTRUNAGAIN      ; if equal end program by prompting to run again
+*                    
+*                    CMP.L       A5,A6               ; check if starting address and ending address are equal
+*                    BLT         PROMPTRUNAGAIN      ; if start is greater than end then prompt to run again
+                    
+                    BRA         BEGINOPCODE         ; branch to opcode conversion
+                    
+                    
                     
 *---------------------PROMPTRUNAGAIN-------------------------
 * ask to run the program again, if Y then call MAIN
@@ -217,10 +232,10 @@ PROMPTRUNAGAIN
                     MOVE.B      #2,D0               ; trap task 5 grabs a single character
                     TRAP        #15                 ; trap #15 I/O
                     CMP.L       #$59,D1             ; compare Y to D1
-                    BEQ         START               ; brach to Reset if D1 == Y
+                    BEQ         RESET               ; brach to Reset if D1 == UPPER(Y)
                     
                     CMP.B       #$79,D1             ; compare y to D1
-                    BEQ         START               ; brach to Reset if D1 == y
+                    BEQ         RESET               ; brach to Reset if D1 == LOWER(y)
                     BRA         ENDPROGRAM          ; else branch to end
 
 *----------------------RESET--------------------------------
@@ -998,6 +1013,8 @@ fin_movea_ea
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
+
 
 
 
