@@ -104,28 +104,37 @@ LONG                DC.B    '.L',HT,0
     
 START:              ORG         $1000               ; first instruction of program
 
-
 *--------------------MAIN-----------------------------------
 * Put program code here
 
-MAIN
-                    ;BRA         IO_TEST       
+MAIN      
                     LEA         SPLASH,A1           ; put the GETSRTHEX message into A1
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     BRA         STARTHEX
                     
-IO_TEST
-                    MOVE.B      #$7,D2
-                    MOVE.W      #$A,D3
-                    MOVE.B      #$3,D4
-                    MOVE.B      #$2,D5
-*                    MOVE.B      #2,NUM_EXP_WRDS
-                    MOVE.B      #$2,NUM_OPERANDS
-                    JSR         PRINT
+*-------------------MAIN LOOP------------------------------
+* main program loop
+* check to see if the starting address is before the ending
+* adress, if so run MINI_LOOP, else prompt to run again.
 
-*--------------------STARTHEX-------------------------------
+MAIN_LOOP
+                    ADDA.L      #$8,A5              ; add 1 word to the start address to move over the opcode
+                    MOVE.L      NUM_OPERANDS,D1     ; copy the operands count to D1
+                    MULU       #8,D1               ; multiply 8bits be the number of operands to move over 
+                    ADDA.L      D1,A5               ; add operand displacment to the start adress to find
+                                                    ; the begining of the nexr opcode
+                    BRA         MAIN_LOOP_RUN       ; branch to the main loop
+MAIN_LOOP_RUN
+                    CMP.L       A5,A6               ; check if starting address and ending address are equal
+                    BEQ         PROMPTRUNAGAIN      ; if equal end program by prompting to run again
+*                    CMP.L       A5,A6               ; check if starting address and ending address are equal
+*                    BLT         PROMPTRUNAGAIN      ; if start is greater than end then prompt to run again
+                    BRA         BEGINOPCODE         ; branch to opcode conversion
+
+*--------------------STARTHEX & ENDHEX-------------------------------
 * prompt the user for a starting address in hex
+* prompt the user for a ending address in hex
 * this does not error check!
 
 STARTHEX
@@ -140,11 +149,6 @@ STARTHEX
                     MOVEA.L     D3,A5               ; move converted address to A5(start address)
                     MOVE.L      #$0,D3              ; reset D3
                     BRA         ENDHEX              ; branch to get and convert the ending address
-
-*---------------------ENDHEX--------------------------------
-* prompt the user for a ending address in hex
-* this does not error check!
-
 ENDHEX
                     LEA         GETENDHEX,A1        ; put the GETENDHEX message into A1
                     MOVE.B      #14,D0              ; trap task #14 to print the message to screen
@@ -157,11 +161,10 @@ ENDHEX
                     MOVEA.L     D3,A6               ; move converted address to A6(end address)
                     MOVE.L      #$0,D3              ; reset D3
                     BRA         MAIN_LOOP_RUN           ; branch to main loop
-                    *BRA         BEGINOPCODE         ;ENDPROGRAM          ; branch to end program (TESTING)
                     
 *---------------------CALLCONVERTASCII--------------------------------
-* prompt the user for a ending address in hex
-* this does not error check!
+* preps the ascii to hex conversion by putting the length of the hex
+* address in register D1
 
 CALLCONVERTASCII
                     MOVE.L      #$4,D1              ; convert 1 word
@@ -195,31 +198,7 @@ ASCIINEXT
                     BRA         ASCIITOHEX          ; loop back to ASCIITOHEX
 ASCIITOHEXQUIT
                     RTS                             ; return back
-                    
-*-------------------MAIN LOOP------------------------------
-* main program loop
-* check to see if the starting address is before the ending
-* adress, if so run MINI_LOOP, else prompt to run again.
-
-MAIN_LOOP
-                    ADDA.L      #$8,A5              ; add 1 word to the start address to move over the opcode
-                    MOVE.L      NUM_OPERANDS,D1     ; copy the operands count to D1
-                    ROL.L       #8,D1               ; multiply 8bits be the number of operands to move over 
-                    ADDA.L      D1,A5               ; add operand displacment to the start adress to find
-                                                    ; the begining of the nexr opcode
-                    BRA         MAIN_LOOP_RUN       ; branch to the main loop
-
-MAIN_LOOP_RUN
-*                    CMP.L       A5,A6               ; check if starting address and ending address are equal
-*                    BEQ         PROMPTRUNAGAIN      ; if equal end program by prompting to run again
-*                    
-*                    CMP.L       A5,A6               ; check if starting address and ending address are equal
-*                    BLT         PROMPTRUNAGAIN      ; if start is greater than end then prompt to run again
-                    
-                    BRA         BEGINOPCODE         ; branch to opcode conversion
-                    
-                    
-                    
+                   
 *---------------------PROMPTRUNAGAIN-------------------------
 * ask to run the program again, if Y then call MAIN
 * if N then END program
@@ -245,7 +224,6 @@ RESET
                     MOVE.B      #11,D0              ; clear the screen
                     MOVE.W      #$FF00,D1           ; clear the screen
                     TRAP        #15                 ; send trap task command
-            
                     CLR         D0                  ; clear the data register
                     CLR         D1                  ; clear the data register
                     CLR         D2                  ; clear the data register
@@ -254,7 +232,6 @@ RESET
                     CLR         D5                  ; clear the data register
                     CLR         D6                  ; clear the data register
                     CLR         D7                  ; clear the data register
-            
                     SUBA.L      A0,A0               ; clear the acess register
                     SUBA.L      A1,A1               ; clear the acess register
                     SUBA.L      A2,A2               ; clear the acess register
@@ -262,7 +239,6 @@ RESET
                     SUBA.L      A4,A4               ; clear the acess register
                     SUBA.L      A5,A5               ; clear the acess register
                     SUBA.L      A6,A6               ; clear the acess register
-
                     BRA         START               ; branch back to start
 
 *----------------------PRINT------------------------------------------
@@ -315,35 +291,35 @@ MODE1_PRE           JMP         MODE1_PRE000
                     JMP         MODE1_PRE110
                     JMP         MODE1_PRE111
                     
-MODE1_PRE000        LEA         SP0,A1
+MODE1_PRE000        LEA         SP0,A1              ; print pre symbols for opmode Dn
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
-MODE1_PRE001        LEA         SP1,A1
+MODE1_PRE001        LEA         SP1,A1              ; print pre symbols for opmode An
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
-MODE1_PRE010        LEA         SP2,A1
+MODE1_PRE010        LEA         SP2,A1              ; print pre symbols for opmode (An)
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
-MODE1_PRE011        LEA         SP3,A1
+MODE1_PRE011        LEA         SP3,A1              ; print pre symbols for opmode (An)+
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
-MODE1_PRE100        LEA         SP4,A1
+MODE1_PRE100        LEA         SP4,A1              ; print pre symbols for opmode -(An)
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
-MODE1_PRE101        LEA         SP5,A1
+MODE1_PRE101        LEA         SP5,A1              ; print pre symbols for opmode #$
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
-MODE1_PRE110        LEA         SP6,A1
+MODE1_PRE110        LEA         SP6,A1              ; print pre symbols for opmode #WXYZ
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
-MODE1_PRE111        LEA         SP7,A1
+MODE1_PRE111        LEA         SP7,A1              ; print pre symbols for opmode $
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
@@ -377,35 +353,35 @@ MODE1_POST          JMP         MODE1_POST000
                     JMP         MODE1_POST110
                     JMP         MODE1_POST111
                     
-MODE1_POST000       LEA         SE0,A1
+MODE1_POST000       LEA         SE0,A1              ; print post symbols for opmode Dn
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
-MODE1_POST001       LEA         SE1,A1
+MODE1_POST001       LEA         SE1,A1              ; print post symbols for opmode An
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
-MODE1_POST010       LEA         SE2,A1
+MODE1_POST010       LEA         SE2,A1              ; print post symbols for opmode (An)
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
-MODE1_POST011       LEA         SE3,A1
+MODE1_POST011       LEA         SE3,A1              ; print post symbols for opmode (An)+
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
-MODE1_POST100       LEA         SE4,A1
+MODE1_POST100       LEA         SE4,A1              ; print post symbols for opmode -(An)
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
-MODE1_POST101       LEA         SE5,A1
+MODE1_POST101       LEA         SE5,A1              ; print post symbols for opmode #$
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
-MODE1_POST110       LEA         SE6,A1
+MODE1_POST110       LEA         SE6,A1              ; print post symbols for opmode #WXYZ
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
-MODE1_POST111       LEA         SE7,A1
+MODE1_POST111       LEA         SE7,A1              ; print post symbols for opmode $
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
@@ -430,35 +406,35 @@ MODE2_PRE           JMP         MODE2_PRE000
                     JMP         MODE2_PRE110
                     JMP         MODE2_PRE111
                     
-MODE2_PRE000        LEA         SP0,A1
+MODE2_PRE000        LEA         SP0,A1              ; print pre symbols for opmode Dn
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
-MODE2_PRE001        LEA         SP1,A1
+MODE2_PRE001        LEA         SP1,A1              ; print pre symbols for opmode An
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
-MODE2_PRE010        LEA         SP2,A1
+MODE2_PRE010        LEA         SP2,A1              ; print pre symbols for opmode (An)
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
-MODE2_PRE011        LEA         SP3,A1
+MODE2_PRE011        LEA         SP3,A1              ; print pre symbols for opmode (An)+
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
-MODE2_PRE100        LEA         SP4,A1
+MODE2_PRE100        LEA         SP4,A1              ; print pre symbols for opmode -(An)
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
-MODE2_PRE101        LEA         SP5,A1
+MODE2_PRE101        LEA         SP5,A1              ; print pre symbols for opmode #$
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
-MODE2_PRE110        LEA         SP6,A1
+MODE2_PRE110        LEA         SP6,A1              ; print pre symbols for opmode #WXYZ
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
-MODE2_PRE111        LEA         SP7,A1
+MODE2_PRE111        LEA         SP7,A1              ; print pre symbols for opmode $
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
@@ -492,35 +468,35 @@ MODE2_POST          JMP         MODE2_POST000
                     JMP         MODE2_POST110
                     JMP         MODE2_POST111
                     
-MODE2_POST000       LEA         SE0,A1
+MODE2_POST000       LEA         SE0,A1              ; print post symbols for opmode Dn
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
-MODE2_POST001       LEA         SE1,A1
+MODE2_POST001       LEA         SE1,A1              ; print post symbols for opmode An
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
-MODE2_POST010       LEA         SE2,A1
+MODE2_POST010       LEA         SE2,A1              ; print post symbols for opmode (An)
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
-MODE2_POST011       LEA         SE3,A1
+MODE2_POST011       LEA         SE3,A1              ; print post symbols for opmode (An)+
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
-MODE2_POST100       LEA         SE4,A1
+MODE2_POST100       LEA         SE4,A1              ; print post symbols for opmode -(An)
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
-MODE2_POST101       LEA         SE5,A1
+MODE2_POST101       LEA         SE5,A1              ; print post symbols for opmode #$
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
-MODE2_POST110       LEA         SE6,A1
+MODE2_POST110       LEA         SE6,A1              ; print post symbols for opmode #WXYZ
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
-MODE2_POST111       LEA         SE7,A1
+MODE2_POST111       LEA         SE7,A1              ; print post symbols for opmode $
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     RTS
@@ -1013,6 +989,7 @@ fin_movea_ea
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
