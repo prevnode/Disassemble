@@ -41,6 +41,9 @@ START:                  ; first instruction of program
     MOVE.L    #1455,D6
     MOVE.L    #1455,A6
     MOVE.L    #145555,D6
+    
+*--------------------MOVEM VARIANTS--------------------------
+    MOVEM.L     A0-A3/D0-D7, -(A7)
 
 *----------------------CMP VARIANTS--------------------------
 CMPVARIANTS
@@ -50,6 +53,13 @@ CMPVARIANTS
     CMP         $1234FFFF,D2
     CMP         #14,D2
     CMP.L       #$12345,D2
+    
+*--------------------BTST VARIANTS-----------------------
+    BTST    D7,D2
+    BTST    D7,$1600
+    BTST    D7,$12345678
+    BTST    #8,D2
+    BTST    #$12345678, D2
     
 *----------------------EOR VARIANTS------------------
 
@@ -61,6 +71,8 @@ CMPVARIANTS
 * Put variables and constants here
 
     END    START        ; last line of source
+
+
 
 
 

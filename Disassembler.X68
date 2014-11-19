@@ -716,6 +716,10 @@ shift   LSR.L   D1,D0               ;Shift bits to the least sig bit
         
         RTS
  
+*------------------------------BTST_EA-------------------------------------------
+BTST_EA        
+
+
                   
 *-----------------------------Invalid Opcode---------------------------
 *Used when the word read in is garbage/unsupported opcode/invalid ea 
@@ -994,6 +998,7 @@ fin_movea_ea
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
