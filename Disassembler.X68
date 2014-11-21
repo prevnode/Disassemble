@@ -119,6 +119,7 @@ SPLASH_SCREEN       LEA         SPLASH,A1           ; put the GETSRTHEX message 
                     TRAP        #15                 ; trap #15 I/O
                     RTS             
                     
+                    
 *-------------------MAIN LOOP------------------------------
 * main program loop
 * check to see if the starting address is before the ending
@@ -358,12 +359,51 @@ MODE1_PRE111        LEA         SP7,A1              ; print pre symbols for opmo
 * print the REGISTER FOR OPMODE 1                   
 
 PRINT_OPREG1        CLR         D1                  ; clear D1
-                    SUBA.L      A1,A1               ; clear A1
+*                    SUBA.L      A1,A1               ; clear A1
                     MOVE.L      D3,D1
                     MOVE        #3,D0               ; trap task #14 to print the message to screen
-                    TRAP        #15                 ; trap #15 I/O
+*                    MOVE.L      D2,D6               ; SAVE MODE1                                                *CANNOT USE THIS TRAP, MUST CHANGE
+*                    MOVE.L      D3,D1               ; PUT REG# INTO 1                                           *CANNOT USE THIS TRAP, MUST CHANGE
+*                    MOVE.L      #16,D2              ; PUT BASE 16 INTO D2                                       *CANNOT USE THIS TRAP, MUST CHANGE
+*                    MOVE.B      #15,D0              ; TRAP TASK 15                                              *CANNOT USE THIS TRAP, MUST CHANGE
+                    TRAP        #15                 ; trap #15 I/O                                              
+*                    MOVE.L      D6,D2               ; RESTORE MODE1                                             *CANNOT USE THIS TRAP, MUST CHANGE
                     RTS
                     
+*REGVALUE            DC.L        0
+*
+*PRINT_OPREG1        CLR         D1                  ; clear D1
+*                    SUBA.L      A1,A1               ; clear A1
+*                    MOVE.L      D3,REGVALUE
+*                    MOVEA.L     REGVALUE,A1
+*                    JSR         DEC2ASCII    
+*   
+*                    MOVEA.L     A2,A1
+*                    MOVE        #14,D0               ; trap task #14 to print the message to screen
+*                    TRAP        #15                 ; trap #15 I/O
+*                    RTS
+*    
+*DEC2ASCII           MOVE.L      #8,D7               ; move counter to D7
+*                    JSR         D2ALOOP             ; start loop
+*                    RTS                             ; return
+*D2ALOOP             MOVE.B      (A1)+,D6            ; move 
+*                    CMPI.B      #$09,D6             ; compare 9 to byte         
+*                    BLE         DECTONUM
+*                    BRA         DECTOLET
+*DECTONUM            ADDI.B      #$30,D6             ; add 30 to number
+*                    BRA         D2ANEXT
+*DECTOLET            ADDI.B      #$37,D6
+*                    BRA         D2ANEXT
+*
+*D2ANEXT             SUBI.B      #$1,D7
+*                    MOVE.B       D6,(A2)+
+*                    
+*                    CMPI.B      #$0,D7
+*                    BEQ         D2AQUIT
+*                    ROL.L       #4,D1
+*                    BRA         D2ALOOP
+*D2AQUIT             RTS
+
 *----------------------PRINT OPMODE POST--------------------------------
 * print the post operand mode symbol(s)
 
@@ -1018,6 +1058,8 @@ fin_movea_ea
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
+
 
 *~Font name~Courier New~
 *~Font size~10~
