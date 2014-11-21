@@ -42,8 +42,11 @@ HT                  EQU         $09                 ; Tab (horizontal 5 characte
 LF                  EQU         $0A                 ; New line (line feed)
 VT                  EQU         $0B                 ; Vertical tab (4 lines)
 FF                  EQU         $0C                 ; Form Feed (Always end printing with a Form Feed.)
+
 NUM_EXP_WRDS        DC.B        0                   ; Number of expansion words after the opcode
 NUM_OPERANDS        DC.B        0                   ; Number of operands for the current instruction valid range: 1 or 2
+PAUSE_COUNT         DC.W        30                  ; COUNTER
+PAUSE_MSG           DC.B        'Dissambler paused. Press any key to continue...',0
 MOVE_OP             DC.B        'MOVE',0
 CMP_OP              DC.B        'CMP',0
 EL                  DC.B        '',CR,LF,0          ; End Line
@@ -108,10 +111,13 @@ START:              ORG         $1000               ; first instruction of progr
 * Put program code here
 
 MAIN      
-                    LEA         SPLASH,A1           ; put the GETSRTHEX message into A1
+                    JSR         SPLASH_SCREEN
+                    BRA         STARTHEX
+                    
+SPLASH_SCREEN       LEA         SPLASH,A1           ; put the GETSRTHEX message into A1
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
-                    BRA         STARTHEX
+                    RTS             
                     
 *-------------------MAIN LOOP------------------------------
 * main program loop
@@ -127,12 +133,29 @@ MAIN_LOOP
 *                    ADDA.L      D1,A5               ; add operand displacment to the start adress to find
 *                                                    ; the begining of the nexr opcode
                     BRA         MAIN_LOOP_RUN       ; branch to the main loop
-MAIN_LOOP_RUN
-                    CMP.L       A5,A6               ; check if starting address and ending address are equal
+
+MAIN_LOOP_RUN       JSR         DEC_LOOP_COUNT
+                    CMPI.W      #$0,PAUSE_COUNT
+                    BEQ         PAUSE
+                    
+                    MOVE.L      A5,D1
+                    MOVE.L      A6,D2
+                    CMP.L       D1,D2               ; check if starting address and ending address are equal
                     BEQ         PROMPTRUNAGAIN      ; if equal end program by prompting to run again
-*                    CMP.L       A5,A6               ; check if starting address and ending address are equal
-*                    BLT         PROMPTRUNAGAIN      ; if start is greater than end then prompt to run again
                     BRA         BEGINOPCODE         ; branch to opcode conversion
+                    
+DEC_LOOP_COUNT      SUBI.W      #$1,PAUSE_COUNT
+                    RTS
+                    
+PAUSE               LEA         PAUSE_MSG,A1
+                    MOVE        #14,D0              ; trap task #14 to print the message to screen
+                    TRAP        #15                 ; trap #15 I/O
+                    SUBA.L      A1,A1
+                    MOVE.B      #2,D0               ; trap task 5 grabs a single character
+                    TRAP        #15                 ; trap #15 I/O
+                    MOVE.W      #30,PAUSE_COUNT
+                    JSR         CLEAR_SCREEN
+                    BRA         MAIN_LOOP_RUN
 
 *--------------------STARTHEX & ENDHEX-------------------------------
 * prompt the user for a starting address in hex
@@ -150,6 +173,8 @@ STARTHEX
                     JSR         CALLCONVERTASCII
                     MOVEA.L     D3,A5               ; move converted address to A5(start address)
                     MOVE.L      #$0,D3              ; reset D3
+                    JSR         CLEAR_SCREEN
+                    JSR         SPLASH_SCREEN
                     BRA         ENDHEX              ; branch to get and convert the ending address
 ENDHEX
                     LEA         GETENDHEX,A1        ; put the GETENDHEX message into A1
@@ -161,7 +186,8 @@ ENDHEX
 
                     JSR         CALLCONVERTASCII
                     MOVEA.L     D3,A6               ; move converted address to A6(end address)
-                    MOVE.L      #$0,D3              ; reset D3
+                    JSR         CLEAR_DATA
+                    JSR         CLEAR_SCREEN
                     BRA         MAIN_LOOP_RUN           ; branch to main loop
                     
 *---------------------CALLCONVERTASCII--------------------------------
@@ -222,11 +248,16 @@ PROMPTRUNAGAIN
 *----------------------RESET--------------------------------
 * prep the program to run again
 
-RESET
-                    MOVE.B      #11,D0              ; clear the screen
+RESET               JSR         CLEAR_SCREEN
+                    JSR         CLEAR_DATA
+                    JSR         CLEAR_ADDRESS
+                    BRA         START               ; branch back to start
+                    
+CLEAR_SCREEN        MOVE.B      #11,D0              ; clear the screen
                     MOVE.W      #$FF00,D1           ; clear the screen
                     TRAP        #15                 ; send trap task command
-                    CLR         D0                  ; clear the data register
+                    RTS
+CLEAR_DATA          CLR         D0                  ; clear the data register
                     CLR         D1                  ; clear the data register
                     CLR         D2                  ; clear the data register
                     CLR         D3                  ; clear the data register
@@ -234,24 +265,21 @@ RESET
                     CLR         D5                  ; clear the data register
                     CLR         D6                  ; clear the data register
                     CLR         D7                  ; clear the data register
-                    SUBA.L      A0,A0               ; clear the acess register
+                    RTS
+CLEAR_ADDRESS       SUBA.L      A0,A0               ; clear the acess register
                     SUBA.L      A1,A1               ; clear the acess register
                     SUBA.L      A2,A2               ; clear the acess register
                     SUBA.L      A3,A3               ; clear the acess register
                     SUBA.L      A4,A4               ; clear the acess register
                     SUBA.L      A5,A5               ; clear the acess register
                     SUBA.L      A6,A6               ; clear the acess register
-                    BRA         START               ; branch back to start
+                    RTS
 
 *----------------------PRINT------------------------------------------
 * print the operands
 
 PRINT               CMPI.B      #$0,NUM_OPERANDS    ; check to see if opcode has no operands
                     BEQ         PRINT_RETURN        ; return to main loop if no operands
-                    
-                    LEA         TAB,A1              ; move TAB string to A1
-                    MOVE        #14,D0              ; trap task #14 to print the message to screen
-                    TRAP        #15                 ; trap #15 I/O
                     
                     JSR         PRINT_OPMODE1_PRE   ; print the first opmode preface symbol
                     JSR         PRINT_OPREG1        ; print the first opmode register
@@ -985,21 +1013,11 @@ movea_unsupported
 
 fin_movea_ea
                 BRA     PRINT
-            
-
-
+        
 * EndProgram
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
-
-
-
-
-
-
-
-
 
 *~Font name~Courier New~
 *~Font size~10~
