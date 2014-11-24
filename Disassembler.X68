@@ -732,7 +732,7 @@ Check_BTST       JSR     CLEAR_DATA
 *starting the the JMP
 code0000         JSR     CLEAR_DATA                    ; Clear all of the Registers    
 
-                 LEA     jmp_table_1011_11109 ,A0      ;Next JMP table
+                 LEA     jmp_table_0000_11109 ,A0      ;Next JMP table
                  
                  MOVE.W  #Bits_11109,D3                  ;Move the mask into D3
                  
@@ -763,12 +763,12 @@ jmp_table_0000_11109        JMP code_0000_000
 code_0000_000     JSR   Check_BTST
                   CMPI  #4,D0
                   BRA   BTST_EA
-                  BRA   CMPI_EA   
+                  *BRA   CMPI_EA   
 
 code_0000_001     JSR   Check_BTST
                   CMPI  #4,D0
                   BRA   BTST_EA
-                  BRA   SUBI_EA 
+                  *BRA   SUBI_EA 
 
 code_0000_010     JSR   Check_BTST
                   CMPI  #4,D0
@@ -785,7 +785,7 @@ code_0000_100     BRA   BTST_EA
 code_0000_101     JSR   Check_BTST
                   CMPI  #4,D0
                   BRA   BTST_EA
-                  BRA   EORI_EA 
+                  *BRA   EORI_EA 
 
 code_0000_110     JSR   Check_BTST
                   CMPI  #4,D0
@@ -1027,6 +1027,11 @@ ea_reg_msk          EQU     %00000000000001110000000000000000
 
                     MOVE.L  #$DA430000,$1600    *Test data corresponds to ADD D3,D5
                     
+                    
+*---------------------------------CMPA_EA------------------------------------
+CMPA_EA
+        
+                    
 *---------------------------------CMP_EA-----------------------------------------
 *Parse the effective address of a cmp opcode
 CMP_EA
@@ -1152,7 +1157,7 @@ fin_eor_ea
 *Parse the effective address of a move opcode
 MOVE_EA
 
-                    CLR     NUM_EXP_WRDS            *Zero out number of expansion words
+                    MOVE.B  #0,NUM_EXP_WRDS            *Zero out number of expansion words
                     MOVE.B  #2,NUM_OPERANDS         ;Move always has 2 operands                    
                     
                     MOVE.L  #MASK_13_12,D7         *Load the mask for size
@@ -1204,7 +1209,7 @@ fin_move_ea
 
 *------------------------------------------MOVEA_EA----------------------------------------------------------
 MOVEA_EA
-                CLR     NUM_EXP_WRDS
+                MOVE.B  #0,NUM_EXP_WRDS
                 MOVE.B  #2,NUM_OPERANDS             ; MOVEA always has 2 operands
                 
                 MOVE    #1,D4                       ; MOVEA always has a destination address register
@@ -1270,6 +1275,7 @@ fin_movea_ea
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
