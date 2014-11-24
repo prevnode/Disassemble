@@ -165,8 +165,14 @@ SPLASH_SCREEN       LEA         SPLASH,A1           ; put the GETSRTHEX message 
 
 MAIN_LOOP
                     ADDA.L      #$2,A5              ; add 1 word to the start address to move over the opcode
-                    ADDA.L      #NUM_EXP_WRDS,A5
-                    ADDA.L      #NUM_EXP_WRDS,A5
+*                    ADDA.L      NUM_EXP_WRDS,A5
+*                    ADDA.L      NUM_EXP_WRDS,A5
+                    CLR         D0
+                    MOVE.B      NUM_EXP_WRDS,D0
+                    ADDA.L      D0,A5
+                    ADDA.L      D0,A5
+*                    MULU        #$4,D0
+*                    ADDA.L      D0,A5
 *                    MOVE.L      NUM_OPERANDS,D1     ; copy the operands count to D1
 *                    MULU        #8,D1               ; multiply 8bits be the number of operands to move over 
 *                    ADDA.L      D1,A5               ; add operand displacment to the start adress to find
@@ -874,18 +880,18 @@ btst_not7
         CMP.B   #0,D5           ;
         
 btst_bad    
-        BRA     PRINT*<-------------------------------------------Replace with call to print bad data
+        BRA     PRINT_BAD
         
         
 btst_im
         MOVE.B  #5,D2           ;First operand mode is immediate
         MOVE.B  #2,NUM_EXP_WRDS ;Immediate btst always has 2 words
-        BSR     prnt_btst       ;Print the opcode
+        BSR     print_btst       ;Print the opcode
         JSR     PRINT_LONG      ;Immediate is always long
         BRA     PRINT           ;Print the operands
         
         
-prnt_btst
+print_btst
         *Print opcode
         LEA     BTST_OP,A1
         MOVE.B  #14,D0
@@ -1164,6 +1170,7 @@ fin_movea_ea
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
