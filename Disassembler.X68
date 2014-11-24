@@ -234,7 +234,7 @@ ENDHEX
 * address in register D1
 
 CALLCONVERTASCII
-                    *MOVE.L      #$4,D1              ; convert 1 word
+                    MOVE.L      #$4,D1              ; convert 1 word
                     JSR         ASCIITOHEX          ; convert the string to hex address
                     RTS                             ; return
              
@@ -835,7 +835,8 @@ BTST_EA
         
         CMP.B   #4,D2           ;4 indicates BIT NUMBER STATIC
         BNE     btst_im         ;Immediate if not 4 (assume 0)
-        *Dynamic
+        
+*Dynamic
         
         MOVE.L  #MASK_11_9,D7   ;Mask for destination register
         JSR     APPLYMASK
@@ -844,7 +845,21 @@ BTST_EA
         CLR     D2              
         MOVE.B  #0,D2           ;Dynamic always uses data register
         
-        ;CMP.B   
+        CMP.B   #7,D4           ;D4 should be EA Mode
+        BLE     btst_not7
+        
+        
+btst_not7
+        CMP.B   #0,D4           ;Only supported mode below 7 is 0
+        BNE     btst_bad        ;Unsupported address mode
+        BSR     print_btst      
+        JSR     PRINT_LONG      ;Data reg destination uses long only
+        BRA     PRINT           ;Print operands
+        JSR     INCREMENT_WRD_CNT   ;Mode 7 has at least 1 expansion word
+        CMP.B   #0,D5           ;
+        
+btst_bad    
+        BRA     PRINT*<-------------------------------------------Replace with call to print bad data
         
         
 btst_im
