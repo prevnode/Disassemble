@@ -635,6 +635,8 @@ Bits_15141312  EQU  %1111000000000000
 
 Bits_876       EQU  %0000000111000000
 
+Bits_11109     EQU  %0000111000000000
+
 
 *------------------------------Configure JMP----------------------------------
 
@@ -644,7 +646,7 @@ CONFIGURE_JMP
                 
                  AND.W   D3,D0           ; Mask the current Opcode 
                 
-                 LSR     D1,D0           ; Shift over a certain number of bits    
+                 LSR.W   D1,D0           ; Shift over a certain number of bits    
                 
                  MULU    #6,D0           ; Multiply by 6 to JMP b/c each JMP is 6 bytes    
                  
@@ -705,14 +707,113 @@ jmp_table        JMP     code0000
  
 
  
+*------------------------------------Begin Bucket 0001-------------------------------
+* Supported Opcodes
+* CMPI, EORI, ORI, SUBI, BTST
 
-code0000        STOP     #$2700
 
-code0001        STOP        #$2700
+*Check BTST is a special function to make sure that the opcode is not btst
+* it is easy to look at a code and accidently return BTST when it is not
+Check_BTST       JSR     CLEAR_DATA
 
-code0010        STOP        #$2700
+                 MOVE.W  #Bits_876,D3                  ;Move the mask into D3
+                 
+                 MOVE.W  #6,D1                         ;Move the shift amount into D1 
+                 
+                 MOVE.W  (A5),D0                       ; Copy the current opcode
+                
+                 AND.W   D3,D0                         ; Mask the current Opcode 
+                
+                 LSR.W   D1,D0                         ; Shift over a certain number of bits
 
-code0011        STOP        #$2700
+                 RTS
+  
+
+*starting the the JMP
+code0000         JSR     CLEAR_DATA                    ; Clear all of the Registers    
+
+                 LEA     jmp_table_1011_11109 ,A0      ;Next JMP table
+                 
+                 MOVE.W  #Bits_11109,D3                  ;Move the mask into D3
+                 
+                 MOVE.W  #9,D1                         ;Move the shift amount into D1
+
+                 JSR     CONFIGURE_JMP   
+               
+                 JMP     0(A0,D0)
+                   
+jmp_table_0000_11109        JMP code_0000_000
+
+                            JMP code_0000_001
+
+                            JMP code_0000_010
+
+                            JMP code_0000_011
+
+                            JMP code_0000_100
+
+                            JMP code_0000_101
+
+                            JMP code_0000_110
+
+                            JMP code_0000_111
+  
+
+          
+code_0000_000     JSR   Check_BTST
+                  CMPI  #4,D0
+                  BRA   BTST_EA
+                  BRA   CMPI_EA   
+
+code_0000_001     JSR   Check_BTST
+                  CMPI  #4,D0
+                  BRA   BTST_EA
+                  BRA   SUBI_EA 
+
+code_0000_010     JSR   Check_BTST
+                  CMPI  #4,D0
+                  BRA   BTST_EA
+                  BRA   PRINT_BAD 
+
+code_0000_011     JSR   Check_BTST
+                  CMPI  #4,D0
+                  BRA   BTST_EA
+                  BRA   PRINT_BAD 
+
+code_0000_100     BRA   BTST_EA
+              
+code_0000_101     JSR   Check_BTST
+                  CMPI  #4,D0
+                  BRA   BTST_EA
+                  BRA   EORI_EA 
+
+code_0000_110     JSR   Check_BTST
+                  CMPI  #4,D0
+                  BRA   BTST_EA
+                  BRA   PRINT_BAD 
+
+code_0000_111     JSR   Check_BTST
+                  CMPI  #4,D0
+                  BRA   BTST_EA
+                  BRA   PRINT_BAD 
+                
+*------------------------------------End Bucket 0000---------------------------------
+
+
+
+*------------------------------------Begin Bucket 0001-------------------------------
+code0001         BRA        MOVE_EA
+*------------------------------------End Bucket 0001---------------------------------
+
+
+*------------------------------------Begin Bucket 0010-------------------------------
+code0010         BRA        MOVE_EA
+*------------------------------------End Bucket 0010---------------------------------
+
+
+*------------------------------------Begin Bucket 0011-------------------------------
+code0011         BRA        MOVE_EA
+*------------------------------------End Bucket 0011---------------------------------
  
 code0100        STOP        #$2700
 
@@ -726,17 +827,18 @@ code1000        STOP        #$2700
 
 code1001        STOP        #$2700
 
-code1010        STOP        #$2700
+*------------------------------------Begin Bucket 1010-----------------------------
+code1010        BRA      PRINT_BAD
+*------------------------------------End Bucket 1010-------------------------------
 
 
+*------------------------------------Begin Bucket 1011-----------------------------
 
-*------------------------------------Begin Bucket 1011---------------------------------------------------
-
-code1011         JSR     CLEAR_DATA      ; Clear all of the Registers    
+code1011         JSR     CLEAR_DATA                    ; Clear all of the Registers    
 
                  LEA     jmp_table_1011_XXX_876 ,A0    ;Next JMP table
                  
-                 MOVE.W  #Bits_876,D3                        ;Move the mask into D3
+                 MOVE.W  #Bits_876,D3                  ;Move the mask into D3
                  
                  MOVE.W  #6,D1                         ;Move the shift amount into D1
 
@@ -770,7 +872,7 @@ code_1011_XXX_001  BRA CMP_EA
 
 code_1011_XXX_010  BRA CMP_EA
 
-code_1011_XXX_011  BRA CMP_EA
+code_1011_XXX_011  BRA CMPA_EA
 
 code_1011_XXX_100  BRA EOR_EA
 
@@ -778,14 +880,10 @@ code_1011_XXX_101  BRA EOR_EA
 
 code_1011_XXX_110  BRA EOR_EA
 
-code_1011_XXX_111  BRA CMP_EA
+code_1011_XXX_111  BRA CMPA_EA
 
 
-*-----------------------------End Bucket 1011--------------------------------------------------------
-
-
-
-  
+*-----------------------------End Bucket 1011---------------------------------------
 
 code1100       STOP        #$2700
 
@@ -793,7 +891,9 @@ code1101       STOP        #$2700
 
 code1110       STOP        #$2700
 
-code1111       STOP        #$2700
+*-----------------------------Begin Bucket 1111-------------------------------------
+code1111       BRA      PRINT_BAD
+*-----------------------------End Bucket 1111---------------------------------------
 
 *----------------------------------------------Increment Expansion Word Count-----------------------------------------
 INCREMENT_WRD_CNT       
@@ -1170,6 +1270,7 @@ fin_movea_ea
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
