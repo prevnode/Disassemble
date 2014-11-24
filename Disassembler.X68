@@ -33,6 +33,42 @@
 * A7 STACK POINTER
 
 * Put variables and constants here
+*------------------------------------------Opcode Constants----------------------------------------------------
+BEQ_OP              DC.B        'BEQ',0
+ADD_OP              DC.B        'ADD',0
+ADDA_OP             DC.B        'ADDA',0
+ADDQ_OP             DC.B        'ADDQ',0
+AND_OP              DC.B        'AND',0
+ASL_OP              DC.B        'ASL',0
+ASR_OP              DC.B        'ASR',0
+BHI_OP              DC.B        'BHI',0
+BLT_OP              DC.B        'BLT',0
+BNE_OP              DC.B        'BNE',0
+BRA_OP              DC.B        'BRA',0
+BTST_OP             DC.B        'BTST',0
+CMP_OP              DC.B        'CMP',0
+CMPA_OP             DC.B        'CMPA',0
+CMPI_OP             DC.B        'CMPI',0
+DIVS_OP             DC.B        'DIVS',0
+EOR_OP              DC.B        'EOR',0
+EORI_OP             DC.B        'EORI',0
+JSR_OP              DC.B        'JSR',0
+LEA_OP              DC.B        'LEA',0
+LSL_OP              DC.B        'LSL',0
+LSR_OP              DC.B        'LSR',0
+MOVE_OP             DC.B        'MOVE',0
+MOVEA_OP            DC.B        'MOVEA',0
+MOVEM_OP            DC.B        'MOVEM',0
+MULS_OP             DC.B        'MULS',0
+NEG_OP              DC.B        'NEG',0
+NOT_OP              DC.B        'NOT',0
+ORI_OP              DC.B        'ORI',0
+ROL_OP              DC.B        'ROL',0
+ROR_OP              DC.B        'ROR',0
+RTS_OP              DC.B        'RTS',0
+SUB_OP              DC.B        'SUB',0
+SUBA_OP             DC.B        'SUBA',0
+SUBI_OP             DC.B        'SUBI',0
 *-----------------------------------------------------------
 
 CR                  EQU         $0D                 ; Carriage Return
@@ -49,8 +85,6 @@ NUM_OPERANDS        DS.B        1                   ; Number of operands for the
                     
 PAUSE_COUNT         DC.W        30                  ; COUNTER
 PAUSE_MSG           DC.B        'Dissambler paused. Press any key to continue...',0
-MOVE_OP             DC.B        'MOVE',0
-CMP_OP              DC.B        'CMP',0
 EL                  DC.B        '',CR,LF,0          ; End Line
 OP_COMMA            DC.B        ',',0
 TAB                 DC.B        '',HT,0
@@ -783,7 +817,7 @@ shift   LSR.L   D1,D0               ;Shift bits to the least sig bit
  
 *------------------------------BTST_EA-------------------------------------------
 BTST_EA        
-
+    
 
                   
 *-----------------------------Invalid Opcode---------------------------
@@ -1063,6 +1097,7 @@ fin_movea_ea
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
