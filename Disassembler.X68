@@ -350,6 +350,7 @@ PRINT_BAD
                     LEA         BAD_MSG,A1
                     MOVE.B      #14,D0
                     TRAP        #15
+                    BRA         MAIN_LOOP
                                 
 *----------------------PRINT OPMODE PRE--------------------------------
 * print the preface operand mode symbol(s)
@@ -1163,6 +1164,7 @@ fin_movea_ea
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
