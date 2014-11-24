@@ -234,7 +234,7 @@ ENDHEX
 * address in register D1
 
 CALLCONVERTASCII
-                    MOVE.L      #$4,D1              ; convert 1 word
+                    *MOVE.L      #$4,D1              ; convert 1 word
                     JSR         ASCIITOHEX          ; convert the string to hex address
                     RTS                             ; return
              
@@ -1097,6 +1097,7 @@ fin_movea_ea
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
