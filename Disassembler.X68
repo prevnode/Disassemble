@@ -339,7 +339,18 @@ PRINT_RETURN        LEA         EL,A1               ; print end of line to scree
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     BRA         MAIN_LOOP           ; return to main loop
-                                        
+
+BAD_MSG             DC.B        'DATA',HT,'#WXYZ',CR,LF,0
+
+PRINT_BAD
+                    CLR         D2
+                    CLR         D3
+                    CLR         D4
+                    CLR         D5
+                    LEA         BAD_MSG,A1
+                    MOVE.B      #14,D0
+                    TRAP        #15
+                                
 *----------------------PRINT OPMODE PRE--------------------------------
 * print the preface operand mode symbol(s)
 
@@ -1097,6 +1108,7 @@ fin_movea_ea
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
