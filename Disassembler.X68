@@ -610,68 +610,77 @@ MODE2_POST111       LEA         SE7,A1              ; print post symbols for opm
                     RTS
 
 *------------------------------Begin OpCode----------------------------------
-BEGINOPCODE
-*                CMPM (A0)+,(A1)+ *B348       
-*                CMP.W D0,D1 *B240
-*                CMP.B D0,D1 *B001
-*                EOR.W D0,D1 *B141
-*                EOR.L D0,D1 *B181
 
 
-                 LEA     jmp_table,A0    *Index into the table
 
-                 CLR.L   D0              *Zero it
+Bits_15141312  EQU  %1111000000000000
 
-                 MOVE.W  (A5),D0
-                       
-                 ANDI #%1111000000000000, D0
+Bits_876       EQU  %0000000111000000
+
+
+*------------------------------Configure JMP----------------------------------
+
+CONFIGURE_JMP    
+
+                 MOVE.W  (A5),D0         ; Copy the current opcode
+                
+                 AND.W   D3,D0           ; Mask the current Opcode 
+                
+                 LSR     D1,D0           ; Shift over a certain number of bits    
+                
+                 MULU    #6,D0           ; Multiply by 6 to JMP b/c each JMP is 6 bytes    
                  
-                 MOVE.W #12,D1
+                 RTS                     ; return
+
+*------------------------------Configure JMP----------------------------------
+
+
+BEGINOPCODE      JSR     CLEAR_DATA      ; Clear all of the Registers
+
+                 LEA     jmp_table,A0    ;Load the next JMP table
                  
-                 LSR D1,D0         *Move the bits
- 
+                 MOVE.W  #Bits_15141312,D3     ;Move the mask into D3
+                 
+                 MOVE.W  #12,D1          ;Move the shift amount into D1
 
-                 MULU        #6,D0       *Form offset     
-
-                 JSR          0(A0,D0)   *Jump indirect with index
+                 JSR     CONFIGURE_JMP   
+               
+                 JMP     0(A0,D0)     
 
 *----------------------Initial jmp table----------------------------------                    
 
-jmp_table      JMP         code0000
+jmp_table        JMP     code0000
 
-               JMP         code0001
+                 JMP     code0001
 
-               JMP         code0010
+                 JMP     code0010
 
-               JMP         code0011
+                 JMP     code0011
 
-               JMP         code0100
+                 JMP     code0100
 
-               JMP         code0101
+                 JMP     code0101
 
-               JMP         code0110
+                 JMP     code0110
 
-               JMP         code0111
+                 JMP     code0111
 
-               JMP         code1000
+                 JMP     code1000
 
-               JMP         code1001
+                 JMP     code1001
 
-               JMP         code1010
+                 JMP     code1010
 
-               JMP         code1011
+                 JMP     code1011
 
-               JMP         code1100
+                 JMP     code1100
 
-               JMP         code1101
+                 JMP     code1101
 
-               JMP         code1110
+                 JMP     code1110
 
-               JMP         code1111
+                 JMP     code1111
 
-        
-
- 
 
 * ------------------------ end initial jmp table----------------------------
 
@@ -679,67 +688,61 @@ jmp_table      JMP         code0000
 
  
 
-code0000       STOP        #$2700
+code0000        STOP     #$2700
 
-code0001       STOP        #$2700
+code0001        STOP        #$2700
 
-code0010       STOP        #$2700
+code0010        STOP        #$2700
 
-code0011       STOP        #$2700
+code0011        STOP        #$2700
+ 
+code0100        STOP        #$2700
 
-code0100       STOP        #$2700
+code0101        STOP        #$2700
 
-code0101       STOP        #$2700
+code0110        STOP        #$2700
 
-code0110       STOP        #$2700
+code0111        STOP        #$2700
 
-code0111       STOP        #$2700
+code1000        STOP        #$2700
 
-code1000       STOP        #$2700
+code1001        STOP        #$2700
 
-code1001       STOP        #$2700
-
-code1010       STOP        #$2700
+code1010        STOP        #$2700
 
 
 
 *------------------------------------Begin Bucket 1011---------------------------------------------------
 
-code1011         LEA     jmp_table_1011_XXX,A0    *Index into the table
+code1011         JSR     CLEAR_DATA      ; Clear all of the Registers    
 
-                 CLR.L   D0              *Zero it
+                 LEA     jmp_table_1011_XXX_876 ,A0    ;Next JMP table
                  
-                 CLR.L   D1
+                 MOVE.W  #Bits_876,D3                        ;Move the mask into D3
                  
-                 MOVE.W  (A5),D0
-                       
-                 ANDI #%0000000111000000, D0
-                 
-                 MOVE.W #6,D1
-                 
-                 LSR D1,D0
+                 MOVE.W  #6,D1                         ;Move the shift amount into D1
 
-                 MULU  #6,D0          
-
-                 JSR   0(A0,D0)   
+                 JSR     CONFIGURE_JMP   
+               
+                 JMP     0(A0,D0)
                  
                  
                  
-jmp_table_1011_XXX      JMP code_1011_XXX_000
+jmp_table_1011_XXX_876      JMP code_1011_XXX_000
 
-                        JMP code_1011_XXX_001
+                            JMP code_1011_XXX_001
 
-                        JMP code_1011_XXX_010
+                            JMP code_1011_XXX_010
 
-                        JMP code_1011_XXX_011
+                            JMP code_1011_XXX_011
 
-                        JMP code_1011_XXX_100
+                            JMP code_1011_XXX_100
 
-                        JMP code_1011_XXX_101
+                            JMP code_1011_XXX_101
 
-                        JMP code_1011_XXX_110
+                            JMP code_1011_XXX_110
 
-                        JMP code_1011_XXX_111
+                            JMP code_1011_XXX_111
   
 
           
@@ -1149,6 +1152,7 @@ fin_movea_ea
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
