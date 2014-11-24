@@ -62,11 +62,14 @@ CMPVARIANTS
     CMP.L       #$12345,D2
     
 *--------------------BTST VARIANTS-----------------------
+    BTST    D3,#1234
     BTST    D7,D2
     BTST    D7,$1600
     BTST    D7,$12345678
-    BTST    #8,D2
+    BTST    #12345678,D2
+    BTST.L  #$12345678, D2
     BTST    #$12345678, D2
+
     
 *----------------------EOR VARIANTS------------------
 
@@ -78,6 +81,7 @@ CMPVARIANTS
 * Put variables and constants here
 
     END    START        ; last line of source
+
 
 
 
