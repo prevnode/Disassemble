@@ -43,8 +43,10 @@ LF                  EQU         $0A                 ; New line (line feed)
 VT                  EQU         $0B                 ; Vertical tab (4 lines)
 FF                  EQU         $0C                 ; Form Feed (Always end printing with a Form Feed.)
 
-NUM_EXP_WRDS        DC.B        0                   ; Number of expansion words after the opcode
-NUM_OPERANDS        DC.B        0                   ; Number of operands for the current instruction valid range: 1 or 2
+NUM_EXP_WRDS        DS.B        1                   ; Number of expansion words after the opcode
+                    
+NUM_OPERANDS        DS.B        1                   ; Number of operands for the current instruction valid range: 1 or 2
+                    
 PAUSE_COUNT         DC.W        30                  ; COUNTER
 PAUSE_MSG           DC.B        'Dissambler paused. Press any key to continue...',0
 MOVE_OP             DC.B        'MOVE',0
@@ -110,7 +112,9 @@ START:              ORG         $1000               ; first instruction of progr
 *--------------------MAIN-----------------------------------
 * Put program code here
 
-MAIN      
+MAIN
+                    MOVE.B      #0,NUM_EXP_WRDS     ; Initialize to 0
+                    MOVE.B      #0,NUM_OPERANDS     ; Initialize to 0
                     JSR         SPLASH_SCREEN
                     BRA         STARTHEX
                     
@@ -819,16 +823,16 @@ ea_reg_msk          EQU     %00000000000001110000000000000000
 *---------------------------------CMP_EA-----------------------------------------
 *Parse the effective address of a cmp opcode
 CMP_EA
-                CLR     NUM_EXP_WRDS
+                CLR.B   NUM_EXP_WRDS
                 MOVE.B  #2,NUM_OPERANDS           
                
                 MOVE.L  #MASK_11_9,D7       ;Mask out bits 11_9 for the destination register
                 JSR     APPLYMASK
-                MOVE.L  D7,D5               
+                MOVE.L  D7,D5               ;Move the dest register for display
                
                 MOVE.L  #MASK_8_6,D7        ;Load the mask for opmode
                 JSR     APPLYMASK
-                MOVE.L  D7,D4               ;Move the opmode for display
+                MOVE.L  D7,D4               ;Move the opmode for finding attribute (will not be displayed)
                                 
                 MOVE.L  #MASK_5_3,D7        ;Load the mask for ea mode
                 JSR     APPLYMASK
@@ -877,7 +881,8 @@ cmp_long
                 BRA     fin_cmp_ea
                 
 fin_cmp_ea      
-                BRA     PRINT       ;<--------------------------------------------------------Replace with call to print
+                CLR.L   D4          ;Destination is always a data register
+                BRA     PRINT       ;EA completed
                 
 *-----------------------------PRINT_BYTE--------------------------------------
 *Prints the byte attribute
@@ -1058,6 +1063,7 @@ fin_movea_ea
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
