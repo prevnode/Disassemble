@@ -34,6 +34,10 @@
 
 *-----------------------------------------TEST DATA--------------------------------------------------------
 TESTDATA
+    CMPA        D3,A2
+    CMPA        A2,A4
+    CMPA        $1234,A3
+
     CMP         D1,D2           ;Data register direct
     CMP         A1,D2           ;Address register direct
     CMP         $0010,D2        ;
@@ -200,6 +204,7 @@ SE7                 DC.B        '',0
 MASK_13_12          EQU     %00110000000000000000000000000000
 MASK_11_9           EQU     %00001110000000000000000000000000
 MASK_8_6            EQU     %00000001110000000000000000000000
+MASK_7_6            EQU     %00000000110000000000000000000000
 MASK_5_3            EQU     %00000000001110000000000000000000
 MASK_2_0            EQU     %00000000000001110000000000000000
 
@@ -1118,22 +1123,22 @@ ea_reg_msk          EQU     %00000000000001110000000000000000
                     
 *---------------------------------CMPA_EA------------------------------------
 CMPA_EA
-                CLR.B   NUM_EXP_WRDS
+                MOVE.B  #0,NUM_EXP_WRDS
                 MOVE.B  #2,NUM_OPERANDS           
                
                 JSR     LOAD12BY3
 *Calculate the number of expansion words
                 CMP     #7,D2               ;Source mode determines if expansion words needed
-                BLT     cmpa_output          ;Modes less than 7 don't have words
+                BLT     cmpa_output         ;Modes less than 7 don't have words
                 JSR     INCREMENT_WRD_CNT   ;Mode 7 has at least 1 expansion word
                 CMP     #0,D3               ;Look at register
-                BEQ     cmpa_output          ;Source register of 0 is short word so already incremented once
+                BEQ     cmpa_output         ;Source register of 0 is short word so already incremented once
                 CMP     #1,D3               ;Source register of 4 is imediate data need to look at atribute (opmode)
                 BNE     cmpa_op_mod         ;If register is not one (earlier checked 0) then it is 4 which means immediate
                 JSR     INCREMENT_WRD_CNT   ;Register 1 means long word add one expansion
-                BRA     cmpa_output          ;Thats all folks
+                BRA     cmpa_output         ;Thats all folks
 cmpa_op_mod     CMP     #2,D3               ;Source register 4 immediate data need to check attribute (opmode)
-                BNE     cmpa_output          ;Byte or Word only add a single word already done when we hit mode 7 so done
+                BNE     cmpa_output         ;Byte or Word only add a single word already done when we hit mode 7 so done
                 JSR     INCREMENT_WRD_CNT   ;Opmode 2 eauals long word so one more expansion
 cmpa_output
                 *Print opcode
@@ -1142,7 +1147,7 @@ cmpa_output
                 TRAP    #15
                 *Print attribute
                 CMP     #3,D4             ;Destination mode (opmode) determines attribute
-                BLE     PRINT_BAD         ;No mode below 3 are valid
+                BLT     PRINT_BAD         ;No mode below 3 are valid
                 CMP     #3,D4               
                 BEQ     cmpa_word          ;Mode 3 is equal to word    
                 CMP     #7,D4
@@ -1156,16 +1161,13 @@ cmpa_long
                 BRA     fin_cmpa_ea
                 
 fin_cmpa_ea      
-                CLR.L   D4          ;Destination is always a data register
+                MOVE.L  #1,D4       ;Destination is always an address register
                 BRA     PRINT       ;EA completed
-
-                
-
                     
 *---------------------------------CMP_EA-----------------------------------------
 *Parse the effective address of a cmp opcode
 CMP_EA
-                CLR.B   NUM_EXP_WRDS
+                MOVE.B  #0,NUM_EXP_WRDS
                 MOVE.B  #2,NUM_OPERANDS           
                
                 JSR     LOAD12BY3
@@ -1211,6 +1213,26 @@ cmp_long
 fin_cmp_ea      
                 CLR.L   D4          ;Destination is always a data register
                 BRA     PRINT       ;EA completed
+                
+*------------------------------------CMPI_EA--------------------------------------
+CMPI_EA
+                MOVE.B  #1,NUM_EXP_WRDS     ;CMPI always includes at least 1 word
+                MOVE.B  #2,NUM_OPERANDS     
+                
+                MOVE.L  MASK_7_6,D7         ;Mask for size
+                JSR     APPLYMASK
+                MOVE.L  D7,D6               ;Hold on to size for comparrison
+                
+                MOVE.L  MASK_5_3,D7         ;EA mode (operand 2)
+                JSR     APPLYMASK
+                MOVE.L  D7,D4               ;Move ea mode for display
+                
+                MOVE.L  MASK_2_0,D7         ;Mask for ea register
+                JSR     APPLYMASK
+                MOVE.L  D7,D5               ;Move ea register for display
+                
+                
+                         
                 
 *-----------------------------PRINT_BYTE--------------------------------------
 *Prints the byte attribute

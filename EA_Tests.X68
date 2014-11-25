@@ -9,6 +9,10 @@ START:                  ; first instruction of program
     
     CMPA        A3,A4
     CMPA        D3,A4
+    
+    CMPI        #12,D5
+    CMPI        #$1234,D5
+    CMPI        #$1234,$8765
 
 
     CMP         D1,D2           ;Data register direct
@@ -86,6 +90,7 @@ CMPVARIANTS
 * Put variables and constants here
 
     END    START        ; last line of source
+
 
 
 
