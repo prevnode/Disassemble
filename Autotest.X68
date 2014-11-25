@@ -1353,18 +1353,6 @@ MOVEA_EA
                 
                 JSR     LOAD12BY3
 
-                ;MOVE.L  #MASK_11_9,D7               ; Mask for destination register
-                ;JSR     APPLYMASK
-                ;MOVE.L  D7,D5                       ; Move for printing
-                
-                ;MOVE.L  #MASK_5_3,D7                ; Mask of source mode
-                ;JSR     APPLYMASK
-                ;MOVE.L  D7,D2                       ; Move for printing
-                
-                ;MOVE.L  #MASK_2_0,D7                ; Mask of source register
-                ;JSR     APPLYMASK
-                ;MOVE.L  D7,D3                       ; Move for printing                
-               
                 LEA     MOVEA_OP,A1
                 MOVE.B  #14,D0
                 TRAP    #15
