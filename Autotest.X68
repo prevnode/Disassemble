@@ -43,6 +43,8 @@ TESTDATA
     BTST    #12345678,D2
     BTST.L  #$12345678, D2
     BTST    #$12345678, D2
+    BTST    #120,D2
+    BTST    #128,D2
 
     CMPA        D3,A2
     CMPA        A2,A4
@@ -1022,6 +1024,15 @@ shift   LSR.L   D1,D0               ;Shift bits to the least sig bit
         MOVE.L  D0,D7               ;Move the data register for display
         
         RTS
+        
+*-----------------------------Expansion to Operand-----------------------------
+*Moves data from the expansion words into operand registers
+*D0 = Start offset in words example 1 = A6
+*D1 = Number of words to move
+
+
+EXPTOPER
+        
  
 *------------------------------BTST_EA-------------------------------------------
 BTST_EA
@@ -1091,6 +1102,10 @@ btst_bad
 btst_im
         MOVE.B  #5,D2           ;First operand mode is immediate
         MOVE.B  #2,NUM_EXP_WRDS ;Immediate btst always has 2 words
+        MOVE.L  A5,D0        ;Move the first operator from the expansion word
+        ADDI.L  #2,D0
+        MOVE.L  D0,A4
+        MOVE.W (A4),D3
         BSR     print_btst      ;Print the opcode
         JSR     PRINT_LONG      ;Immediate is always long
         BRA     PRINT           ;Print the operands
@@ -1420,6 +1435,7 @@ fin_movea_ea
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
