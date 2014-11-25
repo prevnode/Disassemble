@@ -34,6 +34,16 @@
 
 *-----------------------------------------TEST DATA--------------------------------------------------------
 TESTDATA
+
+*--------------------BTST VARIANTS-----------------------
+    BTST    D3,#1234
+    BTST    D7,D2
+    BTST    D7,$1600
+    BTST    D7,$12345678
+    BTST    #12345678,D2
+    BTST.L  #$12345678, D2
+    BTST    #$12345678, D2
+
     CMPA        D3,A2
     CMPA        A2,A4
     CMPA        $1234,A3
@@ -91,14 +101,6 @@ CMPVARIANTS
     CMP         #14,D2
     CMP.L       #$12345,D2
     
-*--------------------BTST VARIANTS-----------------------
-    BTST    D3,#1234
-    BTST    D7,D2
-    BTST    D7,$1600
-    BTST    D7,$12345678
-    BTST    #12345678,D2
-    BTST.L  #$12345678, D2
-    BTST    #$12345678, D2
 ENDTESTDATA
 *------------------------------------------------END TEST DATA---------------------
 
@@ -846,7 +848,7 @@ jmp_table_0000_11109        JMP code_0000_000
 code_0000_000     JSR   Check_BTST
                   CMPI  #4,D0
                   BRA   BTST_EA
-                  *BRA   CMPI_EA   
+                  BRA   CMPI_EA   
 
 code_0000_001     JSR   Check_BTST
                   CMPI  #4,D0
@@ -1050,17 +1052,21 @@ BTST_EA
         MOVE.B  #0,D2           ;Dynamic always uses data register
         
         CMP.B   #7,D4           ;D4 should be EA Mode
-        BLE     btst_not7
+        BLT     btst_lss7       ;Modes less than 7
+        *Mode = 7
+        JSR     INCREMENT_WRD_CNT ;Mode 7 has at least 1 expansion word
+        CMP.B   #0,D5           ;Look at EA Register
+        BSR     print_btst      ;Valid btst address EA
+        JSR     PRINT_BYTE              
+        BRA     PRINT           ;Print operands
         
-        
-btst_not7
+btst_lss7
         CMP.B   #0,D4           ;Only supported mode below 7 is 0
         BNE     btst_bad        ;Unsupported address mode
         BSR     print_btst      
         JSR     PRINT_LONG      ;Data reg destination uses long only
         BRA     PRINT           ;Print operands
-        JSR     INCREMENT_WRD_CNT   ;Mode 7 has at least 1 expansion word
-        CMP.B   #0,D5           ;
+        
         
 btst_bad    
         BRA     PRINT_BAD
@@ -1423,46 +1429,6 @@ fin_movea_ea
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
