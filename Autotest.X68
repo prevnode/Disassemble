@@ -39,10 +39,10 @@ TESTDATA
     BTST    D3,#1234
     BTST    D7,D2
     BTST    D7,$1600
-    BTST    D7,$12345678
-    BTST    #12345678,D2
-    BTST.L  #$12345678, D2
-    BTST    #$12345678, D2
+    ;BTST    D7,$12345678
+    ;BTST    #12345678,D2
+    ;BTST.L  #$12345678, D2
+    ;BTST    #$12345678, D2
 
     CMPA        D3,A2
     CMPA        A2,A4
