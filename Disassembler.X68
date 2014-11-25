@@ -321,7 +321,7 @@ PRINT               CMPI.B      #$0,NUM_OPERANDS    ; check to see if opcode has
                     BEQ         PRINT_RETURN        ; return to main loop if no operands
                     
                     JSR         PRINT_OPMODE1_PRE   ; print the first opmode preface symbol
-                    JSR         PRINT_OPREG1        ; print the first opmode register
+                    *JSR         PRINT_OPREG1        ; print the first opmode register
                     JSR         PRINT_OPMODE1_POST  ; print the first opmode post symbol
                     CMPI.B      #$1,NUM_OPERANDS    ; check if opcode has 2 operands
                     BEQ         PRINT_RETURN        ; return to main loop if opcode has 1 operand
@@ -340,20 +340,20 @@ PRINT_RETURN        LEA         EL,A1               ; print end of line to scree
                     TRAP        #15                 ; trap #15 I/O
                     BRA         MAIN_LOOP           ; return to main loop
 
-BAD_MSG             DC.B        'DATA',HT,HT,0
-BAD_MSG2            DC.B        '#WXYZ',CR,LF,0
+BAD_MSG             DC.B        'DATA',HT,HT,0      ; Bad message part 1
+BAD_MSG2            DC.B        '#WXYZ',CR,LF,0     ; Bad message part 2
 
-PRINT_BAD           CLR         D2
-                    CLR         D3
-                    CLR         D4
-                    CLR         D5
-                    LEA         BAD_MSG,A1
-                    MOVE.B      #14,D0
-                    TRAP        #15
-                    LEA         BAD_MSG2,A1
-                    MOVE.B      #14,D0
-                    TRAP        #15
-                    BRA         MAIN_LOOP
+PRINT_BAD           CLR         D2                  ; clear d2
+                    CLR         D3                  ; clear d3
+                    CLR         D4                  ; clear d4
+                    CLR         D5                  ; clear d5
+                    LEA         BAD_MSG,A1          ; print the bad message part 1
+                    MOVE.B      #14,D0              ; trap task #14 to print the message to screen
+                    TRAP        #15                 ; trap #15 I/O
+                    LEA         BAD_MSG2,A1         ; print the bad message part 2
+                    MOVE.B      #14,D0              ; trap task #14 to print the message to screen
+                    TRAP        #15                 ; trap #15 I/O
+                    BRA         MAIN_LOOP           ; branch back to main loop to decode next opword
                                 
 *----------------------PRINT OPMODE PRE--------------------------------
 * print the preface operand mode symbol(s)
@@ -378,11 +378,15 @@ MODE1_PRE           JMP         MODE1_PRE000
 MODE1_PRE000        LEA         SP0,A1              ; print pre symbols for opmode Dn
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
+                    JSR         PRINT_OPREG1        ; print the address/data register number
                     RTS
+                    
 MODE1_PRE001        LEA         SP1,A1              ; print pre symbols for opmode An
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
+                    JSR         PRINT_OPREG1        ; print the address/data register number
                     RTS
+                    
 MODE1_PRE010        LEA         SP2,A1              ; print pre symbols for opmode (An)
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
@@ -390,22 +394,31 @@ MODE1_PRE010        LEA         SP2,A1              ; print pre symbols for opmo
 MODE1_PRE011        LEA         SP3,A1              ; print pre symbols for opmode (An)+
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
+                    JSR         PRINT_OPREG1        ; print the address/data register number
                     RTS
+                    
 MODE1_PRE100        LEA         SP4,A1              ; print pre symbols for opmode -(An)
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
+                    JSR         PRINT_OPREG1        ; print the address/data register number
                     RTS
+                    
 MODE1_PRE101        LEA         SP5,A1              ; print pre symbols for opmode #$
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
+                    JSR         POPR1_HEX           ; print the EA register number
                     RTS
+                    
 MODE1_PRE110        LEA         SP6,A1              ; print pre symbols for opmode #WXYZ
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
+                    JSR         POPR1_HEX           ; print the EA register number
                     RTS
+                    
 MODE1_PRE111        LEA         SP7,A1              ; print pre symbols for opmode $
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
+                    JSR         POPR1_HEX           ; print the EA register number
                     RTS
 
 *----------------------PRINT OP REGISTER 1--------------------------------
@@ -413,46 +426,41 @@ MODE1_PRE111        LEA         SP7,A1              ; print pre symbols for opmo
 
 PRINT_OPREG1        
                     CLR         D1                  ; clear D1
-*                    SUBA.L      A1,A1               ; clear A1
                     MOVE.L      D3,D1
                     MOVE        #3,D0               ; trap task #14 to print the message to screen
-*                    MOVE.L      D2,D6               ; SAVE MODE1                                                *CANNOT USE THIS TRAP, MUST CHANGE
-*                    MOVE.L      D3,D1               ; PUT REG# INTO 1                                           *CANNOT USE THIS TRAP, MUST CHANGE
-*                    MOVE.L      #16,D2              ; PUT BASE 16 INTO D2                                       *CANNOT USE THIS TRAP, MUST CHANGE
-*                    MOVE.B      #15,D0              ; TRAP TASK 15                                              *CANNOT USE THIS TRAP, MUST CHANGE
                     TRAP        #15                 ; trap #15 I/O                                              
-*                    MOVE.L      D6,D2               ; RESTORE MODE1                                             *CANNOT USE THIS TRAP, MUST CHANGE
                     RTS
                     
-*PRINT_OPREG1_L      CLR          D0
-*                    CLR          D1
-*                    MOVE.B       #8,D0        
-*PUSH_LOOP           CMPI.B       #$0,D0
-*                    BEQ          HEX_PULL
-*                    MOVE.B       D1,D3
-*                    LSR.L        #4,D1
-*                    ANDI.B       #$F,D3
-*                    CMPI.B       #$9,D3
-*                    BLT          HEX_NUM
-*                    BRA          HEX_ALP
-*            
-*HEX_NUM             ADDI.B       #$30,D3
-*                    BRA          HEX_AGAIN
-*HEX_ALP             ADD.B        #$37,D3
-*                    BRA          HEX_AGAIN
-*HEX_AGAIN           MOVE.B       D3,-(SP)
-*                    SUBI.B       #$1,D0
-*                    BRA          PUSH_LOOP
-*
-*HEX_PULL            MOVE.B       #$8,D1
-*PULL_LOOP           MOVE.B       (SP)+,HEX_MSG
-*                    LEA          HEX_MSG,A1
-*                    MOVE.B       #14,D0
-*                    TRAP         #15
-*                    SUBI.B       #$1,D1
-*                    CMPI.B       #$0,D1
-*                    BGT          PULL_LOOP
-*                    RTS              
+POPR1_HEX           CLR          D0                 ; clear d0
+                    CLR          D1                 ; clear d1
+                    MOVE.B       #8,D0              ; set counter to 8
+                    MOVE.L       D3,D1              ; copy reg number to d1
+PUSH_LOOP           CMPI.B       #$0,D0             ; is counter at 0
+                    BEQ          HEX_PULL           ; if counter = 0 branch to hex_pull
+                    MOVE.B       D1,D3              ; move LSB to d3
+                    LSR.L        #4,D1              ; shift register right
+                    ANDI.B       #$F,D3             ; and F to get the least significant nibble
+                    CMPI.B       #$9,D3             ; is nibble a number
+                    BLT          HEX_NUM            ; nibble is number, branch to hex_num
+                    BRA          HEX_ALP            ; nibble is a letter, branch to hex_alp
+            
+HEX_NUM             ADDI.B       #$30,D3            ; add #$30 to nibble to get ascii number
+                    BRA          HEX_AGAIN          ; branch to hex_again to continue loop
+HEX_ALP             ADD.B        #$37,D3            ; add #$37 to nibble to get ascii letter
+                    BRA          HEX_AGAIN          ; branch to hex_again to contiune loop
+HEX_AGAIN           MOVE.B       D3,-(SP)           ; move letter to stack
+                    SUBI.B       #$1,D0             ; decrement counter
+                    BRA          PUSH_LOOP          ; branch to loop
+
+HEX_PULL            MOVE.B       #$8,D1             ; set counter to 8
+PULL_LOOP           MOVE.B       (SP)+,HEX_MSG      ; get char from stack
+                    LEA          HEX_MSG,A1         ; print out the MSB char
+                    MOVE         #14,D0             ; trap task #14 to print the message to screen
+                    TRAP         #15                ; trap #15 I/O
+                    SUBI.B       #$1,D1             ; decrement counter
+                    CMPI.B       #$0,D1             ; check if counter is 0
+                    BGT          PULL_LOOP          ; counter is not 0, loop again
+                    RTS                             ; return
 
 *----------------------PRINT OPMODE POST--------------------------------
 * print the post operand mode symbol(s)
@@ -1333,6 +1341,7 @@ fin_movea_ea
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
