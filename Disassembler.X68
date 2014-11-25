@@ -140,6 +140,8 @@ MASK_2_0            EQU     %00000000000001110000000000000000
 BYTE                DC.B    '.B',HT,0
 WORD                DC.B    '.W',HT,0
 LONG                DC.B    '.L',HT,0
+
+HEX_MSG             DC.B    'A',0                   ; PLACEHOLDER FOR HEX CONVERSION
     
 START:              ORG         $1000               ; first instruction of program
 
@@ -215,7 +217,7 @@ STARTHEX
                     MOVE.B      #2,D0               ; read a string in from the keyboard
                     TRAP        #15                 ; trap #15 I/O
             
-                    JSR         CALLCONVERTASCII
+                    JSR         ASCIITOHEX          ; convert the string to hex address
                     MOVEA.L     D3,A5               ; move converted address to A5(start address)
                     MOVE.L      #$0,D3              ; reset D3
                     JSR         CLEAR_SCREEN
@@ -229,21 +231,12 @@ ENDHEX
                     MOVE.B      #2,D0               ; read a string in from the keyboard
                     TRAP        #15                 ; trap #15 I/O
 
-                    JSR         CALLCONVERTASCII
+                    JSR         ASCIITOHEX          ; convert the string to hex address
                     MOVEA.L     D3,A6               ; move converted address to A6(end address)
                     JSR         CLEAR_DATA
                     JSR         CLEAR_SCREEN
                     BRA         MAIN_LOOP_RUN           ; branch to main loop
                     
-*---------------------CALLCONVERTASCII--------------------------------
-* preps the ascii to hex conversion by putting the length of the hex
-* address in register D1
-
-CALLCONVERTASCII
-                    MOVE.L      #$4,D1              ; convert 1 word
-                    JSR         ASCIITOHEX          ; convert the string to hex address
-                    RTS                             ; return
-             
 *-------------------ASCIITOHEX------------------------------
 * turn the ascii letter in A1 to hex
 * A1 = FULL STRING TO CONVERT
@@ -417,17 +410,51 @@ MODE1_PRE111        LEA         SP7,A1              ; print pre symbols for opmo
 *----------------------PRINT OP REGISTER 1--------------------------------
 * print the REGISTER FOR OPMODE 1                   
 
-PRINT_OPREG1        CLR         D1                  ; clear D1
+PRINT_OPREG1        
+*                    CLR         D1                  ; clear D1
 *                    SUBA.L      A1,A1               ; clear A1
-                    MOVE.L      D3,D1
-                    MOVE        #3,D0               ; trap task #14 to print the message to screen
+*                    MOVE.L      D3,D1
+*                    MOVE        #3,D0               ; trap task #14 to print the message to screen
 *                    MOVE.L      D2,D6               ; SAVE MODE1                                                *CANNOT USE THIS TRAP, MUST CHANGE
 *                    MOVE.L      D3,D1               ; PUT REG# INTO 1                                           *CANNOT USE THIS TRAP, MUST CHANGE
 *                    MOVE.L      #16,D2              ; PUT BASE 16 INTO D2                                       *CANNOT USE THIS TRAP, MUST CHANGE
 *                    MOVE.B      #15,D0              ; TRAP TASK 15                                              *CANNOT USE THIS TRAP, MUST CHANGE
-                    TRAP        #15                 ; trap #15 I/O                                              
+*                    TRAP        #15                 ; trap #15 I/O                                              
 *                    MOVE.L      D6,D2               ; RESTORE MODE1                                             *CANNOT USE THIS TRAP, MUST CHANGE
+*                    RTS
+                    
+                    CLR          D0
+                    CLR          D1
+                    MOVE.B       #8,D0        
+PUSH_LOOP           CMPI.B       #$0,D0
+                    BEQ          HEX_PULL
+                    MOVE.B       D1,D3
+                    LSR.L        #4,D1
+                    ANDI.B       #$F,D3
+                    CMPI.B       #$9,D3
+                    BLT          HEX_NUM
+                    BRA          HEX_ALP
+            
+HEX_NUM             ADDI.B       #$30,D3
+                    BRA          HEX_AGAIN
+HEX_ALP             ADD.B        #$37,D3
+                    BRA          HEX_AGAIN
+HEX_AGAIN           MOVE.B       D3,-(SP)
+                    SUBI.B       #$1,D0
+                    BRA          PUSH_LOOP
+
+HEX_PULL            MOVE.B       #$8,D1
+PULL_LOOP           MOVE.B       (SP)+,HEX_MSG
+                    LEA          HEX_MSG,A1
+                    MOVE.B       #14,D0
+                    TRAP         #15
+                    SUBI.B       #$1,D1
+                    CMPI.B       #$0,D1
+                    BGT          PULL_LOOP
                     RTS
+            
+
+                    
                     
 *REGVALUE            DC.L        0
 *
@@ -1284,6 +1311,7 @@ fin_movea_ea
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
