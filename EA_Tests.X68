@@ -6,6 +6,11 @@
 *-----------------------------------------------------------
     ORG    $8888
 START:                  ; first instruction of program
+    
+    CMPA        A3,A4
+    CMPA        D3,A4
+
+
     CMP         D1,D2           ;Data register direct
     CMP         A1,D2           ;Address register direct
     CMP         $0010,D2        ;
@@ -81,6 +86,7 @@ CMPVARIANTS
 * Put variables and constants here
 
     END    START        ; last line of source
+
 
 
 

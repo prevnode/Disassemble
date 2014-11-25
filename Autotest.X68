@@ -1124,17 +1124,41 @@ CMPA_EA
                 JSR     LOAD12BY3
 *Calculate the number of expansion words
                 CMP     #7,D2               ;Source mode determines if expansion words needed
-                BLT     cmp_output          ;Modes less than 7 don't have words
+                BLT     cmpa_output          ;Modes less than 7 don't have words
                 JSR     INCREMENT_WRD_CNT   ;Mode 7 has at least 1 expansion word
                 CMP     #0,D3               ;Look at register
-                BEQ     cmp_output          ;Source register of 0 is short word so already incremented once
+                BEQ     cmpa_output          ;Source register of 0 is short word so already incremented once
                 CMP     #1,D3               ;Source register of 4 is imediate data need to look at atribute (opmode)
                 BNE     cmpa_op_mod         ;If register is not one (earlier checked 0) then it is 4 which means immediate
                 JSR     INCREMENT_WRD_CNT   ;Register 1 means long word add one expansion
-                BRA     cmp_output          ;Thats all folks
+                BRA     cmpa_output          ;Thats all folks
 cmpa_op_mod     CMP     #2,D3               ;Source register 4 immediate data need to check attribute (opmode)
-                BNE     cmp_output          ;Byte or Word only add a single word already done when we hit mode 7 so done
+                BNE     cmpa_output          ;Byte or Word only add a single word already done when we hit mode 7 so done
                 JSR     INCREMENT_WRD_CNT   ;Opmode 2 eauals long word so one more expansion
+cmpa_output
+                *Print opcode
+                LEA     CMPA_OP,A1
+                MOVE.B  #14,D0
+                TRAP    #15
+                *Print attribute
+                CMP     #3,D4             ;Destination mode (opmode) determines attribute
+                BLE     PRINT_BAD         ;No mode below 3 are valid
+                CMP     #3,D4               
+                BEQ     cmpa_word          ;Mode 3 is equal to word    
+                CMP     #7,D4
+                BEQ     cmpa_long          ;Mode 7 is equal to long
+cmpa_word
+                JSR     PRINT_WORD
+                BRA     fin_cmpa_ea
+                
+cmpa_long  
+                JSR     PRINT_LONG     
+                BRA     fin_cmpa_ea
+                
+fin_cmpa_ea      
+                CLR.L   D4          ;Destination is always a data register
+                BRA     PRINT       ;EA completed
+
                 
 
                     
@@ -1374,6 +1398,7 @@ fin_movea_ea
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
