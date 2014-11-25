@@ -212,6 +212,8 @@ MASK_2_0            EQU     %00000000000001110000000000000000
 BYTE                DC.B    '.B',HT,0
 WORD                DC.B    '.W',HT,0
 LONG                DC.B    '.L',HT,0
+
+HEX_MSG             DC.B    'A',0                   ; PLACEHOLDER FOR HEX CONVERSION 
     
 START:              ORG         $3000               ; first instruction of program
 
@@ -1421,6 +1423,7 @@ fin_movea_ea
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
