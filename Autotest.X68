@@ -39,10 +39,10 @@ TESTDATA
     BTST    D3,#1234
     BTST    D7,D2
     BTST    D7,$1600
-    ;BTST    D7,$12345678
-    ;BTST    #12345678,D2
-    ;BTST.L  #$12345678, D2
-    ;BTST    #$12345678, D2
+    BTST    D7,$12345678
+    BTST    #12345678,D2
+    BTST.L  #$12345678, D2
+    BTST    #$12345678, D2
 
     CMPA        D3,A2
     CMPA        A2,A4
@@ -1026,7 +1026,7 @@ shift   LSR.L   D1,D0               ;Shift bits to the least sig bit
 *------------------------------BTST_EA-------------------------------------------
 BTST_EA
 
-        CLR.B   NUM_EXP_WRDS
+        MOVE.B  #0,NUM_EXP_WRDS
         MOVE.B  #2,NUM_OPERANDS ;
         
         MOVE.L  #MASK_8_6,D7    ;Mask determines immediate data source
@@ -1041,7 +1041,7 @@ BTST_EA
         JSR     APPLYMASK       
         MOVE.L  D7,D5           ;Move ea register for display
         
-        CMP.B   #4,D2           ;4 indicates BIT NUMBER STATIC
+        CMP.B   #4,D2           ;4 indicates BIT NUMBER DYNAMIC
         BNE     btst_im         ;Immediate if not 4 (assume 0)
         
 *Dynamic
@@ -1061,6 +1061,10 @@ BTST_EA
         BEQ     btst_byte       ;EA Register 0 has only one expansion word and byte attribute
         CMP.B   #4,D5           ;Look at EA Register
         BEQ     btst_byte       ;EA Register 4 also has only one expansion word and byte attribute
+        CMP.B   #1,D5           ;Look at EA Register
+        BNE     btst_bad        ;INVAID
+        JSR     INCREMENT_WRD_CNT ;Ea register 1 indicates long attribute with 2 expansion words
+        BRA     btst_long
         
 btst_byte
         BSR     print_btst      ;Valid btst address EA
@@ -1416,6 +1420,8 @@ fin_movea_ea
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
+
 
 
 
