@@ -84,7 +84,7 @@ NUM_EXP_WRDS        DS.B        1                   ; Number of expansion words 
 NUM_OPERANDS        DS.B        1                   ; Number of operands for the current instruction valid range: 1 or 2
                     
 PAUSE_COUNT         DC.W        30                  ; COUNTER
-PAUSE_MSG           DC.B        'Dissambler paused. Press any key to continue...',0
+PAUSE_MSG           DC.B        CR,LF,'Dissambler paused. Press any key to continue...',0
 EL                  DC.B        '',CR,LF,0          ; End Line
 OP_COMMA            DC.B        ',',0
 TAB                 DC.B        '',HT,0
@@ -154,7 +154,7 @@ START:              ORG         $1000               ; first instruction of progr
 MAIN
                     MOVE.B      #0,NUM_EXP_WRDS     ; Initialize to 0
                     MOVE.B      #0,NUM_OPERANDS     ; Initialize to 0
-                    MOVE.B      #30,PAUSE_COUNT     ; Initialize to 30
+                    MOVE.W      #30,PAUSE_COUNT     ; Initialize to 30
                     JSR         SPLASH_SCREEN       ; Display splash screen
                     BRA         STARTHEX            ; get starting hex address
                     
@@ -1361,6 +1361,7 @@ fin_movea_ea
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
