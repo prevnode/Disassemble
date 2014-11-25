@@ -426,14 +426,17 @@ PRINT_RETURN        LEA         EL,A1               ; print end of line to scree
                     TRAP        #15                 ; trap #15 I/O
                     BRA         MAIN_LOOP           ; return to main loop
 
-BAD_MSG             DC.B        'DATA',HT,'#WXYZ',CR,LF,0
+BAD_MSG1             DC.B        'DATA',HT,0
+BAD_MSG2            DC.B        '#wxyz',CR,LF,0
 
-PRINT_BAD
-                    CLR         D2
+PRINT_BAD           CLR         D2
                     CLR         D3
                     CLR         D4
                     CLR         D5
-                    LEA         BAD_MSG,A1
+                    LEA         BAD_MSG1,A1
+                    MOVE.B      #14,D0
+                    TRAP        #15
+                    LEA         BAD_MSG2,A1
                     MOVE.B      #14,D0
                     TRAP        #15
                     BRA         MAIN_LOOP
@@ -1420,6 +1423,7 @@ fin_movea_ea
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
