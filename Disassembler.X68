@@ -1224,22 +1224,8 @@ MOVE_EA
                     JSR     APPLYMASK
                     MOVE.L  D7,D0                 ;<-------------------------------------------------------------------Need to integrate with I/O now that I have attribute
                   
-                    MOVE.L  #MASK_11_9,D7          *Load the mask for destination register                  
-                    JSR     APPLYMASK                  
-                    MOVE.L  D7,D5                  *Move the finished destination reg in place for display                    
-                    
-                    MOVE.L  #MASK_8_6,D7           *Load the mask destination mode
-                    JSR     APPLYMASK
-                    MOVE.L  D7,D4                  *Move the mode for display                  
-                    
-                    
-                    MOVE.L  #MASK_5_3,D7           *Load the mask for the source mode
-                    JSR     APPLYMASK              
-                    MOVE.L  D7,D2                  *Move the mode for display
-                    
-                    MOVE.L  #MASK_2_0,D7           *Load the mask source register
-                    JSR     APPLYMASK   
-                    MOVE.L  D7,D3                  *Move the source reg num for display
+                    JSR     LOAD12BY3
+                  
                     
 *Calculate number of expansion words
                     *Destination side
@@ -1278,18 +1264,8 @@ MOVEA_EA
                 JSR     APPLYMASK
                 MOVE.L  D7,D0                       ; Move for exmpansion wrd and attribute calculations
                 
-                MOVE.L  #MASK_11_9,D7               ; Mask for destination register
-                JSR     APPLYMASK
-                MOVE.L  D7,D5                       ; Move for printing
-                
-                MOVE.L  #MASK_5_3,D7                ; Mask of source mode
-                JSR     APPLYMASK
-                MOVE.L  D7,D2                       ; Move for printing
-                
-                MOVE.L  #MASK_2_0,D7                ; Mask of source register
-                JSR     APPLYMASK
-                MOVE.L  D7,D3                       ; Move for printing                
-               
+                JSR     LOAD12BY3
+
                 LEA     MOVEA_OP,A1
                 MOVE.B  #14,D0
                 TRAP    #15

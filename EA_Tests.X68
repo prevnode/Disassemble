@@ -7,22 +7,16 @@
     ORG    $8888
 START:                  ; first instruction of program
     
-    CMPA        A3,A4
-    CMPA        D3,A4
-    
-    CMPI        #12,D5
-    CMPI        #$1234,D5
-    CMPI        #$1234,$8765
-
+    CMPA        D3,A2
+    CMPA        A2,A4
+    CMPA        $1234,A3
 
     CMP         D1,D2           ;Data register direct
     CMP         A1,D2           ;Address register direct
     CMP         $0010,D2        ;
     CMP         $1234FFFF,D2
     CMP         #14,D2
-    CMP.L       #$12345,D2
-
-    
+    CMP.L       #$12345,D2   
     
 *--------------------MOVEA VARIANTS---------------------------
     MOVEA.W     D1,A2
@@ -70,7 +64,7 @@ CMPVARIANTS
     CMP         #14,D2
     CMP.L       #$12345,D2
     
-*--------------------BTST VARIANTS-----------------------
+    *--------------------BTST VARIANTS-----------------------
     BTST    D3,#1234
     BTST    D7,D2
     BTST    D7,$1600
@@ -79,8 +73,6 @@ CMPVARIANTS
     BTST.L  #$12345678, D2
     BTST    #$12345678, D2
 
-    
-*----------------------EOR VARIANTS------------------
 
     
     
@@ -90,6 +82,7 @@ CMPVARIANTS
 * Put variables and constants here
 
     END    START        ; last line of source
+
 
 
 
