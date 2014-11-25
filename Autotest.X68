@@ -35,7 +35,14 @@
 *-----------------------------------------TEST DATA--------------------------------------------------------
 TESTDATA
 
-
+ *--------------------BTST VARIANTS-----------------------
+    BTST    D3,#1234
+    BTST    D7,D2
+    BTST    D7,$1600
+    BTST    D7,$12345678
+    BTST    #12345678,D2
+    BTST.L  #$12345678, D2
+    BTST    #$12345678, D2
 
     CMPA        D3,A2
     CMPA        A2,A4
@@ -94,14 +101,7 @@ CMPVARIANTS
     CMP         #14,D2
     CMP.L       #$12345,D2
     
-    *--------------------BTST VARIANTS-----------------------
-    BTST    D3,#1234
-    BTST    D7,D2
-    BTST    D7,$1600
-    BTST    D7,$12345678
-    BTST    #12345678,D2
-    BTST.L  #$12345678, D2
-    BTST    #$12345678, D2
+   
     
 ENDTESTDATA
 *------------------------------------------------END TEST DATA---------------------
@@ -1058,13 +1058,23 @@ BTST_EA
         *Mode = 7
         JSR     INCREMENT_WRD_CNT ;Mode 7 has at least 1 expansion word
         CMP.B   #0,D5           ;Look at EA Register
+        BEQ     btst_byte       ;EA Register 0 has only one expansion word and byte attribute
+        CMP.B   #4,D5           ;Look at EA Register
+        BEQ     btst_byte       ;EA Register 4 also has only one expansion word and byte attribute
+        
+btst_byte
         BSR     print_btst      ;Valid btst address EA
         JSR     PRINT_BYTE              
         BRA     PRINT           ;Print operands
         
 btst_lss7
-        CMP.B   #0,D4           ;Only supported mode below 7 is 0
-        BNE     btst_bad        ;Unsupported address mode
+        CMP.B   #0,D4           ;Only supported modes are 0,2-4
+        BEQ     btst_long       ;Data register is the only long attribute
+        CMP.B   #4,D4           ;Only supported modes are 0,2-4
+        BGT     btst_bad        ;Unsupported address mode
+        BRA     btst_byte       ;EA Modes 2-4 are all byte sized
+        
+btst_long      
         BSR     print_btst      
         JSR     PRINT_LONG      ;Data reg destination uses long only
         BRA     PRINT           ;Print operands
@@ -1406,6 +1416,7 @@ fin_movea_ea
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
