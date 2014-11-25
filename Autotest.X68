@@ -34,8 +34,6 @@
 
 *-----------------------------------------TEST DATA--------------------------------------------------------
 TESTDATA
-
-
     CMP         D1,D2           ;Data register direct
     CMP         A1,D2           ;Address register direct
     CMP         $0010,D2        ;
@@ -230,8 +228,8 @@ SPLASH_SCREEN       LEA         SPLASH,A1           ; put the GETSRTHEX message 
 *---------------------------Autohex----------------------
 AUTOTEST
 
-                    MOVEA.L     TESTDATA,A5
-                    MOVEA.L     ENDTESTDATA,A6
+                    MOVEA.L     #TESTDATA,A5
+                    MOVEA.L     #ENDTESTDATA,A6
                     
                     BRA         MAIN_LOOP_RUN           ; branch to main loop                    
                     
@@ -1073,20 +1071,33 @@ print_btst
         LEA     BTST_OP,A1
         MOVE.B  #14,D0
         TRAP    #15
-        RTS
+        RTS       
         
-        
-        
-                         
-*-----------------------------Invalid Opcode---------------------------
-*Used when the word read in is garbage/unsupported opcode/invalid ea 
-invalid_opcode
-
-inv_mem             DC.B    '1000'
-inv_code            DC.B    'DATA'
-inv_operand         DC.B    '$WXYZ'
-
-
+*----------------------------Load Last 12 Bits by 3--------------------------------------------
+*Loads the least 12 significant bits from the word A5 is currently pointing to. These are grouped
+*by 3 bits and loaded into D2-D5. SR uses RTS.
+*The order is:
+*Bits 11-9 -> D5
+*Bits 8-6 -> D4
+*Bits 5-3 -> D2
+*Bits 2-0 -> D3
+LOAD12BY3
+                MOVE.L  #MASK_11_9,D7       ;Mask out bits 11_9 for the destination register
+                JSR     APPLYMASK
+                MOVE.L  D7,D5               ;Move the dest register for display
+               
+                MOVE.L  #MASK_8_6,D7        ;Load the mask for opmode
+                JSR     APPLYMASK
+                MOVE.L  D7,D4               ;Move the opmode for finding attribute (will not be displayed)
+                                
+                MOVE.L  #MASK_5_3,D7        ;Load the mask for ea mode
+                JSR     APPLYMASK
+                MOVE.L  D7,D2               ;Move the ea mode for display                
+              
+                MOVE.L  #MASK_2_0,D7        ;Load the mask for ea register
+                JSR     APPLYMASK
+                MOVE.L  D7,D3               ;Move the ea register for display
+                RTS
 
 *-----------------------------------NOP_EA------------------------------ 
 *NOP doesn't actually have an ea but hey you gotta start somewhere
@@ -1107,7 +1118,25 @@ ea_reg_msk          EQU     %00000000000001110000000000000000
                     
 *---------------------------------CMPA_EA------------------------------------
 CMPA_EA
-        
+                CLR.B   NUM_EXP_WRDS
+                MOVE.B  #2,NUM_OPERANDS           
+               
+                JSR     LOAD12BY3
+*Calculate the number of expansion words
+                CMP     #7,D2               ;Source mode determines if expansion words needed
+                BLT     cmp_output          ;Modes less than 7 don't have words
+                JSR     INCREMENT_WRD_CNT   ;Mode 7 has at least 1 expansion word
+                CMP     #0,D3               ;Look at register
+                BEQ     cmp_output          ;Source register of 0 is short word so already incremented once
+                CMP     #1,D3               ;Source register of 4 is imediate data need to look at atribute (opmode)
+                BNE     cmpa_op_mod         ;If register is not one (earlier checked 0) then it is 4 which means immediate
+                JSR     INCREMENT_WRD_CNT   ;Register 1 means long word add one expansion
+                BRA     cmp_output          ;Thats all folks
+cmpa_op_mod     CMP     #2,D3               ;Source register 4 immediate data need to check attribute (opmode)
+                BNE     cmp_output          ;Byte or Word only add a single word already done when we hit mode 7 so done
+                JSR     INCREMENT_WRD_CNT   ;Opmode 2 eauals long word so one more expansion
+                
+
                     
 *---------------------------------CMP_EA-----------------------------------------
 *Parse the effective address of a cmp opcode
@@ -1115,21 +1144,7 @@ CMP_EA
                 CLR.B   NUM_EXP_WRDS
                 MOVE.B  #2,NUM_OPERANDS           
                
-                MOVE.L  #MASK_11_9,D7       ;Mask out bits 11_9 for the destination register
-                JSR     APPLYMASK
-                MOVE.L  D7,D5               ;Move the dest register for display
-               
-                MOVE.L  #MASK_8_6,D7        ;Load the mask for opmode
-                JSR     APPLYMASK
-                MOVE.L  D7,D4               ;Move the opmode for finding attribute (will not be displayed)
-                                
-                MOVE.L  #MASK_5_3,D7        ;Load the mask for ea mode
-                JSR     APPLYMASK
-                MOVE.L  D7,D2               ;Move the ea mode for display                
-              
-                MOVE.L  #MASK_2_0,D7        ;Load the mask for ea register
-                JSR     APPLYMASK
-                MOVE.L  D7,D3               ;Move the ea register for display
+                JSR     LOAD12BY3
                 
 *Calculate the number of expansion words
                 CMP     #7,D2               ;Source mode determines if expansion words needed
@@ -1138,11 +1153,11 @@ CMP_EA
                 CMP     #0,D3               ;Look at register
                 BEQ     cmp_output          ;Source register of 0 is short word so already incremented once
                 CMP     #1,D3               ;Source register of 4 is imediate data need to look at atribute (opmode)
-                BNE     chk_op_mod          ;If register is not one (earlier checked 0) then it is 4 which means immediate
+                BNE     cmp_op_mod          ;If register is not one (earlier checked 0) then it is 4 which means immediate
                 JSR     INCREMENT_WRD_CNT   ;Register 1 means long word add one expansion
                 BRA     cmp_output          ;Thats all folks
-chk_op_mod      CMP     #2,D1               ;Register 4 immediate data need to check attribute (opmode)
-                BNE     cmp_output              ;Byte or Word only add a single word already done when we hit mode 7 so done
+cmp_op_mod      CMP     #2,D3               ;Source register 4 immediate data need to check attribute (opmode)
+                BNE     cmp_output          ;Byte or Word only add a single word already done when we hit mode 7 so done
                 JSR     INCREMENT_WRD_CNT   ;Opmode 2 eauals long word so one more expansion
                 
 cmp_output
@@ -1241,22 +1256,23 @@ MOVE_EA
                     JSR     APPLYMASK
                     MOVE.L  D7,D0                 ;<-------------------------------------------------------------------Need to integrate with I/O now that I have attribute
                   
-                    MOVE.L  #MASK_11_9,D7          *Load the mask for destination register                  
-                    JSR     APPLYMASK                  
-                    MOVE.L  D7,D5                  *Move the finished destination reg in place for display                    
+                    JSR     LOAD12BY3
+                    ;MOVE.L  #MASK_11_9,D7          *Load the mask for destination register                  
+                    ;JSR     APPLYMASK                  
+                    ;MOVE.L  D7,D5                  *Move the finished destination reg in place for display                    
                     
-                    MOVE.L  #MASK_8_6,D7           *Load the mask destination mode
-                    JSR     APPLYMASK
-                    MOVE.L  D7,D4                  *Move the mode for display                  
+                    ;MOVE.L  #MASK_8_6,D7           *Load the mask destination mode
+                    ;JSR     APPLYMASK
+                    ;MOVE.L  D7,D4                  *Move the mode for display                  
                     
                     
-                    MOVE.L  #MASK_5_3,D7           *Load the mask for the source mode
-                    JSR     APPLYMASK              
-                    MOVE.L  D7,D2                  *Move the mode for display
+                    ;MOVE.L  #MASK_5_3,D7           *Load the mask for the source mode
+                    ;JSR     APPLYMASK              
+                    ;MOVE.L  D7,D2                  *Move the mode for display
                     
-                    MOVE.L  #MASK_2_0,D7           *Load the mask source register
-                    JSR     APPLYMASK   
-                    MOVE.L  D7,D3                  *Move the source reg num for display
+                    ;MOVE.L  #MASK_2_0,D7           *Load the mask source register
+                    ;JSR     APPLYMASK   
+                    ;MOVE.L  D7,D3                  *Move the source reg num for display
                     
 *Calculate number of expansion words
                     *Destination side
@@ -1358,6 +1374,7 @@ fin_movea_ea
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
