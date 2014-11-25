@@ -8,41 +8,41 @@
     
 START:      ORG         $1000            | first instruction of program
 
-MASK        EQU         %11110000000000000000000000000000
-
-* D0,D1,D7 OPEN
-* CONVERT D3 TO ASCII HEX
-
-            MOVE.L      #$A00F551F,D3
-
+            MOVE.L      #$A100FF6B,D1
             MOVE.B      #$8,D0
             
-LOOP        MOVE.L      D3,D7
-            ANDI.L      #MASK,D7
-            MOVE.B      D0,D6
-            SUBI.B      #1,D6
-            MULU        #4,D6
-            ROR.L       D6,D7
+PUSH_LOOP   CMPI.B      #$0,D0
+            BEQ         HEX_PULL
+            MOVE.B      D1,D3
+            LSR.L       #4,D1
+            ANDI.B      #$F,D3
+            CMPI.B      #$9,D3
+            BLT         HEX_NUM
+            BRA         HEX_ALP
             
-            CMPI.B      #9,D7
-            BLE         CONV_NUM
-            BRA         CONV_ALPHA
-            
-CONV_NUM    ADDI.B      #30,D7
-            BRA         CONV_MOVE
-            
-CONV_ALPHA  ADDI.B      #42,D7
-            BRA         CONV_MOVE
-            
-CONV_MOVE   SUBI.L      #4,D6
-            ROL.L       D6,D7
-            ADD.L       D7,D1
-            
+HEX_NUM     ADDI.B      #$30,D3
+            BRA         HEX_AGAIN
+HEX_ALP     ADD.B       #$37,D3
+            BRA         HEX_AGAIN
+HEX_AGAIN   MOVE.B      D3,-(SP)
+            SUBI.B      #$1,D0
+            BRA         PUSH_LOOP
 
+HEX_PULL    MOVE.B      #$8,D1
+PULL_LOOP   MOVE.B     (SP)+,HEX_MSG
+            LEA         HEX_MSG,A1
+            MOVE.B      #14,D0
+            TRAP        #15
+            SUBI.B      #$1,D1
+            CMPI.B      #$0,D1
+            BGT         PULL_LOOP
+            
+HEX_MSG     DC.B        'A',0
 * EndProgram
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            | last line of source
+
 
 
 
