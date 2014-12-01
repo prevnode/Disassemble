@@ -35,11 +35,44 @@
 *-----------------------------------------TEST DATA--------------------------------------------------------
 TESTDATA
 
+*ericks testing opcodes
+    *CMPI    #1,D0
+    *SUBI #1,D0
+    *EORI  #1,D0
+    *ORI   #1,D0
+    *SUBA    D0,A1
+    *SUB     D0,D1
+    *ADDQ    #1,D1
+    *BHI     TESTJSR    
+    *BCC     TESTJSR
+    *BNE     TESTJSR
+    *BLT     TESTJSR 
+    *BHI     TESTJSR 
+    LSR.W   D0,D1
+    LSL.W   D0,D1
+    ROL.W   D0,D1
+    ROR.W   D0,D1
+    NEG     D0
+    NOT     D0
+    RTS
+    JSR     TESTJSR
+    
+TESTJSR
+    RTS
+    
+    *LEA     $3243,A3
+    *MOVEM   
+    AND.B   D1,D2
+    MULS.W  D1,D2
+    MULS.W  D1,D2
+
 *---------------------Add Variants--------------------
+
     ADD     D1,D2
     ADD     $1234,D2
     ADD     D2,$1234
     ADD     (A1)+,D2
+
 
 *----------------------MOVE VARIANTS--------------------------
     MOVE.L    D3,$1650000
@@ -1107,7 +1140,56 @@ code0101        BRA         ADDQ_EA
 *supported opcodes
 *BCC, BEQ, BHI, BLT, BNE, BRA
 
-code0110        STOP        #$2700
+code0110         JSR     CLEAR_DATA                    ; Clear all of the Registers    
+
+                 LEA     jmp_table_0110_11109 ,A0      ;Next JMP table
+                 
+                 MOVE.W  #Bits_11109,D3                  ;Move the mask into D3
+                 
+                 MOVE.W  #9,D1                         ;Move the shift amount into D1
+
+                 JSR     CONFIGURE_JMP ;_to hyper space   
+               
+                 JMP     0(A0,D0)
+                   
+jmp_table_0110_11109        JMP code_0110_000
+
+                            JMP code_0110_001
+
+                            JMP code_0110_010
+
+                            JMP code_0110_011
+
+                            JMP code_0110_100
+
+                            JMP code_0110_101
+
+                            JMP code_0110_110
+
+                            JMP code_0110_111
+  
+
+          
+code_0110_000     BRA   BRA_EA
+
+code_0110_001     BRA   BHI_EA
+
+code_0110_010     BRA   PRINT_BAD 
+
+code_0110_011     JSR   Check_8
+                  CMPI  #0,D0
+                  BEQ   BNE_EA
+                  BRA   BEQ_EA 
+
+code_0110_100     BRA   PRINT_BAD
+              
+code_0110_101     BRA   PRINT_BAD 
+
+code_0110_110     BRA   BLT_EA
+
+code_0110_111     BRA   PRINT_BAD                
+
+
 *------------------------------------End Bucket 0110---------------------------------
 
 
@@ -2213,6 +2295,10 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
+
+
+
 
 
 
