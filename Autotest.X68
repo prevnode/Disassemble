@@ -36,9 +36,10 @@
 TESTDATA
 
 *---------------------Add Variants--------------------
+    MULS.W  D1,D2
     ADD     D1,D2
     ADD     $1234,D2
-    ADD     D2,$1234
+    
 
 *----------------------MOVE VARIANTS--------------------------
     MOVE.L    D3,$1650000
@@ -2111,6 +2112,7 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
