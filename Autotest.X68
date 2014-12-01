@@ -1064,6 +1064,7 @@ shift   LSR.L   D1,D0               ;Shift bits to the least sig bit
 *D5 operand 2 register
 
 EXP2OPER
+        MOVE.B  #0,NUM_EXP_WRDS
         MOVE.L  A5,A4   ;Make a copy of the opcode pointer
         ADD.L   #2,A4   ;Advance to first expansion word (assumes on exists)
         
@@ -1106,11 +1107,13 @@ operand1
 getword1
         CLR     D3          ;Clear the register before copy expansion word
         MOVE.W  (A4)+,D3
+        ADD.B   #1,NUM_EXP_WRDS
         BRA     operand2
         
 getlong1
         CLR     D3          ;Clear the register before copy expansion word
         MOVE.L  (A4)+,D3
+        ADD.B   #2,NUM_EXP_WRDS
         BRA     operand2
         
 operand2
@@ -1126,11 +1129,13 @@ operand2
 getword2
         CLR     D5          ;Clear the register before copy expansion word
         MOVE.W  (A4)+,D5
+        ADD.B   #1,NUM_EXP_WRDS
         BRA     fin_exp
         
 getlong2
         CLR     D5          ;Clear the register before copy expansion word
         MOVE.L  (A4)+,D5
+        ADD.B   #2,NUM_EXP_WRDS
         BRA     fin_exp
 
 
@@ -1578,35 +1583,10 @@ MOVE_EA
                     MOVE.L  D7,D0                 ;<-------------------------------------------------------------------Need to integrate with I/O now that I have attribute
                   
                     JSR     LOAD12BY3
-                  
-                    
-*Calculate number of expansion words
-                    *Destination side
-                    CMP.W   #7,D4                  *Destination modes below 7 do not have expansion words 
-                    BLT     src_expansion
-                    JSR     INCREMENT_WRD_CNT
-                    CMP.W   #1,D5                  *001 in destination register
-                    BNE     src_expansion
-                    JSR     INCREMENT_WRD_CNT
-                    
-*Calculate number of expansion words
-                    *Source Side
-src_expansion       CMP.W   #7,D2                   
-                    BLT     move_attribute          *Mode less than 7 don't have expansion words
-                    JSR     INCREMENT_WRD_CNT       *At lease one more word
-                    CMP.W   #1,D3                   *Reg 1 means long word
-                    BLT     move_attribute          *Reg 0 is single word
-                    JSR     INCREMENT_WRD_CNT
-                    CMP.W   #4,D3                   *Register 4 indicates immediate data     
-                    BNE     move_attribute          *If not immediate data then wer're done
-                    CMP.W   #2,D0                   *If immediate then look at the size
-                    BNE     move_attribute          *Less than 2 means a single word and we've already added that
-                    JSR     INCREMENT_WRD_CNT       *Size is 2 (cant be greater) so add additonal word
-
-                    
+                    JSR     EXP2OPER      
  
 move_attribute
-                    JSR     EXP2OPER
+                    
                     LEA     MOVE_OP,A1
                     MOVE.B  #14,D0
                     TRAP    #15
@@ -1615,7 +1595,7 @@ move_attribute
                     JSR     APPLYMASK
                     MOVE.L  D7,D0                       ; Move for exmpansion wrd and attribute calculations
                     
-                                    *Calculate attribute
+                    *Calculate attribute
                     CMP.W   #1,D0                      ; 1 is byte
                     BEQ     move_byte
                     CMP.W   #2,D0                      ; Size determines attribute
