@@ -1054,11 +1054,92 @@ shift   LSR.L   D1,D0               ;Shift bits to the least sig bit
         
 *-----------------------------Expansion to Operand-----------------------------
 *Moves data from the expansion words into operand registers
+*D2 operand 1 mode
+*D3 operand 1 register
+*D4 operand 2 mode
+*D5 operand 2 register
+
 EXP2OPER
-        MOVE.L  A6,A5   ;Make a copy of the opcode pointer
+        MOVE.L  A5,A4   ;Make a copy of the opcode pointer
+        ADD.L   #2,A4   ;Advance to first expansion word (assumes on exists)
+        
+check_unsupported1
+        CMP.B   #5,D2       ;Mode 5-6 are displacement and unsupported
+        BEQ     PRINT_BAD
+        CMP.B   #6,D2
+        BEQ     PRINT_BAD
+        CMP.B   #7,D2    
+        BNE     check_unsupported2
+        CMP.B   #2,D3
+        BEQ     PRINT_BAD
+        CMP.B   #3,D3
+        BEQ     PRINT_BAD
+        BRA     check_unsupported2
+        
+check_unsupported2
+        CMP.B   #5,D4       ;Mode 5-6 are displacement and unsupported
+        BEQ     PRINT_BAD
+        CMP.B   #6,D4
+        BEQ     PRINT_BAD
+        CMP.B   #7,D4    
+        BNE     check_unsupported2
+        CMP.B   #2,D3       ;Register 2 - 3 are unsupported
+        BEQ     PRINT_BAD
+        CMP.B   #3,D3
+        BEQ     PRINT_BAD
+        
+operand1
+        CMP.B   #7,D2       ;Look at operand 1 mode
+        BLT     operand2    ;Opcodes below 7 don't use expansion words
+        CMP     #0,D3       ;Register 0 is word addressing
+        BEQ     getword1    ;Single word
+        CMP     #1,D3
+        BEQ     getlong1    ;Long word
+        CMP     #4,D3       ;Signifies immediate data
+        BEQ     getlong1    <---------------------------------Need to revise: have calling sr set D0 to indicate immediate size maybe
         
         
-opmodetable 
+getword1
+        CLR     D3          ;Clear the register before copy expansion word
+        MOVE.W  (A4)+,D3
+        BRA     operand2
+        
+getlong1
+        CLR     D3          ;Clear the register before copy expansion word
+        MOVE.L  (A4)+,D3
+        BRA     operand2
+        
+operand2
+        CMP.B   #7,D4       ;Look at operand 1 mode
+        BLT     fin_exp     ;Opcodes below 7 don't use expansion words
+        CMP     #0,D5       ;Register 0 is word addressing
+        BEQ     getword2    ;Single word
+        CMP     #1,D5
+        BEQ     getlong2    ;Long word
+        CMP     #4,D5       ;Signifies immediate data
+        BEQ     getlong2    <---------------------------------Need to revise: have calling sr set D0 to indicate immediate size maybe
+        
+getword2
+        CLR     D5          ;Clear the register before copy expansion word
+        MOVE.W  (A4)+,D5
+        BRA     operand2
+        
+getlong2
+        CLR     D5          ;Clear the register before copy expansion word
+        MOVE.L  (A4)+,D5
+        BRA     operand2
+
+
+fin_exp
+        RTS
+        
+        
+        
+        
+        
+        
+     
+         
         
         
  
@@ -1706,6 +1787,7 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
