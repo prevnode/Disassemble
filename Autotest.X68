@@ -36,6 +36,7 @@
 TESTDATA
 
 *---------------------Add Variants--------------------
+    MULS    D1,D2
     ADD     D1,D2
     ADD     $1234,D2
     ADD     D2,$1234
@@ -1509,7 +1510,7 @@ ADDA_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
+        MOVE.B  #1,NUM_EXP_WRDS
         BRA PRINT
   
 *-------------------------------------ADDQ_EA-----------------------------------
@@ -1519,7 +1520,7 @@ ADDQ_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
+        MOVE.B  #1,NUM_EXP_WRDS
         BRA PRINT
         
 *---------------------------AND_EA------------------------------------
@@ -1529,7 +1530,7 @@ AND_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
+        MOVE.B  #1,NUM_EXP_WRDS
         BRA PRINT
 
 *---------------------------ASL_EA------------------------------------
@@ -1539,7 +1540,7 @@ ASL_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
+        MOVE.B  #1,NUM_EXP_WRDS
         BRA PRINT
         
 *---------------------------ASR_EA------------------------------------
@@ -1549,7 +1550,7 @@ ASR_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
+        MOVE.B  #1,NUM_EXP_WRDS
         BRA PRINT
         
 *---------------------------BEQ_EA------------------------------------
@@ -1559,7 +1560,7 @@ BEQ_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
+        MOVE.B  #1,NUM_EXP_WRDS
         BRA PRINT
         
 *---------------------------BLT_EA------------------------------------
@@ -1569,7 +1570,7 @@ BLT_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
+        MOVE.B  #1,NUM_EXP_WRDS
         BRA PRINT
         
 *---------------------------BNE_EA------------------------------------
@@ -1579,7 +1580,7 @@ BNE_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
+        MOVE.B  #1,NUM_EXP_WRDS
         BRA PRINT
 *---------------------------BHI_EA------------------------------------
 BHI_EA
@@ -1588,7 +1589,7 @@ BHI_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
+        MOVE.B  #1,NUM_EXP_WRDS
         BRA PRINT
 *---------------------------BRA_EA------------------------------------
 BRA_EA
@@ -1597,7 +1598,7 @@ BRA_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
+        MOVE.B  #1,NUM_EXP_WRDS
         BRA PRINT
 
 
@@ -1806,7 +1807,7 @@ DIVS_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
+        MOVE.B  #1,NUM_EXP_WRDS
         BRA PRINT              
                 
                 
@@ -1849,7 +1850,7 @@ EORI_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
+        MOVE.B  #1,NUM_EXP_WRDS
         BRA PRINT
         
 *---------------------------JSR_EA------------------------------------
@@ -1859,7 +1860,7 @@ JSR_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
+        MOVE.B  #1,NUM_EXP_WRDS
         BRA PRINT
 
                 
@@ -1870,7 +1871,7 @@ LEA_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
+        MOVE.B  #1,NUM_EXP_WRDS
         BRA PRINT
         
 *---------------------------LSL_EA------------------------------------
@@ -1880,7 +1881,7 @@ LSL_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
+        MOVE.B  #1,NUM_EXP_WRDS
         BRA PRINT
         
 *---------------------------LSR_EA------------------------------------
@@ -1890,7 +1891,7 @@ LSR_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
+        MOVE.B  #1,NUM_EXP_WRDS
         BRA PRINT
                 
 
@@ -2001,7 +2002,7 @@ MOVEM_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
+        MOVE.B  #1,NUM_EXP_WRDS
         BRA PRINT
         
 *---------------------------MULS_EA------------------------------------
@@ -2011,7 +2012,7 @@ MULS_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
+        MOVE.B  #1,NUM_EXP_WRDS
         BRA PRINT
         
 *---------------------------NEG_EA------------------------------------
@@ -2021,7 +2022,7 @@ NEG_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
+        MOVE.B  #1,NUM_EXP_WRDS
         BRA PRINT
         
 *---------------------------NOT_EA------------------------------------
@@ -2031,7 +2032,7 @@ NOT_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
+        MOVE.B  #1,NUM_EXP_WRDS
         BRA PRINT
         
 *---------------------------ORI_EA------------------------------------
@@ -2041,7 +2042,7 @@ ORI_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
+        MOVE.B  #1,NUM_EXP_WRDS
         BRA PRINT
         
 *---------------------------ROL_EA------------------------------------
@@ -2051,7 +2052,7 @@ ROL_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
+        MOVE.B  #1,NUM_EXP_WRDS
         BRA PRINT
         
 *---------------------------ROR_EA------------------------------------
@@ -2061,7 +2062,7 @@ ROR_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
+        MOVE.B  #1,NUM_EXP_WRDS
         BRA PRINT
         
 *---------------------------RTS_EA------------------------------------
@@ -2071,7 +2072,7 @@ RTS_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
+        MOVE.B  #1,NUM_EXP_WRDS
         BRA PRINT
 
         
@@ -2084,7 +2085,7 @@ SUB_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
+        MOVE.B  #1,NUM_EXP_WRDS
         BRA PRINT
         
 *-----------------------------SUBA_EA---------------------------------
@@ -2094,7 +2095,7 @@ SUBA_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
+        MOVE.B  #1,NUM_EXP_WRDS
         BRA PRINT
         
 *---------------------------SUBI_EA------------------------------------
@@ -2103,7 +2104,7 @@ SUBI_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
+        MOVE.B  #1,NUM_EXP_WRDS
         BRA PRINT
 
 
@@ -2111,6 +2112,7 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
