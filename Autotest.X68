@@ -35,12 +35,23 @@
 *-----------------------------------------TEST DATA--------------------------------------------------------
 TESTDATA
 
-*---------------------Add Variants--------------------
-<<<<<<< HEAD
+*ericks testing opcodes
+    NEG     D0
+    NOT     D0
+    RTS
+    JSR     TESTJSR
+    
+TESTJSR
+    RTS
+    
+    LEA     $3243,A3
+    *MOVEM   
+    AND.B   D1,D2
     MULS.W  D1,D2
-=======
-    MULS    D1,D2
->>>>>>> origin/master
+    MULS.W  D1,D2
+
+*---------------------Add Variants--------------------
+ 
     ADD     D1,D2
     ADD     $1234,D2
     
@@ -2116,6 +2127,7 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
