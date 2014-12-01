@@ -1027,13 +1027,157 @@ shift   LSR.L   D1,D0               ;Shift bits to the least sig bit
         
 *-----------------------------Expansion to Operand-----------------------------
 *Moves data from the expansion words into operand registers
-*D0 = Start offset in words example 1 = A6
-*D1 = Number of words to move
-
-
-EXPTOPER
+EXP2OPER
+        MOVE.L  A6,A5   ;Make a copy of the opcode pointer
+        
+        
+opmodetable 
+        
         
  
+       
+        
+*----------------------------Load Last 12 Bits by 3--------------------------------------------
+*Loads the least 12 significant bits from the word A5 is currently pointing to. These are grouped
+*by 3 bits and loaded into D2-D5. SR uses RTS.
+*The order is:
+*Bits 11-9 -> D5
+*Bits 8-6 -> D4
+*Bits 5-3 -> D2
+*Bits 2-0 -> D3
+LOAD12BY3
+                MOVE.L  #MASK_11_9,D7       ;Mask out bits 11_9 for the destination register
+                JSR     APPLYMASK
+                MOVE.L  D7,D5               ;Move the dest register for display
+               
+                MOVE.L  #MASK_8_6,D7        ;Load the mask for opmode
+                JSR     APPLYMASK
+                MOVE.L  D7,D4               ;Move the opmode for finding attribute (will not be displayed)
+                                
+                MOVE.L  #MASK_5_3,D7        ;Load the mask for ea mode
+                JSR     APPLYMASK
+                MOVE.L  D7,D2               ;Move the ea mode for display                
+              
+                MOVE.L  #MASK_2_0,D7        ;Load the mask for ea register
+                JSR     APPLYMASK
+                MOVE.L  D7,D3               ;Move the ea register for display
+                RTS
+
+*-----------------------------------NOP_EA------------------------------ 
+*NOP doesn't actually have an ea but hey you gotta start somewhere
+NOP_EA
+
+                   
+
+*------------------------------------ADD_EA------------------------------------
+ADD_EA
+        LEA     ADD_OP,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+        
+        MOVE.L  #1,NUM_EXP_WRDS
+        BRA PRINT
+        
+*-----------------------------------ADDA_EA-------------------------------------
+ADDA_EA
+        LEA     ADDA_OP,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+        
+        MOVE.L  #1,NUM_EXP_WRDS
+        BRA PRINT
+  
+*-------------------------------------ADDQ_EA-----------------------------------
+ADDQ_EA
+
+        LEA     ADDQ_OP,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+        
+        MOVE.L  #1,NUM_EXP_WRDS
+        BRA PRINT
+        
+*---------------------------AND_EA------------------------------------
+AND_EA
+
+        LEA     AND_OP,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+        
+        MOVE.L  #1,NUM_EXP_WRDS
+        BRA PRINT
+
+*---------------------------ASL_EA------------------------------------
+ASL_EA
+
+        LEA     ASL_OP,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+        
+        MOVE.L  #1,NUM_EXP_WRDS
+        BRA PRINT
+        
+*---------------------------ASR_EA------------------------------------
+ASR_EA
+
+        LEA     MULS_OP,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+        
+        MOVE.L  #1,NUM_EXP_WRDS
+        BRA PRINT
+        
+*---------------------------BEQ_EA------------------------------------
+BEQ_EA
+
+        LEA     BEQ_OP,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+        
+        MOVE.L  #1,NUM_EXP_WRDS
+        BRA PRINT
+        
+*---------------------------BLT_EA------------------------------------
+BLT_EA
+
+        LEA     BLT_OP,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+        
+        MOVE.L  #1,NUM_EXP_WRDS
+        BRA PRINT
+        
+*---------------------------BNE_EA------------------------------------
+BNE_EA
+
+        LEA     BNE_OP,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+        
+        MOVE.L  #1,NUM_EXP_WRDS
+        BRA PRINT
+*---------------------------BHI_EA------------------------------------
+BHI_EA
+
+        LEA     BHI_OP,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+        
+        MOVE.L  #1,NUM_EXP_WRDS
+        BRA PRINT
+*---------------------------BRA_EA------------------------------------
+BRA_EA
+
+        LEA     BRA_OP,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+        
+        MOVE.L  #1,NUM_EXP_WRDS
+        BRA PRINT
+
+
+
+
 *------------------------------BTST_EA-------------------------------------------
 BTST_EA
 
@@ -1116,49 +1260,7 @@ print_btst
         LEA     BTST_OP,A1
         MOVE.B  #14,D0
         TRAP    #15
-        RTS       
-        
-*----------------------------Load Last 12 Bits by 3--------------------------------------------
-*Loads the least 12 significant bits from the word A5 is currently pointing to. These are grouped
-*by 3 bits and loaded into D2-D5. SR uses RTS.
-*The order is:
-*Bits 11-9 -> D5
-*Bits 8-6 -> D4
-*Bits 5-3 -> D2
-*Bits 2-0 -> D3
-LOAD12BY3
-                MOVE.L  #MASK_11_9,D7       ;Mask out bits 11_9 for the destination register
-                JSR     APPLYMASK
-                MOVE.L  D7,D5               ;Move the dest register for display
-               
-                MOVE.L  #MASK_8_6,D7        ;Load the mask for opmode
-                JSR     APPLYMASK
-                MOVE.L  D7,D4               ;Move the opmode for finding attribute (will not be displayed)
-                                
-                MOVE.L  #MASK_5_3,D7        ;Load the mask for ea mode
-                JSR     APPLYMASK
-                MOVE.L  D7,D2               ;Move the ea mode for display                
-              
-                MOVE.L  #MASK_2_0,D7        ;Load the mask for ea register
-                JSR     APPLYMASK
-                MOVE.L  D7,D3               ;Move the ea register for display
-                RTS
-
-*-----------------------------------NOP_EA------------------------------ 
-*NOP doesn't actually have an ea but hey you gotta start somewhere
-NOP_EA
-
-                   
-
-*------------------------------------ADD EA------------------------------------
-ADD_EA
-register_msk        EQU     %00001110000000000000000000000000
-opmode_msk          EQU     %00000001110000000000000000000000
-ea_mode_msk         EQU     %00000000001110000000000000000000
-ea_reg_msk          EQU     %00000000000001110000000000000000
-
-
-                    MOVE.L  #$DA430000,$1600    *Test data corresponds to ADD D3,D5
+        RTS
                     
                     
 *---------------------------------CMPA_EA------------------------------------
@@ -1270,6 +1372,17 @@ CMPI_EA
                 MOVE.L  MASK_2_0,D7         ;Mask for ea register
                 JSR     APPLYMASK
                 MOVE.L  D7,D5               ;Move ea register for display
+                BRA     PRINT
+                
+*---------------------------DIVS_EA------------------------------------
+DIVS_EA
+
+        LEA     DIVS_OP,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+        
+        MOVE.L  #1,NUM_EXP_WRDS
+        BRA PRINT
                 
                 
                          
@@ -1329,6 +1442,58 @@ EOR_EA
                 BLT     fin_eor_ea          ;Register 0 only has one word
                 JSR     INCREMENT_WRD_CNT   ;Register 1 needs a second word                
 fin_eor_ea
+                BRA     PRINT
+                
+*---------------------------EORI_EA------------------------------------
+EORI_EA
+
+        LEA     EORI_OP,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+        
+        MOVE.L  #1,NUM_EXP_WRDS
+        BRA PRINT
+        
+*---------------------------JSR_EA------------------------------------
+JSR_EA
+
+        LEA     JSR_OP,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+        
+        MOVE.L  #1,NUM_EXP_WRDS
+        BRA PRINT
+
+                
+*---------------------------LEA_EA------------------------------------
+LEA_EA
+
+        LEA     LEA_OP,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+        
+        MOVE.L  #1,NUM_EXP_WRDS
+        BRA PRINT
+        
+*---------------------------LSL_EA------------------------------------
+LSL_EA
+
+        LEA     LSL_OP,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+        
+        MOVE.L  #1,NUM_EXP_WRDS
+        BRA PRINT
+        
+*---------------------------LSR_EA------------------------------------
+LSR_EA
+
+        LEA     LSR_OP,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+        
+        MOVE.L  #1,NUM_EXP_WRDS
+        BRA PRINT
                 
 
 *---------------------------------MOVE_EA----------------------------------
@@ -1431,489 +1596,127 @@ movea_unsupported
 fin_movea_ea
                 BRA     PRINT
         
-* EndProgram
-*-----------------------------------------------------------
+*---------------------------------MOVEM_EA--------------------------
+MOVEM_EA
+        LEA     MOVEM_OP,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+        
+        MOVE.L  #1,NUM_EXP_WRDS
+        BRA PRINT
+        
+*---------------------------MULS_EA------------------------------------
+MULS_EA
+
+        LEA     MULS_OP,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+        
+        MOVE.L  #1,NUM_EXP_WRDS
+        BRA PRINT
+        
+*---------------------------NEG_EA------------------------------------
+NEG_EA
+
+        LEA     NEG_OP,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+        
+        MOVE.L  #1,NUM_EXP_WRDS
+        BRA PRINT
+        
+*---------------------------NOT_EA------------------------------------
+NOT_EA
+
+        LEA     NOT_OP,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+        
+        MOVE.L  #1,NUM_EXP_WRDS
+        BRA PRINT
+        
+*---------------------------ORI_EA------------------------------------
+ORI_EA
+
+        LEA     ORI_OP,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+        
+        MOVE.L  #1,NUM_EXP_WRDS
+        BRA PRINT
+        
+*---------------------------ROL_EA------------------------------------
+ROL_EA
+
+        LEA     ROL_OP,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+        
+        MOVE.L  #1,NUM_EXP_WRDS
+        BRA PRINT
+        
+*---------------------------ROR_EA------------------------------------
+ROR_EA
+
+        LEA     ROR_OP,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+        
+        MOVE.L  #1,NUM_EXP_WRDS
+        BRA PRINT
+        
+*---------------------------RTS_EA------------------------------------
+RTS_EA
+
+        LEA     RTS_OP,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+        
+        MOVE.L  #1,NUM_EXP_WRDS
+        BRA PRINT
+
+        
+ 
+        
+*-------------------------------SUB_EA-------------------------------
+SUB_EA
+
+        LEA     SUB_OP,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+        
+        MOVE.L  #1,NUM_EXP_WRDS
+        BRA PRINT
+        
+*-----------------------------SUBA_EA---------------------------------
+SUBA_EA
+
+        LEA     SUBA_OP,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+        
+        MOVE.L  #1,NUM_EXP_WRDS
+        BRA PRINT
+        
+*---------------------------SUBI_EA------------------------------------
+SUBI_EA
+        LEA     SUBI_OP,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+        
+        MOVE.L  #1,NUM_EXP_WRDS
+        BRA PRINT
+
+
+        
+
+
+
+
+
+*-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
