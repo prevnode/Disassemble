@@ -35,27 +35,20 @@
 *-----------------------------------------TEST DATA--------------------------------------------------------
 TESTDATA
 
-*---------------------Add Variants--------------------
-    ADD     D1,D2
-
-
 *----------------------MOVE VARIANTS--------------------------
-    MOVE.L    D3,$1650000
-    MOVE.B      #255,D6         *Immediate Data
-    MOVE.L      #$1234,D6
     MOVE.B      D5,$19001234    *Absolute Long Address
     MOVE.B      D5,$1900        *Absolute Word Address
 
     MOVE.B      D5,D6           *Data Register Direct
     MOVE.L      A5,A4           *Address Register Direct
     MOVE.B      (A5),D6         *Address Register Indirect
-    
+    MOVE.B      #255,D6         *Immediate Data
     MOVE.B      (A5)+,D6        *Address Register with Postincrement
     MOVE.B      -(A5),D6        *Address Register with Predecrement
     
     
     MOVE.W    D2,A2
-   
+    MOVE.L    D3,$1650000
     MOVE.B    #14,D6
     MOVE.W    #14,D6
     MOVE.L    #1455,D6
@@ -727,10 +720,9 @@ MODE2_POST111       LEA         SE7,A1              ; print post symbols for opm
                     TRAP        #15                 ; trap #15 I/O
                     RTS
 
-*------------------------------Begin OpCode-------------------------------------------------------------------------------------------------
+*------------------------------Begin OpCode----------------------------------
 
 
-; differnt masking bits used in opmode analysis
 
 Bits_15141312  EQU  %1111000000000000
 
@@ -738,21 +730,9 @@ Bits_876       EQU  %0000000111000000
 
 Bits_11109     EQU  %0000111000000000
 
-Bits_987       EQU  %0000001110000000
-
-Bits_43        EQU  %0000000000011000
-
-Bits_54        EQU  %0000000000110000
-
-Bits_8         EQU  %0000000100000000
-
-
 
 *------------------------------Configure JMP----------------------------------
 
-
-*this function is only a little different than the Check functions
-*multiplies the number at the end so the jump table move to the correct code
 CONFIGURE_JMP    
 
                  MOVE.W  (A5),D0         ; Copy the current opcode
@@ -764,117 +744,19 @@ CONFIGURE_JMP
                  MULU    #6,D0           ; Multiply by 6 to JMP b/c each JMP is 6 bytes    
                  
                  RTS                     ; return
-                 
-*------------------------------Configure JMP----------------------------------                 
-
-*each of the below functions masks and then shifts the bits that 
-* the function is labeld as
-* Example: 11109 masks bits 11,10,9 and then shifts them all the way to the right
-
-*bits are stored as EQU's
-                 
-Check_11109      JSR     CLEAR_DATA
-
-                 MOVE.W  #Bits_11109,D3                  ;Move the mask into D3
-                 
-                 MOVE.W  #9,D1                         ;Move the shift amount into D1 
-                 
-                 MOVE.W  (A5),D0                       ; Copy the current opcode
-                
-                 AND.W   D3,D0                         ; Mask the current Opcode 
-                
-                 LSR.W   D1,D0                         ; Shift over a certain number of bits
-
-                 RTS
-
-
-Check_987        JSR     CLEAR_DATA 
-
-                 MOVE.W  #Bits_987,D3                  ;Move the mask into D3
-                 
-                 MOVE.W  #7,D1                         ;Move the shift amount into D1 
-                 
-                 MOVE.W  (A5),D0                       ; Copy the current opcode
-                
-                 AND.W   D3,D0                         ; Mask the current Opcode 
-                
-                 LSR.W   D1,D0                         ; Shift over a certain number of bits
-
-                 RTS 
-                 
-                 
-Check_876        JSR     CLEAR_DATA     
-
-                 MOVE.W  #Bits_876,D3                  ;Move the mask into D3
-                 
-                 MOVE.W  #6,D1                         ;Move the shift amount into D1 
-                 
-                 MOVE.W  (A5),D0                       ; Copy the current opcode
-                
-                 AND.W   D3,D0                         ; Mask the current Opcode 
-                
-                 LSR.W   D1,D0                         ; Shift over a certain number of bits
-
-                 RTS 
-                 
-                 
-Check_43         JSR     CLEAR_DATA     
-
-                 MOVE.W  #Bits_43,D3                  ;Move the mask into D3
-                 
-                 MOVE.W  #3,D1                         ;Move the shift amount into D1 
-                 
-                 MOVE.W  (A5),D0                       ; Copy the current opcode
-                
-                 AND.W   D3,D0                         ; Mask the current Opcode 
-                
-                 LSR.W   D1,D0                         ; Shift over a certain number of bits
-
-                 RTS 
-                 
-                 
-Check_54         JSR     CLEAR_DATA     
-
-                 MOVE.W  #Bits_54,D3                  ;Move the mask into D3
-                 
-                 MOVE.W  #4,D1                         ;Move the shift amount into D1 
-                 
-                 MOVE.W  (A5),D0                       ; Copy the current opcode
-                
-                 AND.W   D3,D0                         ; Mask the current Opcode 
-                
-                 LSR.W   D1,D0                         ; Shift over a certain number of bits
-
-                 RTS 
-                 
-                 
-Check_8          JSR     CLEAR_DATA     
-
-                 MOVE.W  #Bits_8,D3                    ;Move the mask into D3
-                 
-                 MOVE.W  #8,D1                         ;Move the shift amount into D1 
-                 
-                 MOVE.W  (A5),D0                       ; Copy the current opcode
-                
-                 AND.W   D3,D0                         ; Mask the current Opcode 
-                
-                 LSR.W   D1,D0                         ; Shift over a certain number of bits
-
-                 RTS 
-
 
 *------------------------------Configure JMP----------------------------------
 
 
-BEGINOPCODE      JSR     CLEAR_DATA              ; Clear all of the Registers
- 
-                 LEA     jmp_table,A0            ;Load the next JMP table
-                 
-                 MOVE.W  #Bits_15141312,D3       ;Move the mask into D3
-                 
-                 MOVE.W  #12,D1                  ;Move the shift amount into D1
+BEGINOPCODE      JSR     CLEAR_DATA      ; Clear all of the Registers
 
-                 JSR     CONFIGURE_JMP ;_to hyper space :0    
+                 LEA     jmp_table,A0    ;Load the next JMP table
+                 
+                 MOVE.W  #Bits_15141312,D3     ;Move the mask into D3
+                 
+                 MOVE.W  #12,D1          ;Move the shift amount into D1
+
+                 JSR     CONFIGURE_JMP   
                
                  JMP     0(A0,D0)     
 
@@ -921,6 +803,23 @@ jmp_table        JMP     code0000
 *------------------------------------Begin Bucket 0001-------------------------------
 * Supported Opcodes
 * CMPI, EORI, ORI, SUBI, BTST
+
+
+*Check BTST is a special function to make sure that the opcode is not btst
+* it is easy to look at a code and accidently return BTST when it is not
+Check_BTST       JSR     CLEAR_DATA
+
+                 MOVE.W  #Bits_876,D3                  ;Move the mask into D3
+                 
+                 MOVE.W  #6,D1                         ;Move the shift amount into D1 
+                 
+                 MOVE.W  (A5),D0                       ; Copy the current opcode
+                
+                 AND.W   D3,D0                         ; Mask the current Opcode 
+                
+                 LSR.W   D1,D0                         ; Shift over a certain number of bits
+
+                 RTS
   
 
 *starting the the JMP
@@ -932,7 +831,7 @@ code0000         JSR     CLEAR_DATA                    ; Clear all of the Regist
                  
                  MOVE.W  #9,D1                         ;Move the shift amount into D1
 
-                 JSR     CONFIGURE_JMP ;_to hyper space   
+                 JSR     CONFIGURE_JMP   
                
                  JMP     0(A0,D0)
                    
@@ -954,41 +853,41 @@ jmp_table_0000_11109        JMP code_0000_000
   
 
           
-code_0000_000     JSR   Check_876           ;if btst else ori
+code_0000_000     JSR   Check_BTST
                   CMPI  #4,D0
-                  BEQ   BTST_EA
-                  *BRA  ORI_EA   
+                  BRA   BTST_EA
+                  BRA   CMPI_EA   
 
-code_0000_001     JSR   Check_876           ;if btst else subi
+code_0000_001     JSR   Check_BTST
                   CMPI  #4,D0
-                  BEQ   BTST_EA
+                  BRA   BTST_EA
                   *BRA   SUBI_EA 
 
-code_0000_010     JSR   Check_876           ;if btst else unsupported
-                  CMPI  #4,D0   
-                  BEQ   BTST_EA
+code_0000_010     JSR   Check_BTST
+                  CMPI  #4,D0
+                  BRA   BTST_EA
                   BRA   PRINT_BAD 
 
-code_0000_011     JSR   Check_876           ;if btst else unsupported
+code_0000_011     JSR   Check_BTST
                   CMPI  #4,D0
-                  BEQ   BTST_EA
+                  BRA   BTST_EA
                   BRA   PRINT_BAD 
 
 code_0000_100     BRA   BTST_EA
               
-code_0000_101     JSR   Check_876           ;if btst else eori
+code_0000_101     JSR   Check_BTST
                   CMPI  #4,D0
-                  BEQ   BTST_EA
+                  BRA   BTST_EA
                   *BRA   EORI_EA 
 
-code_0000_110     JSR   Check_876           ;if btst else cmpi
+code_0000_110     JSR   Check_BTST
                   CMPI  #4,D0
-                  BEQ   BTST_EA
-                  *BRA   CMPI_EA 
+                  BRA   BTST_EA
+                  BRA   PRINT_BAD 
 
-code_0000_111     JSR   Check_876           ;if btst else unsupported
+code_0000_111     JSR   Check_BTST
                   CMPI  #4,D0
-                  BEQ   BTST_EA
+                  BRA   BTST_EA
                   BRA   PRINT_BAD 
                 
 *------------------------------------End Bucket 0000---------------------------------
@@ -996,169 +895,37 @@ code_0000_111     JSR   Check_876           ;if btst else unsupported
 
 
 *------------------------------------Begin Bucket 0001-------------------------------
-*supported opcodes
-*MOVE.B
 code0001         BRA        MOVE_EA
 *------------------------------------End Bucket 0001---------------------------------
 
 
-
 *------------------------------------Begin Bucket 0010-------------------------------
-*supported opcodes
-*MOVE.L, MOVEA.L
 code0010         BRA        MOVE_EA
 *------------------------------------End Bucket 0010---------------------------------
 
 
-
 *------------------------------------Begin Bucket 0011-------------------------------
-*supported opcodes
-*MOVE.W, MOVEA.W
 code0011         BRA        MOVE_EA
 *------------------------------------End Bucket 0011---------------------------------
-
-
-
-*------------------------------------Begin Bucket 0100------------------------------- 
-* supported opcodes
-* MOVEM, NEG, DIVISL, JSR, LEA, MULSL, NOT, RTS
-
-                 
-                
-code0100         JSR     Check_987          ;check movem and lea first, they are different than the rest
-                 CMPI.B  #1, D0             
-                 BEQ     MOVEM_EA
-
-                 JSR     Check_876
-                 CMPI.B  #7, D0
-                 BEQ     LEA_EA 
-
-  
-
-                 JSR     CLEAR_DATA                    ; Clear all of the Registers    
-
-                 LEA     jmp_table_0100_11109 ,A0      ;Next JMP table
-                 
-                 MOVE.W  #Bits_11109,D3                ;Move the mask into D3
-                 
-                 MOVE.W  #9,D1                         ;Move the shift amount into D1
-
-                 JSR     CONFIGURE_JMP   
-               
-                 JMP     0(A0,D0)
-                 
-                   
-jmp_table_0100_11109        JMP code_0100_000
-
-                            JMP code_0100_001
-
-                            JMP code_0100_010
-
-                            JMP code_0100_011
-
-                            JMP code_0100_100
-
-                            JMP code_0100_101
-
-                            JMP code_0100_110
-
-                            JMP code_0100_111
-  
-
-          
-code_0100_000   BRA         PRINT_BAD 
-
-code_0100_001   BRA         PRINT_BAD
-     
-code_0100_010   BRA         NEG_EA
-   
-code_0100_011   BRA         NOT_EA
-  
-code_0100_100   BRA         PRINT_BAD
-                  
-code_0100_101   BRA         PRINT_BAD 
-   
-code_0100_110   JSR         Check_876  ;if/else for divis/muls 
-                CMPI.B      #1,D0
-                *BEQ         DIVIS_EA    
-                BRA         MULS_EA        
-
-code_0100_111   JSR         Check_876  ;if/else for jsr/rts
-                CMPI.B      #2,D0
-                BEQ         JSR_EA   
-                BRA         RTS_EA        
  
+code0100        STOP        #$2700
 
-*------------------------------------End Bucket 0100---------------------------------
-
-
-
-*------------------------------------Begin Bucket 0101-------------------------------
-*supported opcodes
-*ADDQ
-code0101        BRA         ADDQ_EA
-*------------------------------------End Bucket 0101---------------------------------
-
-
-
-*------------------------------------Begin Bucket 0110-------------------------------
-*supported opcodes
-*BCC, BEQ, BHI, BLT, BNE, BRA
+code0101        STOP        #$2700
 
 code0110        STOP        #$2700
-*------------------------------------End Bucket 0110---------------------------------
 
+code0111        STOP        #$2700
 
+code1000        STOP        #$2700
 
-*------------------------------------Begin Bucket 0111-------------------------------
-*supported opcodes
-*NONE
-code0111        BRA         PRINT_BAD
-*------------------------------------End Bucket 0111---------------------------------
+code1001        STOP        #$2700
 
-
-
-*------------------------------------Begin Bucket 1000-------------------------------
-*supported opcodes
-*OR, DIVSW
-
-code1000       JSR          Check_876           ;if/else for or/divs
-               CMPI         #7,D0
-               BEQ          DIVS_EA
-               *BRA          OR_EA
-
-*------------------------------------End Bucket 1000---------------------------------
-
-
-
-*------------------------------------Begin Bucket 1001-------------------------------
-*supported opcodes
-*SUB, SUBA
-
-code1001       JSR          Check_876           ;suba can only be 7 or 3, anything else is sub
-               CMPI         #7,D0
-               BEQ          SUBA_EA
-               
-               JSR          Check_876
-               CMPI         #3,D0
-               BEQ          SUBA_EA
-               
-               BRA          SUB_EA
-*------------------------------------End Bucket 1001---------------------------------
-
-
-
-*------------------------------------Begin Bucket 1010-------------------------------
-*supported opcodes
-*NONE
+*------------------------------------Begin Bucket 1010-----------------------------
 code1010        BRA      PRINT_BAD
-*------------------------------------End Bucket 1010---------------------------------
+*------------------------------------End Bucket 1010-------------------------------
 
 
-
-*------------------------------------Begin Bucket 1011-------------------------------
-*supported opcodes
-*CMP, CMPA, EOR
+*------------------------------------Begin Bucket 1011-----------------------------
 
 code1011         JSR     CLEAR_DATA                    ; Clear all of the Registers    
 
@@ -1173,7 +940,6 @@ code1011         JSR     CLEAR_DATA                    ; Clear all of the Regist
                  JMP     0(A0,D0)
                  
                  
-*XXX represents "dont care what those bits are" 
                  
 jmp_table_1011_XXX_876      JMP code_1011_XXX_000
 
@@ -1212,91 +978,15 @@ code_1011_XXX_111  BRA CMPA_EA
 
 *-----------------------------End Bucket 1011---------------------------------------
 
+code1100       STOP        #$2700
 
+code1101       STOP        #$2700
 
-*-----------------------------Begin Bucket 1100---------------------------------------
-*supported opcodes
-*MULSW, AND
-
-code1100       JSR          Check_876           ;if/else for muls/and
-               CMPI         #7,D0
-               BEQ          MULS_EA
-               BRA          AND_EA
-               
-*-----------------------------End Bucket 1100---------------------------------------
-
-
-
-*-----------------------------Begin Bucket 1101-------------------------------------
-*supported opcodes
-*ADD, ADDA, ADDX
-code1101       JSR          Check_43           ;if addx
-               CMPI         #0,D0
-               *BEQ          ADDX_EA
-               
-               JSR          Check_876          ;else if adda (adda opmode can be 3 or 7)
-               CMPI         #3,D0
-               BEQ          ADDA_EA
-               
-               JSR          Check_876          ;else if adda (adda opmode can be 3 or 7)
-               CMPI         #7,D0
-               BEQ          ADDA_EA
-               
-               BRA          ADD_EA             ;else add (anything else is assumed add)
-
-*-----------------------------End Bucket 1101---------------------------------------
-
-
-
-*-----------------------------End Bucket 1110---------------------------------------
-*supported opcodes
-*LSR, LSL, ROL, ROR
-
-code1110       JSR          Check_11109         ;if LS R or L memory shift         
-               CMPI         #1,D0
-               BEQ          LS_
-               
-               JSR          Check_11109         ;else if RO R or L memory rotate       
-               CMPI         #3,D0
-               BEQ          RO_
-               
-               JSR          Check_43            ;else if LS R or L register shift             
-               CMPI         #1,D0
-               BEQ          LS_
-               
-               JSR          Check_43            ;else if RO R or L register rotate  
-               CMPI         #3,D0
-               BEQ          RO_
-               
-               BRA          PRINT_BAD           ;anything else is not supported
-               
-*know that it is LS, check to see if right or left shift               
-LS_            JSR          Check_8
-               CMPI         #1,D0
-               BEQ          LSL_EA
-               BRA          LSR_EA
-
-
-*know that it is RO, check to see if right or left rotate 
-RO_            JSR          Check_8
-               CMPI         #1,D0
-               BEQ          ROL_EA
-               BRA          ROR_EA
-
-                     
-*-----------------------------End Bucket 1110---------------------------------------
-
-
+code1110       STOP        #$2700
 
 *-----------------------------Begin Bucket 1111-------------------------------------
-*supported opcodes
-*NONE
 code1111       BRA      PRINT_BAD
-
 *-----------------------------End Bucket 1111---------------------------------------
-
-
-*---------------------------------------end opcode-------------------------------------------------------------------------
 
 *-------------------------------------------EA Sub Routines Follow---------------------------------
 
@@ -1398,9 +1088,9 @@ check_unsupported2
         BEQ     PRINT_BAD
         CMP.B   #7,D4    
         BNE     operand1
-        CMP.B   #2,D5       ;Register 2 - 3 are unsupported
+        CMP.B   #2,D3       ;Register 2 - 3 are unsupported
         BEQ     PRINT_BAD
-        CMP.B   #3,D5
+        CMP.B   #3,D3
         BEQ     PRINT_BAD
         
 operand1
@@ -1411,18 +1101,8 @@ operand1
         CMP     #1,D3
         BEQ     getlong1    ;Long word
         CMP     #4,D3       ;Signifies immediate data
-        BEQ     immediate1
+        BEQ     getlong1    <---------------------------------Need to revise: have calling sr set D0 to indicate immediate size maybe
         
-        
-immediate1
-        CMP     #2,D6       ;Size data register
-        BEQ     getlong1    ;2 indicates long word
-        BRA     getword1    ;1 or 3 use word
-        
-immediate2
-        CMP     #2,D6       ;Size data register
-        BEQ     getlong2    ;2 indicates long word
-        BRA     getword2    ;1 or 3 use word        
         
 getword1
         CLR     D3          ;Clear the register before copy expansion word
@@ -1444,7 +1124,7 @@ operand2
         CMP     #1,D5
         BEQ     getlong2    ;Long word
         CMP     #4,D5       ;Signifies immediate data
-        BEQ     immediate2
+        BEQ     getlong2    <---------------------------------Need to revise: have calling sr set D0 to indicate immediate size maybe
         
 getword2
         CLR     D5          ;Clear the register before copy expansion word
@@ -1493,13 +1173,11 @@ LOAD12BY3
 
 *------------------------------------ADD_EA------------------------------------
 ADD_EA
-        JSR     LOAD12BY3
-        JSR     EXP2OPER
-        
         LEA     ADD_OP,A1
-        MOVE    #14,D0
+        MOVE.B  #14,D0
         TRAP    #15
         
+        MOVE.L  #1,NUM_EXP_WRDS
         BRA PRINT
         
 *-----------------------------------ADDA_EA-------------------------------------
@@ -1902,21 +1580,25 @@ MOVE_EA
                     
                     MOVE.L  #MASK_13_12,D7         *Load the mask for size
                     JSR     APPLYMASK
-                    MOVE.L  D7,D6                
+                    MOVE.L  D7,D0                 ;<-------------------------------------------------------------------Need to integrate with I/O now that I have attribute
                   
                     JSR     LOAD12BY3
                     JSR     EXP2OPER      
  
-move_attribute                    
+move_attribute
+                    
                     LEA     MOVE_OP,A1
                     MOVE.B  #14,D0
-                    TRAP    #15                   
+                    TRAP    #15
                     
+                    MOVE.L  #MASK_13_12,D7              ; Mask for size
+                    JSR     APPLYMASK
+                    MOVE.L  D7,D0                       ; Move for exmpansion wrd and attribute calculations
                     
                     *Calculate attribute
-                    CMP.W   #1,D6                      ; 1 is byte
+                    CMP.W   #1,D0                      ; 1 is byte
                     BEQ     move_byte
-                    CMP.W   #2,D6                      ; Size determines attribute
+                    CMP.W   #2,D0                      ; Size determines attribute
                     BEQ     move_long                  ; 2 is long
                     BRA     move_word                  ; 3 is word (No check for invalid values)
                     
