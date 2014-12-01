@@ -36,14 +36,16 @@
 TESTDATA
 
 *----------------------MOVE VARIANTS--------------------------
+    MOVE.B      D5,$19001234    *Absolute Long Address
+    MOVE.B      D5,$1900        *Absolute Word Address
+
     MOVE.B      D5,D6           *Data Register Direct
     MOVE.L      A5,A4           *Address Register Direct
     MOVE.B      (A5),D6         *Address Register Indirect
     MOVE.B      #255,D6         *Immediate Data
     MOVE.B      (A5)+,D6        *Address Register with Postincrement
     MOVE.B      -(A5),D6        *Address Register with Predecrement
-    MOVE.B      D5,$19001234    *Absolute Long Address
-    MOVE.B      D5,$1900        *Absolute Word Address
+    
     
     MOVE.W    D2,A2
     MOVE.L    D3,$1650000
@@ -1084,7 +1086,7 @@ check_unsupported2
         CMP.B   #6,D4
         BEQ     PRINT_BAD
         CMP.B   #7,D4    
-        BNE     check_unsupported2
+        BNE     operand1
         CMP.B   #2,D3       ;Register 2 - 3 are unsupported
         BEQ     PRINT_BAD
         CMP.B   #3,D3
@@ -1124,25 +1126,16 @@ operand2
 getword2
         CLR     D5          ;Clear the register before copy expansion word
         MOVE.W  (A4)+,D5
-        BRA     operand2
+        BRA     fin_exp
         
 getlong2
         CLR     D5          ;Clear the register before copy expansion word
         MOVE.L  (A4)+,D5
-        BRA     operand2
+        BRA     fin_exp
 
 
 fin_exp
-        RTS
-        
-        
-        
-        
-        
-        
-     
-         
-        
+        RTS   
         
  
        
@@ -1613,6 +1606,7 @@ src_expansion       CMP.W   #7,D2
                     
  
 move_attribute
+                    JSR     EXP2OPER
                     LEA     MOVE_OP,A1
                     MOVE.B  #14,D0
                     TRAP    #15
