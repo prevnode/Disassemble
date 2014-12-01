@@ -43,11 +43,11 @@ TESTDATA
     *SUBA    D0,A1
     *SUB     D0,D1
     *ADDQ    #1,D1
-    *BHI     TESTJSR    
+    BHI     TESTJSR    
     *BCC     TESTJSR
-    *BNE     TESTJSR
-    *BLT     TESTJSR 
-    *BHI     TESTJSR 
+    BNE     TESTJSR
+    BLT     TESTJSR 
+    BHI     TESTJSR 
     LSR.W   D0,D1
     LSL.W   D0,D1
     ROL.W   D0,D1
@@ -257,6 +257,7 @@ MASK_13_12          EQU     %00110000000000000000000000000000
 MASK_11_9           EQU     %00001110000000000000000000000000
 MASK_8_6            EQU     %00000001110000000000000000000000
 MASK_7_6            EQU     %00000000110000000000000000000000
+MASK_7_0            EQU     %00000000111111110000000000000000
 MASK_5_3            EQU     %00000000001110000000000000000000
 MASK_2_0            EQU     %00000000000001110000000000000000
 
@@ -1437,9 +1438,13 @@ msk8    CMP.L   #MASK_8_6,D7
         MOVE    #22,D1
         BRA     shift   
 msk5    CMP.L   #MASK_5_3,D7
-        BNE     msk2
+        BNE     msk70
         MOVE    #19,D1
-        BRA     shift   
+        BRA     shift
+msk70   CMP.L   #MASK_7_0,D7
+        BNE     msk2
+        MOVE    #16,D1
+        BRA     shift       
 msk2    CMP.L   #MASK_2_0,D7
         BNE     ENDPROGRAM      ;D7 doesn't match any mask in the global variables
         MOVE    #16,D1
@@ -1734,17 +1739,40 @@ ASR_EA
         MOVE.B  #0,NUM_EXP_WRDS
         BRA PRINT
         
+*---------------------Bcc Common-------------------------------------
+BCCCOM
+    MOVE        A5,A4               ;Make a copy of opcode pointer
+    ADD         #2,A4               ;Point to first expansion word (assume it exists)
+    MOVE.B      #1,NUM_OPERANDS     ;One operand corresponds to displacement
+    MOVE.B      #7,D2               ;Set the first operand to display hex
+    MOVE.L      MASK_7_0,D7         ;Last 8 bits determine length of displacement
+    ANDI.L      #$00FF0000,D7
+    JSR         APPLYMASK
+    CMP.B       #$00,D7              ;0 indicates long
+    BEQ         bcc2
+    BRA         bcc0
+    
+bcc0
+    MOVE.B      D7,D3               ;Displacement less than 8 bits 
+    MOVE.B      #0,NUM_EXP_WRDS
+    RTS
+    
+bcc2    
+    MOVE.B      #2,NUM_EXP_WRDS
+    MOVE.W      (A4)+,D3
+    RTS
 
         
 *---------------------------BEQ_EA------------------------------------
 BEQ_EA
-
+        
         LEA     BEQ_OP,A1
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.B  #2,NUM_EXP_WRDS
-        BRA PRINT
+        JSR     BCCCOM
+        
+        BRA     PRINT
         
 *---------------------------BLT_EA------------------------------------
 BLT_EA
@@ -1753,8 +1781,8 @@ BLT_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.B  #2,NUM_EXP_WRDS
-        BRA PRINT
+        JSR     BCCCOM
+        BRA     PRINT
         
 *---------------------------BNE_EA------------------------------------
 BNE_EA
@@ -1763,8 +1791,8 @@ BNE_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.B  #2,NUM_EXP_WRDS
-        BRA PRINT
+        JSR     BCCCOM
+        BRA     PRINT
 *---------------------------BHI_EA------------------------------------
 BHI_EA
 
@@ -1772,8 +1800,8 @@ BHI_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.B  #2,NUM_EXP_WRDS
-        BRA PRINT
+        JSR     BCCCOM
+        BRA     PRINT
 *---------------------------BRA_EA------------------------------------
 BRA_EA
 
@@ -1781,8 +1809,8 @@ BRA_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.B  #2,NUM_EXP_WRDS
-        BRA PRINT
+        JSR     BCCCOM
+        BRA     PRINT
 
 
 *------------------------------BTST_EA-------------------------------------------
