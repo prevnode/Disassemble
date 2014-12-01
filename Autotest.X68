@@ -35,6 +35,25 @@
 *-----------------------------------------TEST DATA--------------------------------------------------------
 TESTDATA
 
+*----------------------MOVE VARIANTS--------------------------
+    MOVE.B      D5,D6           *Data Register Direct
+    MOVE.L      A5,A4           *Address Register Direct
+    MOVE.B      (A5),D6         *Address Register Indirect
+    MOVE.B      #255,D6         *Immediate Data
+    MOVE.B      (A5)+,D6        *Address Register with Postincrement
+    MOVE.B      -(A5),D6        *Address Register with Predecrement
+    MOVE.B      D5,$19001234    *Absolute Long Address
+    MOVE.B      D5,$1900        *Absolute Word Address
+    
+    MOVE.W    D2,A2
+    MOVE.L    D3,$1650000
+    MOVE.B    #14,D6
+    MOVE.W    #14,D6
+    MOVE.L    #1455,D6
+    MOVE.L    #1455,A6
+    MOVE.L    #145555,D6
+
+
  *--------------------BTST VARIANTS-----------------------
     BTST    D3,#1234
     BTST    D7,D2
@@ -73,23 +92,6 @@ TESTDATA
     MOVEA.W     $16001234,A2
     
     
-*----------------------MOVE VARIANTS--------------------------
-    MOVE.B      D5,D6           *Data Register Direct
-    MOVE.L      A5,A4           *Address Register Direct
-    MOVE.B      (A5),D6         *Address Register Indirect
-    MOVE.B      #255,D6         *Immediate Data
-    MOVE.B      (A5)+,D6        *Address Register with Postincrement
-    MOVE.B      -(A5),D6        *Address Register with Predecrement
-    MOVE.B      D5,$19001234    *Absolute Long Address
-    MOVE.B      D5,$1900        *Absolute Word Address
-    
-    MOVE.W    D2,A2
-    MOVE.L    D3,$1650000
-    MOVE.B    #14,D6
-    MOVE.W    #14,D6
-    MOVE.L    #1455,D6
-    MOVE.L    #1455,A6
-    MOVE.L    #145555,D6
     
 *--------------------MOVEM VARIANTS--------------------------
     MOVEM.L     A0-A3/D0-D7, -(A7)
@@ -1597,18 +1599,41 @@ MOVE_EA
 *Calculate number of expansion words
                     *Source Side
 src_expansion       CMP.W   #7,D2                   
-                    BLT     fin_move_ea             *Mode less than 7 don't have expansion words
+                    BLT     move_attribute          *Mode less than 7 don't have expansion words
                     JSR     INCREMENT_WRD_CNT       *At lease one more word
                     CMP.W   #1,D3                   *Reg 1 means long word
-                    BLT     fin_move_ea             *Reg 0 is single word
+                    BLT     move_attribute          *Reg 0 is single word
                     JSR     INCREMENT_WRD_CNT
                     CMP.W   #4,D5                   *Register 4 indicates immediate data     
-                    BNE     fin_move_ea             *If not immediate data then wer're done
+                    BNE     move_attribute          *If not immediate data then wer're done
                     CMP.W   #2,D0                   *If immediate then look at the size
-                    BNE     fin_move_ea             *Less than 2 means a single word and we've already added that
-                    JSR     INCREMENT_WRD_CNT       *Size is 2 (cant be greater) so add additonal word 
-fin_move_ea         
+                    BNE     move_attribute          *Less than 2 means a single word and we've already added that
+                    JSR     INCREMENT_WRD_CNT       *Size is 2 (cant be greater) so add additonal word
+
                     
+ 
+move_attribute
+                    LEA     MOVE_OP,A1
+                    MOVE.B  #14,D0
+                    TRAP    #15
+                    
+                    MOVE.L  #MASK_13_12,D7              ; Mask for size
+                    JSR     APPLYMASK
+                    MOVE.L  D7,D0                       ; Move for exmpansion wrd and attribute calculations
+                    
+                                    *Calculate attribute
+                    CMP.W   #2,D0                      ; Size determines attribute
+                    BEQ     move_long                  ; 2 is long
+                    BRA     move_word                  ; 3 is word (No check for invalid values)
+move_word      
+                    JSR     PRINT_WORD
+                    BRA     fin_move_ea
+move_long
+                    JSR     PRINT_LONG
+                    BRA     fin_move_ea
+              
+fin_move_ea
+                    BRA     PRINT
                                         
 
 *------------------------------------------MOVEA_EA----------------------------------------------------------
