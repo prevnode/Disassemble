@@ -1582,10 +1582,10 @@ MOVE_EA
                     
 *Calculate number of expansion words
                     *Destination side
-                    CMP.W   #7,D2                  *Destination modes below 7 do not have expansion words 
+                    CMP.W   #7,D4                  *Destination modes below 7 do not have expansion words 
                     BLT     src_expansion
                     JSR     INCREMENT_WRD_CNT
-                    CMP.W   #1,D1                  *001 in destination register
+                    CMP.W   #1,D5                  *001 in destination register
                     BNE     src_expansion
                     JSR     INCREMENT_WRD_CNT
                     
@@ -1597,7 +1597,7 @@ src_expansion       CMP.W   #7,D2
                     CMP.W   #1,D3                   *Reg 1 means long word
                     BLT     move_attribute          *Reg 0 is single word
                     JSR     INCREMENT_WRD_CNT
-                    CMP.W   #4,D5                   *Register 4 indicates immediate data     
+                    CMP.W   #4,D3                   *Register 4 indicates immediate data     
                     BNE     move_attribute          *If not immediate data then wer're done
                     CMP.W   #2,D0                   *If immediate then look at the size
                     BNE     move_attribute          *Less than 2 means a single word and we've already added that
@@ -1616,9 +1616,15 @@ move_attribute
                     MOVE.L  D7,D0                       ; Move for exmpansion wrd and attribute calculations
                     
                                     *Calculate attribute
+                    CMP.W   #1,D0                      ; 1 is byte
+                    BEQ     move_byte
                     CMP.W   #2,D0                      ; Size determines attribute
                     BEQ     move_long                  ; 2 is long
                     BRA     move_word                  ; 3 is word (No check for invalid values)
+                    
+move_byte
+                    JSR     PRINT_BYTE
+                    BRA     fin_move_ea
 move_word      
                     JSR     PRINT_WORD
                     BRA     fin_move_ea
