@@ -36,19 +36,22 @@
 TESTDATA
 
 *----------------------MOVE VARIANTS--------------------------
+    MOVE.L    D3,$1650000
+    MOVE.B      #255,D6         *Immediate Data
+    MOVE.L      #$1234,D6
     MOVE.B      D5,$19001234    *Absolute Long Address
     MOVE.B      D5,$1900        *Absolute Word Address
 
     MOVE.B      D5,D6           *Data Register Direct
     MOVE.L      A5,A4           *Address Register Direct
     MOVE.B      (A5),D6         *Address Register Indirect
-    MOVE.B      #255,D6         *Immediate Data
+    
     MOVE.B      (A5)+,D6        *Address Register with Postincrement
     MOVE.B      -(A5),D6        *Address Register with Predecrement
     
     
     MOVE.W    D2,A2
-    MOVE.L    D3,$1650000
+   
     MOVE.B    #14,D6
     MOVE.W    #14,D6
     MOVE.L    #1455,D6
@@ -1088,9 +1091,9 @@ check_unsupported2
         BEQ     PRINT_BAD
         CMP.B   #7,D4    
         BNE     operand1
-        CMP.B   #2,D3       ;Register 2 - 3 are unsupported
+        CMP.B   #2,D5       ;Register 2 - 3 are unsupported
         BEQ     PRINT_BAD
-        CMP.B   #3,D3
+        CMP.B   #3,D5
         BEQ     PRINT_BAD
         
 operand1
@@ -1101,8 +1104,18 @@ operand1
         CMP     #1,D3
         BEQ     getlong1    ;Long word
         CMP     #4,D3       ;Signifies immediate data
-        BEQ     getlong1    <---------------------------------Need to revise: have calling sr set D0 to indicate immediate size maybe
+        BEQ     immediate1
         
+        
+immediate1
+        CMP     #2,D6       ;Size data register
+        BEQ     getlong1    ;2 indicates long word
+        BRA     getword1    ;1 or 3 use word
+        
+immediate2
+        CMP     #2,D6       ;Size data register
+        BEQ     getlong2    ;2 indicates long word
+        BRA     getword2    ;1 or 3 use word        
         
 getword1
         CLR     D3          ;Clear the register before copy expansion word
@@ -1124,7 +1137,7 @@ operand2
         CMP     #1,D5
         BEQ     getlong2    ;Long word
         CMP     #4,D5       ;Signifies immediate data
-        BEQ     getlong2    <---------------------------------Need to revise: have calling sr set D0 to indicate immediate size maybe
+        BEQ     immediate2
         
 getword2
         CLR     D5          ;Clear the register before copy expansion word
@@ -1580,25 +1593,21 @@ MOVE_EA
                     
                     MOVE.L  #MASK_13_12,D7         *Load the mask for size
                     JSR     APPLYMASK
-                    MOVE.L  D7,D0                 ;<-------------------------------------------------------------------Need to integrate with I/O now that I have attribute
+                    MOVE.L  D7,D6                
                   
                     JSR     LOAD12BY3
                     JSR     EXP2OPER      
  
-move_attribute
-                    
+move_attribute                    
                     LEA     MOVE_OP,A1
                     MOVE.B  #14,D0
-                    TRAP    #15
+                    TRAP    #15                   
                     
-                    MOVE.L  #MASK_13_12,D7              ; Mask for size
-                    JSR     APPLYMASK
-                    MOVE.L  D7,D0                       ; Move for exmpansion wrd and attribute calculations
                     
                     *Calculate attribute
-                    CMP.W   #1,D0                      ; 1 is byte
+                    CMP.W   #1,D6                      ; 1 is byte
                     BEQ     move_byte
-                    CMP.W   #2,D0                      ; Size determines attribute
+                    CMP.W   #2,D6                      ; Size determines attribute
                     BEQ     move_long                  ; 2 is long
                     BRA     move_word                  ; 3 is word (No check for invalid values)
                     
