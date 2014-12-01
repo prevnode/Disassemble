@@ -984,6 +984,33 @@ code1110       STOP        #$2700
 code1111       BRA      PRINT_BAD
 *-----------------------------End Bucket 1111---------------------------------------
 
+*-------------------------------------------EA Sub Routines Follow---------------------------------
+
+*-----------------------------PRINT_BYTE--------------------------------------
+*Prints the byte attribute
+PRINT_BYTE
+                MOVE.B  #14,D0
+                LEA     BYTE,A1
+                TRAP    #15
+                RTS
+ 
+*-------------------------------PRINT_WORD---------------------------------------------------------------
+*Prints the word attribute
+PRINT_WORD
+                MOVE.B  #14,D0
+                LEA     WORD,A1
+                TRAP    #15
+                RTS
+                
+*------------------------------------PRINT_LONG------------------------------------------------------
+*Prints the long attribute
+PRINT_LONG  
+
+                MOVE.B  #14,D0
+                LEA     LONG,A1
+                TRAP    #15
+                RTS
+
 *----------------------------------------------Increment Expansion Word Count-----------------------------------------
 INCREMENT_WRD_CNT       
                     ADD.B   #1,NUM_EXP_WRDS
@@ -1061,13 +1088,7 @@ LOAD12BY3
                 MOVE.L  #MASK_2_0,D7        ;Load the mask for ea register
                 JSR     APPLYMASK
                 MOVE.L  D7,D3               ;Move the ea register for display
-                RTS
-
-*-----------------------------------NOP_EA------------------------------ 
-*NOP doesn't actually have an ea but hey you gotta start somewhere
-NOP_EA
-
-                   
+                RTS                   
 
 *------------------------------------ADD_EA------------------------------------
 ADD_EA
@@ -1176,8 +1197,6 @@ BRA_EA
         BRA PRINT
 
 
-
-
 *------------------------------BTST_EA-------------------------------------------
 BTST_EA
 
@@ -1261,51 +1280,7 @@ print_btst
         MOVE.B  #14,D0
         TRAP    #15
         RTS
-                    
-                    
-*---------------------------------CMPA_EA------------------------------------
-CMPA_EA
-                MOVE.B  #0,NUM_EXP_WRDS
-                MOVE.B  #2,NUM_OPERANDS           
-               
-                JSR     LOAD12BY3
-*Calculate the number of expansion words
-                CMP     #7,D2               ;Source mode determines if expansion words needed
-                BLT     cmpa_output         ;Modes less than 7 don't have words
-                JSR     INCREMENT_WRD_CNT   ;Mode 7 has at least 1 expansion word
-                CMP     #0,D3               ;Look at register
-                BEQ     cmpa_output         ;Source register of 0 is short word so already incremented once
-                CMP     #1,D3               ;Source register of 4 is imediate data need to look at atribute (opmode)
-                BNE     cmpa_op_mod         ;If register is not one (earlier checked 0) then it is 4 which means immediate
-                JSR     INCREMENT_WRD_CNT   ;Register 1 means long word add one expansion
-                BRA     cmpa_output         ;Thats all folks
-cmpa_op_mod     CMP     #2,D3               ;Source register 4 immediate data need to check attribute (opmode)
-                BNE     cmpa_output         ;Byte or Word only add a single word already done when we hit mode 7 so done
-                JSR     INCREMENT_WRD_CNT   ;Opmode 2 eauals long word so one more expansion
-cmpa_output
-                *Print opcode
-                LEA     CMPA_OP,A1
-                MOVE.B  #14,D0
-                TRAP    #15
-                *Print attribute
-                CMP     #3,D4             ;Destination mode (opmode) determines attribute
-                BLT     PRINT_BAD         ;No mode below 3 are valid
-                CMP     #3,D4               
-                BEQ     cmpa_word          ;Mode 3 is equal to word    
-                CMP     #7,D4
-                BEQ     cmpa_long          ;Mode 7 is equal to long
-cmpa_word
-                JSR     PRINT_WORD
-                BRA     fin_cmpa_ea
-                
-cmpa_long  
-                JSR     PRINT_LONG     
-                BRA     fin_cmpa_ea
-                
-fin_cmpa_ea      
-                MOVE.L  #1,D4       ;Destination is always an address register
-                BRA     PRINT       ;EA completed
-                    
+        
 *---------------------------------CMP_EA-----------------------------------------
 *Parse the effective address of a cmp opcode
 CMP_EA
@@ -1355,6 +1330,52 @@ cmp_long
 fin_cmp_ea      
                 CLR.L   D4          ;Destination is always a data register
                 BRA     PRINT       ;EA completed
+
+                    
+                    
+*---------------------------------CMPA_EA------------------------------------
+CMPA_EA
+                MOVE.B  #0,NUM_EXP_WRDS
+                MOVE.B  #2,NUM_OPERANDS           
+               
+                JSR     LOAD12BY3
+*Calculate the number of expansion words
+                CMP     #7,D2               ;Source mode determines if expansion words needed
+                BLT     cmpa_output         ;Modes less than 7 don't have words
+                JSR     INCREMENT_WRD_CNT   ;Mode 7 has at least 1 expansion word
+                CMP     #0,D3               ;Look at register
+                BEQ     cmpa_output         ;Source register of 0 is short word so already incremented once
+                CMP     #1,D3               ;Source register of 4 is imediate data need to look at atribute (opmode)
+                BNE     cmpa_op_mod         ;If register is not one (earlier checked 0) then it is 4 which means immediate
+                JSR     INCREMENT_WRD_CNT   ;Register 1 means long word add one expansion
+                BRA     cmpa_output         ;Thats all folks
+cmpa_op_mod     CMP     #2,D3               ;Source register 4 immediate data need to check attribute (opmode)
+                BNE     cmpa_output         ;Byte or Word only add a single word already done when we hit mode 7 so done
+                JSR     INCREMENT_WRD_CNT   ;Opmode 2 eauals long word so one more expansion
+cmpa_output
+                *Print opcode
+                LEA     CMPA_OP,A1
+                MOVE.B  #14,D0
+                TRAP    #15
+                *Print attribute
+                CMP     #3,D4             ;Destination mode (opmode) determines attribute
+                BLT     PRINT_BAD         ;No mode below 3 are valid
+                CMP     #3,D4               
+                BEQ     cmpa_word          ;Mode 3 is equal to word    
+                CMP     #7,D4
+                BEQ     cmpa_long          ;Mode 7 is equal to long
+cmpa_word
+                JSR     PRINT_WORD
+                BRA     fin_cmpa_ea
+                
+cmpa_long  
+                JSR     PRINT_LONG     
+                BRA     fin_cmpa_ea
+                
+fin_cmpa_ea      
+                MOVE.L  #1,D4       ;Destination is always an address register
+                BRA     PRINT       ;EA completed
+                    
                 
 *------------------------------------CMPI_EA--------------------------------------
 CMPI_EA
@@ -1382,35 +1403,8 @@ DIVS_EA
         TRAP    #15
         
         MOVE.L  #1,NUM_EXP_WRDS
-        BRA PRINT
+        BRA PRINT              
                 
-                
-                         
-                
-*-----------------------------PRINT_BYTE--------------------------------------
-*Prints the byte attribute
-PRINT_BYTE
-                MOVE.B  #14,D0
-                LEA     BYTE,A1
-                TRAP    #15
-                RTS
- 
-*-------------------------------PRINT_WORD---------------------------------------------------------------
-*Prints the word attribute
-PRINT_WORD
-                MOVE.B  #14,D0
-                LEA     WORD,A1
-                TRAP    #15
-                RTS
-                
-*------------------------------------PRINT_LONG------------------------------------------------------
-*Prints the long attribute
-PRINT_LONG  
-
-                MOVE.B  #14,D0
-                LEA     LONG,A1
-                TRAP    #15
-                RTS
                 
 *-------------------------------EOR_EA---------------------------------------------------------
 EOR_EA
@@ -1706,11 +1700,6 @@ SUBI_EA
         
         MOVE.L  #1,NUM_EXP_WRDS
         BRA PRINT
-
-
-        
-
-
 
 
 
