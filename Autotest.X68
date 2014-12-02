@@ -1396,7 +1396,7 @@ PRINT_BYTE
                 MOVE.B  #14,D0
                 LEA     BYTE,A1
                 TRAP    #15
-                RTS
+                BRA     PRINT
  
 *-------------------------------PRINT_WORD---------------------------------------------------------------
 *Prints the word attribute
@@ -1404,7 +1404,7 @@ PRINT_WORD
                 MOVE.B  #14,D0
                 LEA     WORD,A1
                 TRAP    #15
-                RTS
+                BRA     PRINT
                 
 *------------------------------------PRINT_LONG------------------------------------------------------
 *Prints the long attribute
@@ -1413,7 +1413,7 @@ PRINT_LONG
                 MOVE.B  #14,D0
                 LEA     LONG,A1
                 TRAP    #15
-                RTS
+                BRA     PRINT
 
 *----------------------------------------------Increment Expansion Word Count-----------------------------------------
 INCREMENT_WRD_CNT       
@@ -1695,9 +1695,9 @@ ADD_EA
         MOVE    #14,D0
         TRAP    #15
         
-        JSR     PRINT_BYTE
+        BRA     PRINT_BYTE
         
-        BRA PRINT
+        
         
 *-----------------------------------ADDA_EA-------------------------------------
 ADDA_EA
@@ -1906,31 +1906,20 @@ BTST_EA
         *Mode = 7
         JSR     INCREMENT_WRD_CNT ;Mode 7 has at least 1 expansion word
         CMP.B   #0,D5           ;Look at EA Register
-        BEQ     btst_byte       ;EA Register 0 has only one expansion word and byte attribute
+        BEQ     PRINT_BYTE      ;EA Register 0 has only one expansion word and byte attribute
         CMP.B   #4,D5           ;Look at EA Register
-        BEQ     btst_byte       ;EA Register 4 also has only one expansion word and byte attribute
+        BEQ     PRINT_BYTE      ;EA Register 4 also has only one expansion word and byte attribute
         CMP.B   #1,D5           ;Look at EA Register
         BNE     btst_bad        ;INVAID
         JSR     INCREMENT_WRD_CNT ;Ea register 1 indicates long attribute with 2 expansion words
-        BRA     btst_long
-        
-btst_byte
-        BSR     print_btst      ;Valid btst address EA
-        JSR     PRINT_BYTE              
-        BRA     PRINT           ;Print operands
+        BRA     PRINT_LONG                         
         
 btst_lss7
         CMP.B   #0,D4           ;Only supported modes are 0,2-4
-        BEQ     btst_long       ;Data register is the only long attribute
+        BEQ     PRINT_BYTE      ;Data register is the only long attribute
         CMP.B   #4,D4           ;Only supported modes are 0,2-4
         BGT     btst_bad        ;Unsupported address mode
-        BRA     btst_byte       ;EA Modes 2-4 are all byte sized
-        
-btst_long      
-        BSR     print_btst      
-        JSR     PRINT_LONG      ;Data reg destination uses long only
-        BRA     PRINT           ;Print operands
-        
+        BRA     PRINT_BYTE      ;EA Modes 2-4 are all byte sized                
         
 btst_bad    
         BRA     PRINT_BAD
@@ -1944,9 +1933,7 @@ btst_im
         MOVE.L  D0,A4
         MOVE.W (A4),D3
         BSR     print_btst      ;Print the opcode
-        JSR     PRINT_LONG      ;Immediate is always long
-        BRA     PRINT           ;Print the operands
-        
+        BRA     PRINT_LONG      ;Immediate is always long        
         
 print_btst
         *Print opcode
@@ -1982,29 +1969,16 @@ cmp_output
                 LEA     CMP_OP,A1
                 MOVE.B  #14,D0
                 TRAP    #15
+                
+                MOVE.L  D4,D6               ;D6 holds the size
+                CLR.L   D4                  ;Destination is always a data register
                 *Print attribute
-                CMP     #0,D4             ;Destination mode (opmode) determines attribute
-                BEQ     cmp_byte          ;Mode 0 is equal to byte
-                CMP     #1,D4               
-                BEQ     cmp_word          ;MOde 1 is equal to word    
-                CMP     #2,D4
-                BEQ     cmp_long          ;Mode 2 is equal to long   
-
-cmp_byte      
-                JSR     PRINT_BYTE
-                BRA     fin_cmp_ea
-cmp_word
-                JSR     PRINT_WORD
-                BRA     fin_cmp_ea
-                
-cmp_long  
-                JSR     PRINT_LONG     
-                BRA     fin_cmp_ea
-                
-fin_cmp_ea      
-                CLR.L   D4          ;Destination is always a data register
-                BRA     PRINT       ;EA completed
-
+                CMP     #0,D6               ;Destination mode (opmode) determines attribute
+                BEQ     PRINT_BYTE          ;Mode 0 is equal to byte
+                CMP     #1,D6               
+                BEQ     PRINT_WORD          ;MOde 1 is equal to word    
+                CMP     #2,D6
+                BEQ     PRINT_LONG          ;Mode 2 is equal to long
                     
                     
 *---------------------------------CMPA_EA------------------------------------
@@ -2031,24 +2005,16 @@ cmpa_output
                 LEA     CMPA_OP,A1
                 MOVE.B  #14,D0
                 TRAP    #15
+                
+                MOVE.L  D4,D1               ;D1 will determine size
+                MOVE.L  #1,D4               ;Destination is always an address register
                 *Print attribute
-                CMP     #3,D4             ;Destination mode (opmode) determines attribute
-                BLT     PRINT_BAD         ;No mode below 3 are valid
-                CMP     #3,D4               
-                BEQ     cmpa_word          ;Mode 3 is equal to word    
-                CMP     #7,D4
-                BEQ     cmpa_long          ;Mode 7 is equal to long
-cmpa_word
-                JSR     PRINT_WORD
-                BRA     fin_cmpa_ea
-                
-cmpa_long  
-                JSR     PRINT_LONG     
-                BRA     fin_cmpa_ea
-                
-fin_cmpa_ea      
-                MOVE.L  #1,D4       ;Destination is always an address register
-                BRA     PRINT       ;EA completed
+                CMP     #3,D1               ;Destination mode (opmode) determines attribute
+                BLT     PRINT_BAD           ;No mode below 3 are valid
+                CMP     #3,D1               
+                BEQ     PRINT_WORD          ;Mode 3 is equal to word    
+                CMP     #7,D1
+                BEQ     PRINT_LONG          ;Mode 7 is equal to long
                     
                 
 *------------------------------------CMPI_EA--------------------------------------
@@ -2151,24 +2117,13 @@ LSL_EA
         TRAP    #15
         
         CMP.B   #0,D6
-        BEQ     lsl_byte
+        BEQ     PRINT_BYTE
         CMP.B   #1,D6
-        BEQ     lsl_word
+        BEQ     PRINT_WORD
         CMP.B   #2,D6
-        BEQ     lsl_long
+        BEQ     PRINT_LONG
         BRA     ENDPROGRAM
         
-lsl_byte
-        JSR     PRINT_BYTE
-        BRA     PRINT
-lsl_word
-        JSR     PRINT_WORD
-        BRA     PRINT
-lsl_long
-        JSR     PRINT_LONG
-        BRA     PRINT
-        
-        BRA PRINT
         
 *---------------------------LSR_EA------------------------------------
 LSR_EA
@@ -2203,24 +2158,10 @@ move_attribute
                     
                     *Calculate attribute
                     CMP.W   #1,D6                      ; 1 is byte
-                    BEQ     move_byte
+                    BEQ     PRINT_BYTE
                     CMP.W   #2,D6                      ; Size determines attribute
-                    BEQ     move_long                  ; 2 is long
-                    BRA     move_word                  ; 3 is word (No check for invalid values)
-                    
-move_byte
-                    JSR     PRINT_BYTE
-                    BRA     fin_move_ea
-move_word      
-                    JSR     PRINT_WORD
-                    BRA     fin_move_ea
-move_long
-                    JSR     PRINT_LONG
-                    BRA     fin_move_ea
-              
-fin_move_ea
-                    BRA     PRINT
-                                        
+                    BEQ     PRINT_LONG                 ; 2 is long
+                    BRA     PRINT_WORD                  ; 3 is word (No check for invalid values)    
 
 *------------------------------------------MOVEA_EA----------------------------------------------------------
 MOVEA_EA
@@ -2257,30 +2198,22 @@ MOVEA_EA
 chk_sreg_4      CMP.W   #4,D3                       ; Source reg 4 with mode 7 is immediate
                 BNE     movea_unsupported           ; With source mode 7 supported registers are 0,1,4 only
                 CMP.W   #2,D0                       ; Size indicates numb of exp words with immediate
-                BNE     movea_word                  ; Size of 3 indicates word so only 1 expansion
+                BNE     PRINT_WORD                  ; Size of 3 indicates word so only 1 expansion
                 JSR     INCREMENT_WRD_CNT           ; Size of 2 indicates long so need another expansion
-                BRA     movea_long          
+                BRA     PRINT_LONG          
                 
 
                 
                 *Calculate attribute
 movea_attribute
                 CMP.W   #2,D0                       ; Size determines attribute
-                BEQ     movea_long                  ; 2 is long
-                BRA     movea_word                  ; 3 is word (No check for invalid values)
-movea_word      
-                JSR     PRINT_WORD
-                BRA     fin_movea_ea
-movea_long
-                JSR     PRINT_LONG
-                BRA     fin_movea_ea
+                BEQ     PRINT_LONG                  ; 2 is long
+                BRA     PRINT_WORD                  ; 3 is word (No check for invalid values)
+
               
 
 movea_unsupported
-                ; Need to print invalid code here
-
-fin_movea_ea
-                BRA     PRINT
+                BRA     PRINT_BAD
         
 *---------------------------------MOVEM_EA--------------------------
 MOVEM_EA
