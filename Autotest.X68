@@ -1772,23 +1772,37 @@ memory_shifts
         
 *---------------------------ASL_EA------------------------------------
 ASL_EA
-
+        JSR     SHIFTCOM
+        
         LEA     ASL_OP,A1
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.B  #0,NUM_EXP_WRDS
-        BRA PRINT
+        CMP.B   #0,D6
+        BEQ     PRINT_BYTE
+        CMP.B   #1,D6
+        BEQ     PRINT_WORD
+        CMP.B   #2,D6
+        BEQ     PRINT_LONG
+        BRA     ENDPROGRAM      ;In case something went wrong
+
         
 *---------------------------ASR_EA------------------------------------
 ASR_EA
-
+        JSR     SHIFTCOM
+        
         LEA     MULS_OP,A1
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.B  #0,NUM_EXP_WRDS
-        BRA PRINT
+        CMP.B   #0,D6
+        BEQ     PRINT_BYTE
+        CMP.B   #1,D6
+        BEQ     PRINT_WORD
+        CMP.B   #2,D6
+        BEQ     PRINT_LONG
+        BRA     ENDPROGRAM      ;In case something went wrong
+
         
 *---------------------Bcc Common-------------------------------------
 BCCCOM
@@ -2127,13 +2141,18 @@ LSL_EA
         
 *---------------------------LSR_EA------------------------------------
 LSR_EA
-
+        JSR     SHIFTCOM
         LEA     LSR_OP,A1
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.B  #0,NUM_EXP_WRDS
-        BRA PRINT
+        CMP.B   #0,D6
+        BEQ     PRINT_BYTE
+        CMP.B   #1,D6
+        BEQ     PRINT_WORD
+        CMP.B   #2,D6
+        BEQ     PRINT_LONG
+        BRA     ENDPROGRAM
                 
 
 *---------------------------------MOVE_EA----------------------------------
@@ -2266,23 +2285,37 @@ ORI_EA
         
 *---------------------------ROL_EA------------------------------------
 ROL_EA
+        JSR     SHIFTCOM
 
         LEA     ROL_OP,A1
         MOVE.B  #14,D0
         TRAP    #15
         
-        JSR     SHIFTCOM
-        BRA PRINT
+        CMP.B   #0,D6
+        BEQ     PRINT_BYTE
+        CMP.B   #1,D6
+        BEQ     PRINT_WORD
+        CMP.B   #2,D6
+        BEQ     PRINT_LONG
+        BRA     ENDPROGRAM
+
         
 *---------------------------ROR_EA------------------------------------
 ROR_EA
-
+        JSR     SHIFTCOM
+        
         LEA     ROR_OP,A1
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.B  #0,NUM_EXP_WRDS
-        BRA PRINT
+        CMP.B   #0,D6
+        BEQ     PRINT_BYTE
+        CMP.B   #1,D6
+        BEQ     PRINT_WORD
+        CMP.B   #2,D6
+        BEQ     PRINT_LONG
+        BRA     ENDPROGRAM
+
         
 *---------------------------RTS_EA------------------------------------
 RTS_EA
