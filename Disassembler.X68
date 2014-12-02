@@ -286,6 +286,7 @@ PROMPTRUNAGAIN
 RESET               JSR         CLEAR_SCREEN        ; subroutine to clear screen
                     JSR         CLEAR_DATA          ; subroutine to clear data registers
                     JSR         CLEAR_ADDRESS       ; subroutine to clear address registers
+                    MOVE.W      #30,PAUSE_COUNT     ; Initialize to 30
                     BRA         START               ; branch back to start
                     
 CLEAR_SCREEN        MOVE.B      #11,D0              ; clear the screen
@@ -424,6 +425,14 @@ PRINT_OPREG1
                     
 POPR1_HEX           CLR          D0                 ; clear d0
                     CLR          D1                 ; clear d1
+*                    MOVE.L       D3,D0
+*                    ANDI.L      $#FFFF0000,D0
+*                    CMPI.L      #$0,D0
+*                    BEQ         PWRD1
+*                    BRA         PLNG1
+*                    
+*PWRD1               MOVE.B      #4,D0
+*                    MOVE.L
                     MOVE.B       #8,D0              ; set counter to 8
                     MOVE.L       D3,D1              ; copy reg number to d1
 PUSH_LOOP           CMPI.B       #$0,D0             ; is counter at 0
@@ -868,7 +877,7 @@ code0100        STOP        #$2700
 
 
 *------------------------------------Begin Bucket 0101-------------------------------
-code0101        BRA         ADDQ_EA
+code0101        STOP        #$2700  *BRA         ADDQ_EA   <------------------------------------------ BRANDAN REMOVED TO MAKE CODE RUN
 *------------------------------------End Bucket 0101---------------------------------
 
 
@@ -1368,6 +1377,7 @@ fin_movea_ea
 *-----------------------------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
