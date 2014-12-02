@@ -43,8 +43,7 @@ TESTDATA
     *SUBA    D0,A1
     *SUB     D0,D1
     *ADDQ    #1,D1
-    LSL     $8888
-    LSL     $1234567
+    LSL     #3,D0
     BHI     TESTJSR    
     *BCC     TESTJSR
     BNE     TESTJSR
@@ -1099,7 +1098,7 @@ jmp_table_0100_11109        JMP code_0100_000
                             JMP code_0100_101
 
                             JMP code_0100_110
-
+        
                             JMP code_0100_111
   
 
@@ -1724,6 +1723,10 @@ AND_EA
         BRA PRINT
 *---------------------------Shift Common-----------------------------
 SHIFTCOM
+*Bits 11-9 -> D5
+*Bits 8-6 -> D4
+*Bits 5-3 -> D2
+*Bits 2-0 -> D3
         JSR     LOAD12BY3           ;Split opcode into registers (only a few are used here)
         MOVE.L  MASK_7_6,D7         ;Field indicates location of data, register or memory
         ANDI.L  #$00C00000,D7       ;Work around the sign extension
@@ -1734,14 +1737,22 @@ SHIFTCOM
         
 register_shifts
         BTST    #5,D0               ;5th bit is i/r field
-        BEQ     shift_field         
-        BRA     shift_dr
+        BEQ     shift_field         ;0 indicates shift count in the field
+        BRA     shift_dreg
 
 shift_field
+        *MOVE.L  
         
-        
-shift_dr
-        MOVE.B  #0,D2               ;
+shift_dreg
+        MOVE.B  #0,NUM_EXP_WRDS
+        MOVE.B  #2,NUM_OPERANDS
+        *Operand values are reverse order from what 12 by 3 returns (swap d3 and d5)
+        MOVE.L  D3,D2               ;Make a copy of operand 2(d3) value
+        MOVE.L  D5,D3               ;Operand 1 now in correct position
+        MOVE.L  D2,D5               ;Operand 2 now in correct posision
+        MOVE.L  #7,D2               ;Operand 1 mode
+        MOVE.L  #0,D4               ;Operand 2 mode
+        RTS
         
 memory_shifts
         MOVE.B  #1,NUM_OPERANDS
@@ -2362,6 +2373,7 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
