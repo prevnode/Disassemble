@@ -43,7 +43,11 @@ TESTDATA
     *SUBA    D0,A1
     *SUB     D0,D1
     *ADDQ    #1,D1
+    ROL     #5,D3
     LSL     #3,D0
+    ROL     D3,D5
+    LSL     D5,D3
+    LSL.B   D5,D3
     BHI     TESTJSR    
     *BCC     TESTJSR
     BNE     TESTJSR
@@ -1736,22 +1740,25 @@ SHIFTCOM
         BEQ     memory_shifts       ;3 indicates memory shift        
         
 register_shifts
-        BTST    #5,D0               ;5th bit is i/r field
-        BEQ     shift_field         ;0 indicates shift count in the field
-        BRA     shift_dreg
-
-shift_field
-        *MOVE.L  
-        
-shift_dreg
         MOVE.B  #0,NUM_EXP_WRDS
         MOVE.B  #2,NUM_OPERANDS
         *Operand values are reverse order from what 12 by 3 returns (swap d3 and d5)
         MOVE.L  D3,D2               ;Make a copy of operand 2(d3) value
         MOVE.L  D5,D3               ;Operand 1 now in correct position
         MOVE.L  D2,D5               ;Operand 2 now in correct posision
+        MOVE.L  #0,D4               ;Operand 2 mode         
+        
+        MOVE.W  (A5),D0             ;Get a copy of the opcode to test 
+        BTST    #5,D0               ;5th bit is i/r field
+        BEQ     shift_field         ;0 indicates shift count in count/reg
+        BRA     shift_dreg          ;1 indcates data register in count/reg
+
+shift_field
         MOVE.L  #7,D2               ;Operand 1 mode
-        MOVE.L  #0,D4               ;Operand 2 mode
+        RTS
+        
+shift_dreg
+        MOVE.L  #0,D2               ;Operand 1 mode
         RTS
         
 memory_shifts
@@ -1759,6 +1766,7 @@ memory_shifts
         MOVE.B  #2,NUM_EXP_WRDS
         MOVE.L  D4,D2               ;EA mode is first operand in this situation
         MOVE.L  (2,A5),D3           ;Displacement is always a long word
+        MOVE.L  #2,D6               ;D6 will hold the size 0 = byte, 1 = word, 2 = long
         RTS
         
         
@@ -2137,12 +2145,29 @@ LEA_EA
         
 *---------------------------LSL_EA------------------------------------
 LSL_EA
-
+        JSR     SHIFTCOM
         LEA     LSL_OP,A1
         MOVE.B  #14,D0
         TRAP    #15
         
-        JSR     SHIFTCOM
+        CMP.B   #0,D6
+        BEQ     lsl_byte
+        CMP.B   #1,D6
+        BEQ     lsl_word
+        CMP.B   #2,D6
+        BEQ     lsl_long
+        BRA     ENDPROGRAM
+        
+lsl_byte
+        JSR     PRINT_BYTE
+        BRA     PRINT
+lsl_word
+        JSR     PRINT_WORD
+        BRA     PRINT
+lsl_long
+        JSR     PRINT_LONG
+        BRA     PRINT
+        
         BRA PRINT
         
 *---------------------------LSR_EA------------------------------------
@@ -2313,7 +2338,7 @@ ROL_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.B  #0,NUM_EXP_WRDS
+        JSR     SHIFTCOM
         BRA PRINT
         
 *---------------------------ROR_EA------------------------------------
