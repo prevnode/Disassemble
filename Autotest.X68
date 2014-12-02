@@ -43,6 +43,8 @@ TESTDATA
     *SUBA    D0,A1
     *SUB     D0,D1
     *ADDQ    #1,D1
+    LSL     $8888
+    LSL     $1234567
     BHI     TESTJSR    
     *BCC     TESTJSR
     BNE     TESTJSR
@@ -1434,24 +1436,28 @@ msk11   CMP.L   #MASK_11_9,D7
         MOVE    #25,D1
         BRA     shift   
 msk8    CMP.L   #MASK_8_6,D7
-        BNE     msk5
+        BNE     msk76
         MOVE    #22,D1
-        BRA     shift   
-msk5    CMP.L   #MASK_5_3,D7
+        BRA     shift
+msk76   CMP.L   #MASK_7_6,D7
         BNE     msk70
-        MOVE    #19,D1
+        MOVE    #22,D1
         BRA     shift
 msk70   CMP.L   #MASK_7_0,D7
-        BNE     msk2
+        BNE     msk5
         MOVE    #16,D1
-        BRA     shift       
+        BRA     shift    
+msk5    CMP.L   #MASK_5_3,D7
+        BNE     msk2
+        MOVE    #19,D1
+        BRA     shift      
 msk2    CMP.L   #MASK_2_0,D7
         BNE     ENDPROGRAM      ;D7 doesn't match any mask in the global variables
         MOVE    #16,D1
         BRA     shift
         
-shift   LSR.L   D1,D0               ;Shift bits to the least sig bit
-        MOVE.L  D0,D7               ;Move the data register for display
+shift   LSR.L   D1,D0           ;Shift bits to the least sig bit
+        MOVE.L  D0,D7           ;Move the data register for display
         
         RTS
         
@@ -1651,7 +1657,7 @@ fin_exp
        
         
 *----------------------------Load Last 12 Bits by 3--------------------------------------------
-*Loads the least 12 significant bits from the word A5 is currently pointing to. These are grouped
+*Loads the least 12 significant bits from the word A5 is currently pointing at. These are grouped
 *by 3 bits and loaded into D2-D5. SR uses RTS.
 *The order is:
 *Bits 11-9 -> D5
@@ -1701,7 +1707,6 @@ ADDA_EA
   
 *-------------------------------------ADDQ_EA-----------------------------------
 ADDQ_EA
-
         LEA     ADDQ_OP,A1
         MOVE.B  #14,D0
         TRAP    #15
@@ -1711,14 +1716,41 @@ ADDQ_EA
         
 *---------------------------AND_EA------------------------------------
 AND_EA
-
         LEA     AND_OP,A1
         MOVE.B  #14,D0
         TRAP    #15
         
         MOVE.B  #0,NUM_EXP_WRDS
         BRA PRINT
+*---------------------------Shift Common-----------------------------
+SHIFTCOM
+        JSR     LOAD12BY3           ;Split opcode into registers (only a few are used here)
+        MOVE.L  MASK_7_6,D7         ;Field indicates location of data, register or memory
+        ANDI.L  #$00C00000,D7       ;Work around the sign extension
+        JSR     APPLYMASK           
+        MOVE.L  D7,D6               ;D6 now holds "location"/size field
+        CMP.B   #3,D6               ;Size can be 0-2
+        BEQ     memory_shifts       ;3 indicates memory shift        
+        
+register_shifts
+        BTST    #5,D0               ;5th bit is i/r field
+        BEQ     shift_field         
+        BRA     shift_dr
 
+shift_field
+        
+        
+shift_dr
+        MOVE.B  #0,D2               ;
+        
+memory_shifts
+        MOVE.B  #1,NUM_OPERANDS
+        MOVE.B  #2,NUM_EXP_WRDS
+        MOVE.L  D4,D2               ;EA mode is first operand in this situation
+        MOVE.L  (2,A5),D3           ;Displacement is always a long word
+        RTS
+        
+        
 *---------------------------ASL_EA------------------------------------
 ASL_EA
 
@@ -1767,8 +1799,7 @@ bcc1
 bcc2    
     MOVE.L      #2,NUM_EXP_WRDS
     MOVE.W      (A4),D3
-    RTS
-    
+    RTS 
 
         
 *---------------------------BEQ_EA------------------------------------
@@ -1889,7 +1920,7 @@ btst_bad
 btst_im
         MOVE.B  #5,D2           ;First operand mode is immediate
         MOVE.B  #2,NUM_EXP_WRDS ;Immediate btst always has 2 words
-        MOVE.L  A5,D0        ;Move the first operator from the expansion word
+        MOVE.L  A5,D0           ;Move the first operator from the expansion word
         ADDI.L  #2,D0
         MOVE.L  D0,A4
         MOVE.W (A4),D3
@@ -1933,7 +1964,7 @@ cmp_output
                 MOVE.B  #14,D0
                 TRAP    #15
                 *Print attribute
-                CMP     #0,D4               ;Destination mode (opmode) determines attribute
+                CMP     #0,D4             ;Destination mode (opmode) determines attribute
                 BEQ     cmp_byte          ;Mode 0 is equal to byte
                 CMP     #1,D4               
                 BEQ     cmp_word          ;MOde 1 is equal to word    
@@ -2100,7 +2131,7 @@ LSL_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.B  #0,NUM_EXP_WRDS
+        JSR     SHIFTCOM
         BRA PRINT
         
 *---------------------------LSR_EA------------------------------------
