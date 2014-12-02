@@ -877,7 +877,7 @@ code0100        STOP        #$2700
 
 
 *------------------------------------Begin Bucket 0101-------------------------------
-code0101        STOP        #$2700  *BRA         ADDQ_EA   <------------------------------------------ BRANDAN REMOVED TO MAKE CODE RUN
+code0101        BRA         ADDQ_EA   <------------------------------------------ BRANDAN REMOVED TO MAKE CODE RUN
 *------------------------------------End Bucket 0101---------------------------------
 
 
@@ -1679,6 +1679,7 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 *~Font name~Courier New~
