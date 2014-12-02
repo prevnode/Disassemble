@@ -1746,21 +1746,29 @@ BCCCOM
     MOVE.B      #1,NUM_OPERANDS     ;One operand corresponds to displacement
     MOVE.B      #7,D2               ;Set the first operand to display hex
     MOVE.L      MASK_7_0,D7         ;Last 8 bits determine length of displacement
-    ANDI.L      #$00FF0000,D7
+    ANDI.L      #$00FF0000,D7       ;Work around the sign extension
     JSR         APPLYMASK
-    CMP.B       #$00,D7              ;0 indicates long
-    BEQ         bcc2
-    BRA         bcc0
+    CMP.B       #$00,D7             ;D7 holds last 8 bits
+    BEQ         bcc1                ;0 indicates word displacement
+    CMP.B       #$FF,D7             ;D7 holds displacement bits
+    BEQ         bcc2                ;FF indicates long word displacement
+    BRA         bcc0                ;Any other value is the actual displacement
     
 bcc0
     MOVE.B      D7,D3               ;Displacement less than 8 bits 
     MOVE.B      #0,NUM_EXP_WRDS
     RTS
     
-bcc2    
-    MOVE.B      #2,NUM_EXP_WRDS
-    MOVE.W      (A4)+,D3
+bcc1
+    MOVE.W      (A4),D3
+    MOVE.B      #1,NUM_EXP_WRDS
     RTS
+    
+bcc2    
+    MOVE.L      #2,NUM_EXP_WRDS
+    MOVE.W      (A4),D3
+    RTS
+    
 
         
 *---------------------------BEQ_EA------------------------------------
@@ -2323,6 +2331,7 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
