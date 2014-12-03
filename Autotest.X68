@@ -2352,16 +2352,13 @@ ROR_EA
         
 *---------------------------RTS_EA------------------------------------
 RTS_EA
-
         LEA     RTS_OP,A1
         MOVE.B  #14,D0
         TRAP    #15
         
         MOVE.B  #0,NUM_EXP_WRDS
-        BRA PRINT
-
-        
- 
+        MOVE.B  #0,NUM_OPERANDS
+        BRA PRINT 
         
 *-------------------------------SUB_EA-------------------------------
 SUB_EA
