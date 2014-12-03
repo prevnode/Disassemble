@@ -43,6 +43,8 @@ TESTDATA
     *SUBA    D0,A1
     *SUB     D0,D1
     *ADDQ    #1,D1
+    JSR     ENDPROGRAM
+    JSR     TESTDATA
     ASL.W   #3,D0
     ROL     #5,D3
     LSL     #3,D0
@@ -1830,17 +1832,17 @@ BCCCOM
 bcc0
     MOVE.B      D7,D3               ;Displacement less than 8 bits 
     MOVE.B      #0,NUM_EXP_WRDS
-    RTS
+    BRA         PRINT_WORD
     
 bcc1
     MOVE.W      (A4),D3
     MOVE.B      #1,NUM_EXP_WRDS
-    RTS
+    BRA         PRINT_WORD
     
 bcc2    
     MOVE.L      #2,NUM_EXP_WRDS
     MOVE.W      (A4),D3
-    RTS 
+    BRA         PRINT_LONG
 
         
 *---------------------------BEQ_EA------------------------------------
@@ -1850,9 +1852,7 @@ BEQ_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        JSR     BCCCOM
-        
-        BRA     PRINT
+        BRA     BCCCOM
         
 *---------------------------BLT_EA------------------------------------
 BLT_EA
@@ -1861,8 +1861,7 @@ BLT_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        JSR     BCCCOM
-        BRA     PRINT
+        BRA     BCCCOM        
         
 *---------------------------BNE_EA------------------------------------
 BNE_EA
@@ -1871,8 +1870,8 @@ BNE_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        JSR     BCCCOM
-        BRA     PRINT
+        BRA     BCCCOM
+        
 *---------------------------BHI_EA------------------------------------
 BHI_EA
 
@@ -1880,8 +1879,7 @@ BHI_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        JSR     BCCCOM
-        BRA     PRINT
+        BRA     BCCCOM
 *---------------------------BRA_EA------------------------------------
 BRA_EA
 
@@ -1889,9 +1887,7 @@ BRA_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        JSR     BCCCOM
-        BRA     PRINT
-
+        BRA     BCCCOM
 
 *------------------------------BTST_EA-------------------------------------------
 BTST_EA
@@ -2112,13 +2108,32 @@ EORI_EA
         
 *---------------------------JSR_EA------------------------------------
 JSR_EA
-
+        MOVE.B  #1,NUM_OPERANDS
+        
         LEA     JSR_OP,A1
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.B  #0,NUM_EXP_WRDS
-        BRA PRINT
+        JSR     LOAD12BY3       ;Split word into data registers (only need d2 and d3)
+                
+        CMP.W   #5,D2           ;D2 is the ea mode
+        BEQ     PRINT_BAD       ;Unsupported displacement
+        CMP.W   #6,D2           ;D2 is the ea mode
+        BEQ     PRINT_BAD       ;Unsupported displacement
+        CMP.W   #7,D2           ;D2 is the ea mode
+        BLE     PRINT           ;Must be mode 2
+        CMP.W   #2,D3           ;D3 is register
+        BGE     PRINT_BAD       ;Register 2 and up are unsupported
+        CMP.W   #0,D3           ;D3 is register #
+        BEQ     jsr_one         ;Register 0 is word addressing
+        MOVE.B  #2,NUM_EXP_WRDS ;2 words for long addressing
+        BRA     PRINT
+        
+jsr_one
+        MOVE.B  #1,NUM_EXP_WRDS
+        BRA     PRINT
+ 
+  
 
                 
 *---------------------------LEA_EA------------------------------------
@@ -2372,6 +2387,7 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
