@@ -45,6 +45,7 @@ TESTDATA
     *ADDQ    #1,D1
     JSR     ENDPROGRAM
     JSR     TESTDATA
+    JSR     ENDTESTDATA
     ASL.W   #3,D0
     ROL     #5,D3
     LSL     #3,D0
@@ -2109,6 +2110,7 @@ EORI_EA
 *---------------------------JSR_EA------------------------------------
 JSR_EA
         MOVE.B  #1,NUM_OPERANDS
+        MOVE.B  #1,NUM_EXP_WRDS ;May be overwritten later
         
         LEA     JSR_OP,A1
         MOVE.B  #14,D0
@@ -2121,17 +2123,25 @@ JSR_EA
         CMP.W   #6,D2           ;D2 is the ea mode
         BEQ     PRINT_BAD       ;Unsupported displacement
         CMP.W   #7,D2           ;D2 is the ea mode
-        BLE     PRINT           ;Must be mode 2
+        BLT     jsr_operand     ;Must be mode 2
         CMP.W   #2,D3           ;D3 is register
         BGE     PRINT_BAD       ;Register 2 and up are unsupported
         CMP.W   #0,D3           ;D3 is register #
-        BEQ     jsr_one         ;Register 0 is word addressing
+        BEQ     jsr_operand     ;Register 0 is word addressing
         MOVE.B  #2,NUM_EXP_WRDS ;2 words for long addressing
+        BRA     jsr_operand
+        
+jsr_operand
+        MOVE.L  A5,A4   ;Make a copy of the opcode pointer
+        ADD.L   #2,A4   ;Advance to first expansion word (assumes on exists)
+        CMP.B   #1,NUM_EXP_WRDS
+        BGT     jsr_2
+        MOVE.W  (A4),D3
         BRA     PRINT
         
-jsr_one
-        MOVE.B  #1,NUM_EXP_WRDS
+jsr_2   MOVE.L  (A4),D3
         BRA     PRINT
+     
  
   
 
@@ -2387,6 +2397,7 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
