@@ -1475,7 +1475,54 @@ shift   LSR.L   D1,D0           ;Shift bits to the least sig bit
         
         RTS
         
- *-----------------------------Expansion to Operand Arithemitic-----------------------------
+        
+*------------------------------Effective Address with Checks-------------------------------
+EAWCHKS
+        MOVE.B  #0,NUM_EXP_WRDS
+        MOVE.L  A5,A4       ;Make a copy of the opcode pointer
+        ADD.L   #2,A4       ;Advance to first expansion word (assumes on exists)
+        
+        CMP.B   #5,D4       ;Mode 5-6 are displacement and unsupported
+        BEQ     PRINT_BAD
+        CMP.B   #6,D4
+        BEQ     PRINT_BAD
+        CMP.B   #7,D4    
+        BNE     operand1
+        CMP.B   #2,D5       ;Register 2 - 3 are unsupported
+        BEQ     PRINT_BAD
+        CMP.B   #3,D5
+        BEQ     PRINT_BAD
+        
+immediateea
+        CMP     #2,D6       ;Size data register
+        BEQ     getlongea   ;2 indicates long word
+        BRA     getwordea   ;1 or 3 use word
+        
+operandea
+        CMP.B   #7,D4       ;Look at operand 1 mode
+        BLT     fin_exp     ;Opcodes below 7 don't use expansion words
+        CMP     #0,D5       ;Register 0 is word addressing
+        BEQ     getwordea   ;Single word
+        CMP     #1,D5
+        BEQ     getlongea   ;Long word
+        CMP     #4,D5       ;Signifies immediate data
+        BEQ     immediateea
+        
+getwordea
+        CLR     D5          ;Clear the register before copy expansion word
+        MOVE.W  (A4)+,D5
+        ADD.B   #1,NUM_EXP_WRDS
+        RTS
+        
+getlongea
+        CLR     D5          ;Clear the register before copy expansion word
+        MOVE.L  (A4)+,D5
+        ADD.B   #2,NUM_EXP_WRDS
+        RTS   
+        
+        
+        
+*-----------------------------Expansion to Operand Arithemitic-----------------------------
 *Moves data from the expansion words into operand registers
 *D2 operand 1 Opmode
 *D3 operand 1 register
@@ -2288,7 +2335,9 @@ MULS_EA
         
 *---------------------------NEG_EA------------------------------------
 NEG_EA
-
+        
+        JSR     LOAD12BY3
+        JSR     EAWCHKS
         LEA     NEG_OP,A1
         MOVE.B  #14,D0
         TRAP    #15
