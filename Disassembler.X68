@@ -1831,11 +1831,11 @@ ASR_EA
         BEQ     PRINT_WORD
         CMP.B   #2,D6
         BEQ     PRINT_LONG
-        BRA     ENDPROGRAM      ;In case something went wrong
-
+        BRA     ENDPROGRAM      ;In case something went wrong                
         
 *---------------------Bcc Common-------------------------------------
 BCCCOM
+    MOVE        #7,D3               ;Always print as address
     MOVE        A5,A4               ;Make a copy of opcode pointer
     ADD         #2,A4               ;Point to first expansion word (assume it exists)
     MOVE.B      #1,NUM_OPERANDS     ;One operand corresponds to displacement
@@ -1849,6 +1849,7 @@ BCCCOM
     BEQ         bcc2                ;FF indicates long word displacement
     BRA         bcc0                ;Any other value is the actual displacement
     
+   
 bcc0
     MOVE.B      D7,D3               ;Displacement less than 8 bits 
     MOVE.B      #0,NUM_EXP_WRDS
@@ -2455,6 +2456,8 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
+
 
 
 *~Font name~Courier New~
