@@ -1985,27 +1985,31 @@ CMPA_EA
                 MOVE.B  #2,NUM_OPERANDS           
                
                 JSR     LOAD12BY3
-*Calculate the number of expansion words
-                CMP     #7,D2               ;Source mode determines if expansion words needed
-                BLT     cmpa_output         ;Modes less than 7 don't have words
-                JSR     INCREMENT_WRD_CNT   ;Mode 7 has at least 1 expansion word
-                CMP     #0,D3               ;Look at register
-                BEQ     cmpa_output         ;Source register of 0 is short word so already incremented once
-                CMP     #1,D3               ;Source register of 4 is imediate data need to look at atribute (opmode)
-                BNE     cmpa_op_mod         ;If register is not one (earlier checked 0) then it is 4 which means immediate
-                JSR     INCREMENT_WRD_CNT   ;Register 1 means long word add one expansion
-                BRA     cmpa_output         ;Thats all folks
-cmpa_op_mod     CMP     #2,D3               ;Source register 4 immediate data need to check attribute (opmode)
-                BNE     cmpa_output         ;Byte or Word only add a single word already done when we hit mode 7 so done
-                JSR     INCREMENT_WRD_CNT   ;Opmode 2 eauals long word so one more expansion
-cmpa_output
+                JSR     EXP2OPER
+**Calculate the number of expansion words
+*                CMP     #7,D2               ;Source mode determines if expansion words needed
+*                BLT     cmpa_output         ;Modes less than 7 don't have words
+*                JSR     INCREMENT_WRD_CNT   ;Mode 7 has at least 1 expansion word
+*                CMP     #0,D3               ;Look at register
+*                BEQ     cmpa_output         ;Source register of 0 is short word so already incremented once
+*                CMP     #1,D3               ;Source register of 4 is imediate data need to look at atribute (opmode)
+*                BNE     cmpa_op_mod         ;If register is not one (earlier checked 0) then it is 4 which means immediate
+*                JSR     INCREMENT_WRD_CNT   ;Register 1 means long word add one expansion
+*                BRA     cmpa_output         ;Thats all folks
+*cmpa_op_mod     CMP     #2,D3               ;Source register 4 immediate data need to check attribute (opmode)
+*                BNE     cmpa_output         ;Byte or Word only add a single word already done when we hit mode 7 so done
+*                JSR     INCREMENT_WRD_CNT   ;Opmode 2 eauals long word so one more expansion
+*cmpa_output
+
+*                
+                MOVE.L  D4,D1               ;D1 will determine size
+                MOVE.L  #1,D4               ;Operand 2 is always address register
+
+                
                 *Print opcode
                 LEA     CMPA_OP,A1
                 MOVE.B  #14,D0
                 TRAP    #15
-                
-                MOVE.L  D4,D1               ;D1 will determine size
-                MOVE.L  #1,D4               ;Destination is always an address register
                 *Print attribute
                 CMP     #3,D1               ;Destination mode (opmode) determines attribute
                 BLT     PRINT_BAD           ;No mode below 3 are valid
@@ -2013,6 +2017,7 @@ cmpa_output
                 BEQ     PRINT_WORD          ;Mode 3 is equal to word    
                 CMP     #7,D1
                 BEQ     PRINT_LONG          ;Mode 7 is equal to long
+                
                     
                 
 *------------------------------------CMPI_EA--------------------------------------
@@ -2410,6 +2415,7 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
