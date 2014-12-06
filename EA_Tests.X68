@@ -7,7 +7,15 @@
     ORG    $8888
 START:                  ; first instruction of program
     
-    
+    BEQ         TESTJMP
+    BLT         TESTJMP
+    BNE         TESTJMP
+    BHI         TESTJMP
+    BRA         TESTJMP
+    JSR         TESTJMP
+    RTS  
+
+TESTJMP      
     
 *------------------NEG VARIANTS--------------------------------
     NEG.B       D0
@@ -18,9 +26,12 @@ START:                  ; first instruction of program
     NEG.W       (A0)
     NEG.W       $1000
     NEG.W       $10004000
+    NEG.W       D4
     NEG.L       -(A0)
     NEG.L       (A0)
     NEG.L       (A3)
+    NEG.L       D3
+    
     
 *--------------------CMP VARIANTS------------------------------
     CMPA        D3,A2
@@ -98,6 +109,7 @@ CMPVARIANTS
 * Put variables and constants here
 
     END    START        ; last line of source
+
 
 
 

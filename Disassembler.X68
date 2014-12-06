@@ -859,7 +859,7 @@ Check_8          JSR     CLEAR_DATA
                  RTS 
 
 
-*------------------------------Configure JMP----------------------------------
+*------------------------------Configure JMP----------------------------------TESTTAG
 
 
 BEGINOPCODE      JSR     CLEAR_DATA              ; Clear all of the Registers
