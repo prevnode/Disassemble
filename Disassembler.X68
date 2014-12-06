@@ -1312,7 +1312,7 @@ PRINT_BYTE
                 MOVE.B  #14,D0
                 LEA     BYTE,A1
                 TRAP    #15
-                RTS
+                BRA     PRINT
  
 *-------------------------------PRINT_WORD---------------------------------------------------------------
 *Prints the word attribute
@@ -1320,7 +1320,7 @@ PRINT_WORD
                 MOVE.B  #14,D0
                 LEA     WORD,A1
                 TRAP    #15
-                RTS
+                BRA     PRINT
                 
 *------------------------------------PRINT_LONG------------------------------------------------------
 *Prints the long attribute
@@ -1329,8 +1329,7 @@ PRINT_LONG
                 MOVE.B  #14,D0
                 LEA     LONG,A1
                 TRAP    #15
-                RTS
-
+                BRA     PRINT
 
 *----------------------------------------------Increment Expansion Word Count-----------------------------------------
 INCREMENT_WRD_CNT       
@@ -1356,37 +1355,291 @@ msk11   CMP.L   #MASK_11_9,D7
         MOVE    #25,D1
         BRA     shift   
 msk8    CMP.L   #MASK_8_6,D7
-        BNE     msk5
+        BNE     msk76
         MOVE    #22,D1
-        BRA     shift   
+        BRA     shift
+msk76   CMP.L   #MASK_7_6,D7
+        BNE     msk70
+        MOVE    #22,D1
+        BRA     shift
+msk70   CMP.L   #MASK_7_0,D7
+        BNE     msk5
+        MOVE    #16,D1
+        BRA     shift    
 msk5    CMP.L   #MASK_5_3,D7
         BNE     msk2
         MOVE    #19,D1
-        BRA     shift   
+        BRA     shift      
 msk2    CMP.L   #MASK_2_0,D7
         BNE     ENDPROGRAM      ;D7 doesn't match any mask in the global variables
         MOVE    #16,D1
         BRA     shift
         
-shift   LSR.L   D1,D0               ;Shift bits to the least sig bit
-        MOVE.L  D0,D7               ;Move the data register for display
+shift   LSR.L   D1,D0           ;Shift bits to the least sig bit
+        MOVE.L  D0,D7           ;Move the data register for display
         
+        RTS
+        
+        
+*------------------------------Effective Address with Checks-------------------------------
+EAWCHKS
+        MOVE.B  #0,NUM_EXP_WRDS
+        MOVE.L  A5,A4       ;Make a copy of the opcode pointer
+        ADD.L   #2,A4       ;Advance to first expansion word (assumes one exists)
+        
+        CMP.B   #5,D2       ;D2 holds bits 5-3 EA Mode
+        BEQ     PRINT_BAD   ;Mode 5 unsupported
+        CMP.B   #6,D2
+        BEQ     PRINT_BAD   ;Mode 6 unsupported
+        CMP.B   #2,D2       
+        BEQ     PRINT_BAD   ;Mode 2 unsupported
+        CMP.B   #3,D2
+        BEQ     PRINT_BAD   ;Mode 3 unsupported
+        
+        CMP.B   #7,D2       
+        BLT     fin_eachk   ;Modes below 7 don't use expansion words
+        
+        *Mode 7 is W,L or I need to check register
+        CMP     #0,D3       ;D3 holds bits 2-0 EA register
+        BEQ     getwordea   ;Single word
+        CMP     #1,D3
+        BEQ     getlongea   ;Long word
+        CMP     #4,D3       ;Signifies immediate data
+        BEQ     immediateea
+        BRA     PRINT_BAD   ;Other registers with mode 7 are unsupported
+        
+        
+immediateea
+        CMP     #2,D6       ;Size data register
+        BEQ     getlongea   ;2 indicates long word
+        BRA     getwordea   ;1 or 3 use word
+        
+        
+getwordea
+        CLR     D4          ;Clear the register before copy expansion word
+        MOVE.W  (A4)+,D4
+        ADD.B   #1,NUM_EXP_WRDS
+        RTS
+        
+getlongea
+        CLR     D5          ;Clear the register before copy expansion word
+        MOVE.L  (A4)+,D4
+        ADD.B   #2,NUM_EXP_WRDS
+        RTS   
+        
+fin_eachk
+        RTS
+        
+*-------------------------------Multiply and Divide--------------------------------------
+MULDIV
+        JSR     LOAD12BY3
+        JSR     EAWCHKS
+        
+        CMP     #0,D3       ;D3 holds 8-6 indicates size
+        *BEQ     
+        
+mul_long
+        
+        RTS
+        
+        
+*-----------------------------Expansion to Operand Arithemitic-----------------------------
+*Moves data from the expansion words into operand registers
+*D2 operand 1 Opmode
+*D3 operand 1 register
+*D4 operand 2 mode
+*D5 operand 2 register
+
+EXP2OPERAR
+        MOVE.B  #0,NUM_EXP_WRDS
+        MOVE.L  A5,A4   ;Make a copy of the opcode pointer
+        ADD.L   #2,A4   ;Advance to first expansion word (assumes one exists)
+        
+*chk_unsupported1
+*        CMP.B   #5,D2       ;Mode 5-6 are displacement and unsupported
+*        BEQ     PRINT_BAD
+*        CMP.B   #6,D2
+*        BEQ     PRINT_BAD
+*        CMP.B   #7,D2    
+*        BNE     check_unsupported2
+*        CMP.B   #2,D3
+*        BEQ     PRINT_BAD
+*        CMP.B   #3,D3
+*        BEQ     PRINT_BAD
+*        BRA     check_unsupported2
+        
+chk_unsupported2
+        CMP.B   #5,D4       ;Mode 5-6 are displacement and unsupported
+        BEQ     PRINT_BAD
+        CMP.B   #6,D4
+        BEQ     PRINT_BAD
+        CMP.B   #7,D4    
+        BNE     operand1a
+        CMP.B   #2,D5       ;Register 2 - 3 are unsupported
+        BEQ     PRINT_BAD
+        CMP.B   #3,D5
+        BEQ     PRINT_BAD
+        
+operand1a
+        CMP.B   #7,D2       ;Look at operand 1 mode
+        BLT     operand2a    ;Opcodes below 7 don't use expansion words
+        CMP     #0,D3       ;Register 0 is word addressing
+        BEQ     getword1a    ;Single word
+        CMP     #1,D3
+        BEQ     getlong1a   ;Long word
+        CMP     #4,D3       ;Signifies immediate data
+        BEQ     immediate1a
+        
+        
+immediate1a
+        CMP     #2,D6       ;Size data register
+        BEQ     getlong1a   ;2 indicates long word
+        BRA     getword1a   ;1 or 3 use word
+        
+immediate2a
+        CMP     #2,D6       ;Size data register
+        BEQ     getlong2a   ;2 indicates long word
+        BRA     getword2a   ;1 or 3 use word        
+        
+getword1a
+        CLR     D3          ;Clear the register before copy expansion word
+        MOVE.W  (A4)+,D3
+        ADD.B   #1,NUM_EXP_WRDS
+        BRA     operand2
+        
+getlong1a
+        CLR     D3          ;Clear the register before copy expansion word
+        MOVE.L  (A4)+,D3
+        ADD.B   #2,NUM_EXP_WRDS
+        BRA     operand2
+        
+operand2a
+        CMP.B   #7,D4       ;Look at operand 1 mode
+        BLT     fin_exp     ;Opcodes below 7 don't use expansion words
+        CMP     #0,D5       ;Register 0 is word addressing
+        BEQ     getword2a   ;Single word
+        CMP     #1,D5
+        BEQ     getlong2a   ;Long word
+        CMP     #4,D5       ;Signifies immediate data
+        BEQ     immediate2a
+        
+getword2a
+        CLR     D5          ;Clear the register before copy expansion word
+        MOVE.W  (A4)+,D5
+        ADD.B   #1,NUM_EXP_WRDS
+        BRA     fin_exp
+        
+getlong2a
+        CLR     D5          ;Clear the register before copy expansion word
+        MOVE.L  (A4)+,D5
+        ADD.B   #2,NUM_EXP_WRDS
+        BRA     fin_expa
+
+
+fin_expa
         RTS
         
 *-----------------------------Expansion to Operand-----------------------------
 *Moves data from the expansion words into operand registers
+*D2 operand 1 mode
+*D3 operand 1 register
+*D4 operand 2 mode
+*D5 operand 2 register
+
 EXP2OPER
-        MOVE.L  A6,A5   ;Make a copy of the opcode pointer
+        MOVE.B  #0,NUM_EXP_WRDS
+        MOVE.L  A5,A4   ;Make a copy of the opcode pointer
+        ADD.L   #2,A4   ;Advance to first expansion word (assumes on exists)
+        
+check_unsupported1
+        CMP.B   #5,D2       ;Mode 5-6 are displacement and unsupported
+        BEQ     PRINT_BAD
+        CMP.B   #6,D2
+        BEQ     PRINT_BAD
+        CMP.B   #7,D2    
+        BNE     check_unsupported2
+        CMP.B   #2,D3
+        BEQ     PRINT_BAD
+        CMP.B   #3,D3
+        BEQ     PRINT_BAD
+        BRA     check_unsupported2
+        
+check_unsupported2
+        CMP.B   #5,D4       ;Mode 5-6 are displacement and unsupported
+        BEQ     PRINT_BAD
+        CMP.B   #6,D4
+        BEQ     PRINT_BAD
+        CMP.B   #7,D4    
+        BNE     operand1
+        CMP.B   #2,D5       ;Register 2 - 3 are unsupported
+        BEQ     PRINT_BAD
+        CMP.B   #3,D5
+        BEQ     PRINT_BAD
+        
+operand1
+        CMP.B   #7,D2       ;Look at operand 1 mode
+        BLT     operand2    ;Opcodes below 7 don't use expansion words
+        CMP     #0,D3       ;Register 0 is word addressing
+        BEQ     getword1    ;Single word
+        CMP     #1,D3
+        BEQ     getlong1    ;Long word
+        CMP     #4,D3       ;Signifies immediate data
+        BEQ     immediate1
         
         
-opmodetable 
+immediate1
+        CMP     #2,D6       ;Size data register
+        BEQ     getlong1    ;2 indicates long word
+        BRA     getword1    ;1 or 3 use word
         
+immediate2
+        CMP     #2,D6       ;Size data register
+        BEQ     getlong2    ;2 indicates long word
+        BRA     getword2    ;1 or 3 use word        
+        
+getword1
+        CLR     D3          ;Clear the register before copy expansion word
+        MOVE.W  (A4)+,D3
+        ADD.B   #1,NUM_EXP_WRDS
+        BRA     operand2
+        
+getlong1
+        CLR     D3          ;Clear the register before copy expansion word
+        MOVE.L  (A4)+,D3
+        ADD.B   #2,NUM_EXP_WRDS
+        BRA     operand2
+        
+operand2
+        CMP.B   #7,D4       ;Look at operand 1 mode
+        BLT     fin_exp     ;Opcodes below 7 don't use expansion words
+        CMP     #0,D5       ;Register 0 is word addressing
+        BEQ     getword2    ;Single word
+        CMP     #1,D5
+        BEQ     getlong2    ;Long word
+        CMP     #4,D5       ;Signifies immediate data
+        BEQ     immediate2
+        
+getword2
+        CLR     D5          ;Clear the register before copy expansion word
+        MOVE.W  (A4)+,D5
+        ADD.B   #1,NUM_EXP_WRDS
+        BRA     fin_exp
+        
+getlong2
+        CLR     D5          ;Clear the register before copy expansion word
+        MOVE.L  (A4)+,D5
+        ADD.B   #2,NUM_EXP_WRDS
+        BRA     fin_exp
+
+
+fin_exp
+        RTS   
         
  
        
         
 *----------------------------Load Last 12 Bits by 3--------------------------------------------
-*Loads the least 12 significant bits from the word A5 is currently pointing to. These are grouped
+*Loads the least 12 significant bits from the word A5 is currently pointing at. These are grouped
 *by 3 bits and loaded into D2-D5. SR uses RTS.
 *The order is:
 *Bits 11-9 -> D5
@@ -1413,12 +1666,17 @@ LOAD12BY3
 
 *------------------------------------ADD_EA------------------------------------
 ADD_EA
+        MOVE.B  #2,NUM_OPERANDS
+        JSR     LOAD12BY3
+        JSR     EXP2OPERAR
+        
         LEA     ADD_OP,A1
-        MOVE.B  #14,D0
+        MOVE    #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
-        BRA PRINT
+        BRA     PRINT_BYTE
+        
+        
         
 *-----------------------------------ADDA_EA-------------------------------------
 ADDA_EA
@@ -1426,58 +1684,144 @@ ADDA_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
+        MOVE.B  #0,NUM_EXP_WRDS
         BRA PRINT
   
 *-------------------------------------ADDQ_EA-----------------------------------
 ADDQ_EA
-
         LEA     ADDQ_OP,A1
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
+        MOVE.B  #0,NUM_EXP_WRDS
         BRA PRINT
         
 *---------------------------AND_EA------------------------------------
 AND_EA
-
         LEA     AND_OP,A1
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
+        MOVE.B  #0,NUM_EXP_WRDS
         BRA PRINT
+*---------------------------Shift Common-----------------------------
+SHIFTCOM
+*Bits 11-9 -> D5
+*Bits 8-6 -> D4
+*Bits 5-3 -> D2
+*Bits 2-0 -> D3
+        JSR     LOAD12BY3           ;Split opcode into registers (only a few are used here)
+        MOVE.L  MASK_7_6,D7         ;Field indicates location of data, register or memory
+        ANDI.L  #$00C00000,D7       ;Work around the sign extension
+        JSR     APPLYMASK           
+        MOVE.L  D7,D6               ;D6 now holds "location"/size field
+        CMP.B   #3,D6               ;Size can be 0-2
+        BEQ     memory_shifts       ;3 indicates memory shift        
+        
+register_shifts
+        MOVE.B  #0,NUM_EXP_WRDS
+        MOVE.B  #2,NUM_OPERANDS
+        *Operand values are reverse order from what 12 by 3 returns (swap d3 and d5)
+        MOVE.L  D3,D2               ;Make a copy of operand 2(d3) value
+        MOVE.L  D5,D3               ;Operand 1 now in correct position
+        MOVE.L  D2,D5               ;Operand 2 now in correct posision
+        MOVE.L  #0,D4               ;Operand 2 mode         
+        
+        MOVE.W  (A5),D0             ;Get a copy of the opcode to test 
+        BTST    #5,D0               ;5th bit is i/r field
+        BEQ     shift_field         ;0 indicates shift count in count/reg
+        BRA     shift_dreg          ;1 indcates data register in count/reg
 
+shift_field
+        MOVE.L  #7,D2               ;Operand 1 mode
+        RTS
+        
+shift_dreg
+        MOVE.L  #0,D2               ;Operand 1 mode
+        RTS
+        
+memory_shifts
+        MOVE.B  #1,NUM_OPERANDS
+        MOVE.B  #2,NUM_EXP_WRDS
+        MOVE.L  D4,D2               ;EA mode is first operand in this situation
+        MOVE.L  (2,A5),D3           ;Displacement is always a long word
+        MOVE.L  #2,D6               ;D6 will hold the size 0 = byte, 1 = word, 2 = long
+        RTS
+        
+        
 *---------------------------ASL_EA------------------------------------
 ASL_EA
-
+        JSR     SHIFTCOM
+        
         LEA     ASL_OP,A1
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
-        BRA PRINT
+        CMP.B   #0,D6
+        BEQ     PRINT_BYTE
+        CMP.B   #1,D6
+        BEQ     PRINT_WORD
+        CMP.B   #2,D6
+        BEQ     PRINT_LONG
+        BRA     ENDPROGRAM      ;In case something went wrong
+
         
 *---------------------------ASR_EA------------------------------------
 ASR_EA
-
+        JSR     SHIFTCOM
+        
         LEA     MULS_OP,A1
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
-        BRA PRINT
+        CMP.B   #0,D6
+        BEQ     PRINT_BYTE
+        CMP.B   #1,D6
+        BEQ     PRINT_WORD
+        CMP.B   #2,D6
+        BEQ     PRINT_LONG
+        BRA     ENDPROGRAM      ;In case something went wrong
+
+        
+*---------------------Bcc Common-------------------------------------
+BCCCOM
+    MOVE        A5,A4               ;Make a copy of opcode pointer
+    ADD         #2,A4               ;Point to first expansion word (assume it exists)
+    MOVE.B      #1,NUM_OPERANDS     ;One operand corresponds to displacement
+    MOVE.B      #7,D2               ;Set the first operand to display hex
+    MOVE.L      MASK_7_0,D7         ;Last 8 bits determine length of displacement
+    ANDI.L      #$00FF0000,D7       ;Work around the sign extension
+    JSR         APPLYMASK
+    CMP.B       #$00,D7             ;D7 holds last 8 bits
+    BEQ         bcc1                ;0 indicates word displacement
+    CMP.B       #$FF,D7             ;D7 holds displacement bits
+    BEQ         bcc2                ;FF indicates long word displacement
+    BRA         bcc0                ;Any other value is the actual displacement
+    
+bcc0
+    MOVE.B      D7,D3               ;Displacement less than 8 bits 
+    MOVE.B      #0,NUM_EXP_WRDS
+    BRA         PRINT_WORD
+    
+bcc1
+    MOVE.W      (A4),D3
+    MOVE.B      #1,NUM_EXP_WRDS
+    BRA         PRINT_WORD
+    
+bcc2    
+    MOVE.L      #2,NUM_EXP_WRDS
+    MOVE.W      (A4),D3
+    BRA         PRINT_LONG
+
         
 *---------------------------BEQ_EA------------------------------------
 BEQ_EA
-
+        
         LEA     BEQ_OP,A1
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
-        BRA PRINT
+        BRA     BCCCOM
         
 *---------------------------BLT_EA------------------------------------
 BLT_EA
@@ -1486,8 +1830,7 @@ BLT_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
-        BRA PRINT
+        BRA     BCCCOM        
         
 *---------------------------BNE_EA------------------------------------
 BNE_EA
@@ -1496,8 +1839,8 @@ BNE_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
-        BRA PRINT
+        BRA     BCCCOM
+        
 *---------------------------BHI_EA------------------------------------
 BHI_EA
 
@@ -1505,8 +1848,7 @@ BHI_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
-        BRA PRINT
+        BRA     BCCCOM
 *---------------------------BRA_EA------------------------------------
 BRA_EA
 
@@ -1514,9 +1856,7 @@ BRA_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
-        BRA PRINT
-
+        BRA     BCCCOM
 
 *------------------------------BTST_EA-------------------------------------------
 BTST_EA
@@ -1553,31 +1893,20 @@ BTST_EA
         *Mode = 7
         JSR     INCREMENT_WRD_CNT ;Mode 7 has at least 1 expansion word
         CMP.B   #0,D5           ;Look at EA Register
-        BEQ     btst_byte       ;EA Register 0 has only one expansion word and byte attribute
+        BEQ     PRINT_BYTE      ;EA Register 0 has only one expansion word and byte attribute
         CMP.B   #4,D5           ;Look at EA Register
-        BEQ     btst_byte       ;EA Register 4 also has only one expansion word and byte attribute
+        BEQ     PRINT_BYTE      ;EA Register 4 also has only one expansion word and byte attribute
         CMP.B   #1,D5           ;Look at EA Register
         BNE     btst_bad        ;INVAID
         JSR     INCREMENT_WRD_CNT ;Ea register 1 indicates long attribute with 2 expansion words
-        BRA     btst_long
-        
-btst_byte
-        BSR     print_btst      ;Valid btst address EA
-        JSR     PRINT_BYTE              
-        BRA     PRINT           ;Print operands
+        BRA     PRINT_LONG                         
         
 btst_lss7
         CMP.B   #0,D4           ;Only supported modes are 0,2-4
-        BEQ     btst_long       ;Data register is the only long attribute
+        BEQ     PRINT_BYTE      ;Data register is the only long attribute
         CMP.B   #4,D4           ;Only supported modes are 0,2-4
         BGT     btst_bad        ;Unsupported address mode
-        BRA     btst_byte       ;EA Modes 2-4 are all byte sized
-        
-btst_long      
-        BSR     print_btst      
-        JSR     PRINT_LONG      ;Data reg destination uses long only
-        BRA     PRINT           ;Print operands
-        
+        BRA     PRINT_BYTE      ;EA Modes 2-4 are all byte sized                
         
 btst_bad    
         BRA     PRINT_BAD
@@ -1586,14 +1915,12 @@ btst_bad
 btst_im
         MOVE.B  #5,D2           ;First operand mode is immediate
         MOVE.B  #2,NUM_EXP_WRDS ;Immediate btst always has 2 words
-        MOVE.L  A5,D0        ;Move the first operator from the expansion word
+        MOVE.L  A5,D0           ;Move the first operator from the expansion word
         ADDI.L  #2,D0
         MOVE.L  D0,A4
         MOVE.W (A4),D3
         BSR     print_btst      ;Print the opcode
-        JSR     PRINT_LONG      ;Immediate is always long
-        BRA     PRINT           ;Print the operands
-        
+        BRA     PRINT_LONG      ;Immediate is always long        
         
 print_btst
         *Print opcode
@@ -1629,29 +1956,16 @@ cmp_output
                 LEA     CMP_OP,A1
                 MOVE.B  #14,D0
                 TRAP    #15
+                
+                MOVE.L  D4,D6               ;D6 holds the size
+                CLR.L   D4                  ;Destination is always a data register
                 *Print attribute
-                CMP     #0,D4               ;Destination mode (opmode) determines attribute
-                BEQ     cmp_byte          ;Mode 0 is equal to byte
-                CMP     #1,D4               
-                BEQ     cmp_word          ;MOde 1 is equal to word    
-                CMP     #2,D4
-                BEQ     cmp_long          ;Mode 2 is equal to long   
-
-cmp_byte      
-                JSR     PRINT_BYTE
-                BRA     fin_cmp_ea
-cmp_word
-                JSR     PRINT_WORD
-                BRA     fin_cmp_ea
-                
-cmp_long  
-                JSR     PRINT_LONG     
-                BRA     fin_cmp_ea
-                
-fin_cmp_ea      
-                CLR.L   D4          ;Destination is always a data register
-                BRA     PRINT       ;EA completed
-
+                CMP     #0,D6               ;Destination mode (opmode) determines attribute
+                BEQ     PRINT_BYTE          ;Mode 0 is equal to byte
+                CMP     #1,D6               
+                BEQ     PRINT_WORD          ;MOde 1 is equal to word    
+                CMP     #2,D6
+                BEQ     PRINT_LONG          ;Mode 2 is equal to long
                     
                     
 *---------------------------------CMPA_EA------------------------------------
@@ -1678,24 +1992,16 @@ cmpa_output
                 LEA     CMPA_OP,A1
                 MOVE.B  #14,D0
                 TRAP    #15
+                
+                MOVE.L  D4,D1               ;D1 will determine size
+                MOVE.L  #1,D4               ;Destination is always an address register
                 *Print attribute
-                CMP     #3,D4             ;Destination mode (opmode) determines attribute
-                BLT     PRINT_BAD         ;No mode below 3 are valid
-                CMP     #3,D4               
-                BEQ     cmpa_word          ;Mode 3 is equal to word    
-                CMP     #7,D4
-                BEQ     cmpa_long          ;Mode 7 is equal to long
-cmpa_word
-                JSR     PRINT_WORD
-                BRA     fin_cmpa_ea
-                
-cmpa_long  
-                JSR     PRINT_LONG     
-                BRA     fin_cmpa_ea
-                
-fin_cmpa_ea      
-                MOVE.L  #1,D4       ;Destination is always an address register
-                BRA     PRINT       ;EA completed
+                CMP     #3,D1               ;Destination mode (opmode) determines attribute
+                BLT     PRINT_BAD           ;No mode below 3 are valid
+                CMP     #3,D1               
+                BEQ     PRINT_WORD          ;Mode 3 is equal to word    
+                CMP     #7,D1
+                BEQ     PRINT_LONG          ;Mode 7 is equal to long
                     
                 
 *------------------------------------CMPI_EA--------------------------------------
@@ -1723,7 +2029,7 @@ DIVS_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
+        MOVE.B  #0,NUM_EXP_WRDS
         BRA PRINT              
                 
                 
@@ -1766,18 +2072,46 @@ EORI_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
+        MOVE.B  #0,NUM_EXP_WRDS
         BRA PRINT
         
 *---------------------------JSR_EA------------------------------------
 JSR_EA
-
+        MOVE.B  #1,NUM_OPERANDS
+        MOVE.B  #1,NUM_EXP_WRDS ;May be overwritten later
+        
         LEA     JSR_OP,A1
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
-        BRA PRINT
+        JSR     LOAD12BY3       ;Split word into data registers (only need d2 and d3)
+                
+        CMP.W   #5,D2           ;D2 is the ea mode
+        BEQ     PRINT_BAD       ;Unsupported displacement
+        CMP.W   #6,D2           ;D2 is the ea mode
+        BEQ     PRINT_BAD       ;Unsupported displacement
+        CMP.W   #7,D2           ;D2 is the ea mode
+        BLT     jsr_operand     ;Must be mode 2
+        CMP.W   #2,D3           ;D3 is register
+        BGE     PRINT_BAD       ;Register 2 and up are unsupported
+        CMP.W   #0,D3           ;D3 is register #
+        BEQ     jsr_operand     ;Register 0 is word addressing
+        MOVE.B  #2,NUM_EXP_WRDS ;2 words for long addressing
+        BRA     jsr_operand
+        
+jsr_operand
+        MOVE.L  A5,A4   ;Make a copy of the opcode pointer
+        ADD.L   #2,A4   ;Advance to first expansion word (assumes on exists)
+        CMP.B   #1,NUM_EXP_WRDS
+        BGT     jsr_2
+        MOVE.W  (A4),D3
+        BRA     PRINT
+        
+jsr_2   MOVE.L  (A4),D3
+        BRA     PRINT
+     
+ 
+  
 
                 
 *---------------------------LEA_EA------------------------------------
@@ -1787,28 +2121,39 @@ LEA_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
+        MOVE.B  #0,NUM_EXP_WRDS
         BRA PRINT
         
 *---------------------------LSL_EA------------------------------------
 LSL_EA
-
+        JSR     SHIFTCOM
         LEA     LSL_OP,A1
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
-        BRA PRINT
+        CMP.B   #0,D6
+        BEQ     PRINT_BYTE
+        CMP.B   #1,D6
+        BEQ     PRINT_WORD
+        CMP.B   #2,D6
+        BEQ     PRINT_LONG
+        BRA     ENDPROGRAM
+        
         
 *---------------------------LSR_EA------------------------------------
 LSR_EA
-
+        JSR     SHIFTCOM
         LEA     LSR_OP,A1
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
-        BRA PRINT
+        CMP.B   #0,D6
+        BEQ     PRINT_BYTE
+        CMP.B   #1,D6
+        BEQ     PRINT_WORD
+        CMP.B   #2,D6
+        BEQ     PRINT_LONG
+        BRA     ENDPROGRAM
                 
 
 *---------------------------------MOVE_EA----------------------------------
@@ -1820,36 +2165,23 @@ MOVE_EA
                     
                     MOVE.L  #MASK_13_12,D7         *Load the mask for size
                     JSR     APPLYMASK
-                    MOVE.L  D7,D0                 ;<-------------------------------------------------------------------Need to integrate with I/O now that I have attribute
+                    MOVE.L  D7,D6                
                   
                     JSR     LOAD12BY3
-                  
+                    JSR     EXP2OPER      
+ 
+move_attribute                    
+                    LEA     MOVE_OP,A1
+                    MOVE.B  #14,D0
+                    TRAP    #15                   
                     
-*Calculate number of expansion words
-                    *Destination side
-                    CMP.W   #7,D2                  *Destination modes below 7 do not have expansion words 
-                    BLT     src_expansion
-                    JSR     INCREMENT_WRD_CNT
-                    CMP.W   #1,D1                  *001 in destination register
-                    BNE     src_expansion
-                    JSR     INCREMENT_WRD_CNT
                     
-*Calculate number of expansion words
-                    *Source Side
-src_expansion       CMP.W   #7,D2                   
-                    BLT     fin_move_ea             *Mode less than 7 don't have expansion words
-                    JSR     INCREMENT_WRD_CNT       *At lease one more word
-                    CMP.W   #1,D3                   *Reg 1 means long word
-                    BLT     fin_move_ea             *Reg 0 is single word
-                    JSR     INCREMENT_WRD_CNT
-                    CMP.W   #4,D5                   *Register 4 indicates immediate data     
-                    BNE     fin_move_ea             *If not immediate data then wer're done
-                    CMP.W   #2,D0                   *If immediate then look at the size
-                    BNE     fin_move_ea             *Less than 2 means a single word and we've already added that
-                    JSR     INCREMENT_WRD_CNT       *Size is 2 (cant be greater) so add additonal word 
-fin_move_ea         
-                    
-                                        
+                    *Calculate attribute
+                    CMP.W   #1,D6                      ; 1 is byte
+                    BEQ     PRINT_BYTE
+                    CMP.W   #2,D6                      ; Size determines attribute
+                    BEQ     PRINT_LONG                 ; 2 is long
+                    BRA     PRINT_WORD                  ; 3 is word (No check for invalid values)    
 
 *------------------------------------------MOVEA_EA----------------------------------------------------------
 MOVEA_EA
@@ -1886,30 +2218,22 @@ MOVEA_EA
 chk_sreg_4      CMP.W   #4,D3                       ; Source reg 4 with mode 7 is immediate
                 BNE     movea_unsupported           ; With source mode 7 supported registers are 0,1,4 only
                 CMP.W   #2,D0                       ; Size indicates numb of exp words with immediate
-                BNE     movea_word                  ; Size of 3 indicates word so only 1 expansion
+                BNE     PRINT_WORD                  ; Size of 3 indicates word so only 1 expansion
                 JSR     INCREMENT_WRD_CNT           ; Size of 2 indicates long so need another expansion
-                BRA     movea_long          
+                BRA     PRINT_LONG          
                 
 
                 
                 *Calculate attribute
 movea_attribute
                 CMP.W   #2,D0                       ; Size determines attribute
-                BEQ     movea_long                  ; 2 is long
-                BRA     movea_word                  ; 3 is word (No check for invalid values)
-movea_word      
-                JSR     PRINT_WORD
-                BRA     fin_movea_ea
-movea_long
-                JSR     PRINT_LONG
-                BRA     fin_movea_ea
+                BEQ     PRINT_LONG                  ; 2 is long
+                BRA     PRINT_WORD                  ; 3 is word (No check for invalid values)
+
               
 
 movea_unsupported
-                ; Need to print invalid code here
-
-fin_movea_ea
-                BRA     PRINT
+                BRA     PRINT_BAD
         
 *---------------------------------MOVEM_EA--------------------------
 MOVEM_EA
@@ -1917,38 +2241,75 @@ MOVEM_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
+        MOVE.B  #0,NUM_EXP_WRDS
         BRA PRINT
         
 *---------------------------MULS_EA------------------------------------
 MULS_EA
-
+        
+        JSR     MULDIV
+        
         LEA     MULS_OP,A1
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
-        BRA PRINT
+        *
+        CMP.B   #7,D4       ;D4 Holds bits 8-6
+        BEQ     PRINT_BYTE
+        CMP.B   #0,D4
+        BEQ     PRINT_BYTE
+        
+        
+      
         
 *---------------------------NEG_EA------------------------------------
 NEG_EA
-
+        MOVE.B  #0,NUM_EXP_WRDS
+        MOVE.B  #1,NUM_OPERANDS ;Neg always has a single operand
+        JSR     LOAD12BY3
+        MOVE.L  D2,D4           ;Only one operand with neg need to move
+        MOVE.L  D3,D5           ;What 12by3 calls operand 2 to operand 1
+        JSR     EAWCHKS       
+        
         LEA     NEG_OP,A1
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
-        BRA PRINT
+        MOVE.L  MASK_7_6,D7
+        ANDI.L  #$00C00000,D7   ;Work around the sign extension   
+        JSR     APPLYMASK       ;Size is in D7
+        
+        CMP.B   #0,D7           ;Check for size
+        BEQ     PRINT_BYTE
+        CMP.B   #1,D7           
+        BEQ     PRINT_WORD
+        CMP.B   #2,D7
+        BEQ     PRINT_LONG     
+       
         
 *---------------------------NOT_EA------------------------------------
 NOT_EA
+        MOVE.B  #0,NUM_EXP_WRDS
+        MOVE.B  #1,NUM_OPERANDS ;Not always has a single operand
+        JSR     LOAD12BY3
+        MOVE.L  D2,D4           ;Only one operand with neg need to move
+        MOVE.L  D3,D5           ;What 12by3 calls operand 2 to operand 1
+        JSR     EAWCHKS
 
         LEA     NOT_OP,A1
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
-        BRA PRINT
+         MOVE.L  MASK_7_6,D7
+        ANDI.L  #$00C00000,D7   ;Work around the sign extension   
+        JSR     APPLYMASK       ;Size is in D7
+        
+        CMP.B   #0,D7           ;Check for size
+        BEQ     PRINT_BYTE
+        CMP.B   #1,D7           
+        BEQ     PRINT_WORD
+        CMP.B   #2,D7
+        BEQ     PRINT_LONG
         
 *---------------------------ORI_EA------------------------------------
 ORI_EA
@@ -1957,41 +2318,52 @@ ORI_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
+        MOVE.B  #0,NUM_EXP_WRDS
         BRA PRINT
         
 *---------------------------ROL_EA------------------------------------
 ROL_EA
+        JSR     SHIFTCOM
 
         LEA     ROL_OP,A1
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
-        BRA PRINT
+        CMP.B   #0,D6
+        BEQ     PRINT_BYTE
+        CMP.B   #1,D6
+        BEQ     PRINT_WORD
+        CMP.B   #2,D6
+        BEQ     PRINT_LONG
+        BRA     ENDPROGRAM
+
         
 *---------------------------ROR_EA------------------------------------
 ROR_EA
-
+        JSR     SHIFTCOM
+        
         LEA     ROR_OP,A1
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
-        BRA PRINT
+        CMP.B   #0,D6
+        BEQ     PRINT_BYTE
+        CMP.B   #1,D6
+        BEQ     PRINT_WORD
+        CMP.B   #2,D6
+        BEQ     PRINT_LONG
+        BRA     ENDPROGRAM
+
         
 *---------------------------RTS_EA------------------------------------
 RTS_EA
-
         LEA     RTS_OP,A1
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
-        BRA PRINT
-
-        
- 
+        MOVE.B  #0,NUM_EXP_WRDS
+        MOVE.B  #0,NUM_OPERANDS
+        BRA PRINT 
         
 *-------------------------------SUB_EA-------------------------------
 SUB_EA
@@ -2000,7 +2372,7 @@ SUB_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
+        MOVE.B  #0,NUM_EXP_WRDS
         BRA PRINT
         
 *-----------------------------SUBA_EA---------------------------------
@@ -2010,7 +2382,7 @@ SUBA_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
+        MOVE.B  #0,NUM_EXP_WRDS
         BRA PRINT
         
 *---------------------------SUBI_EA------------------------------------
@@ -2019,7 +2391,7 @@ SUBI_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  #1,NUM_EXP_WRDS
+        MOVE.B  #0,NUM_EXP_WRDS
         BRA PRINT
 
 
@@ -2027,6 +2399,7 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
