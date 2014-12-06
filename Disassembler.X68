@@ -34,6 +34,7 @@
 
 * Put variables and constants here
 *------------------------------------------Opcode Constants----------------------------------------------------
+PAUSE_COUNT         DC.B        30                  ; COUNTER
 BEQ_OP              DC.B        'BEQ',0
 ADD_OP              DC.B        'ADD',0
 ADDA_OP             DC.B        'ADDA',0
@@ -83,7 +84,7 @@ NUM_EXP_WRDS        DS.B        1                   ; Number of expansion words 
                     
 NUM_OPERANDS        DS.B        1                   ; Number of operands for the current instruction valid range: 1 or 2
                     
-PAUSE_COUNT         DC.W        30                  ; COUNTER
+
 PAUSE_MSG           DC.B        'Dissambler paused. Press any key to continue...',0
 EL                  DC.B        '',CR,LF,0          ; End Line
 OP_COMMA            DC.B        ',',0
@@ -155,7 +156,8 @@ START:              ORG         $1000               ; first instruction of progr
 MAIN
                     MOVE.B      #0,NUM_EXP_WRDS     ; Initialize to 0
                     MOVE.B      #0,NUM_OPERANDS     ; Initialize to 0
-                    *MOVE.B      #30,PAUSE_COUNT     ; Initialize to 30
+                    MOVE.B      #0,PAUSE_COUNT      ; RESET PUASE_COUNT
+                    MOVE.B      #30,PAUSE_COUNT     ; Initialize to 30
                     JSR         SPLASH_SCREEN       ; Display splash screen
                     BRA         STARTHEX            ; get starting hex address
                     
@@ -180,16 +182,16 @@ MAIN_LOOP
                     BRA         MAIN_LOOP_RUN       ; branch to the main loop
 
 MAIN_LOOP_RUN       JSR         DEC_LOOP_COUNT      ; branh to decrement the counter
-                    CMPI.W      #$0,PAUSE_COUNT     ; check if counter is at 0
+                    CMPI.B      #$0,PAUSE_COUNT     ; check if counter is at 0
                     BEQ         PAUSE               ; counter == 0, pause the program
                                     
                     MOVE.L      A5,D1               ; move the starting address to d1
                     MOVE.L      A6,D2               ; move the ending address to d2
                     CMP.L       D1,D2               ; check if starting address and ending address are equal
-                    BEQ         PROMPTRUNAGAIN      ; if equal end program by prompting to run again
-                    BRA         BEGINOPCODE         ; branch to opcode conversion
-                    
-DEC_LOOP_COUNT      SUBI.W      #$1,PAUSE_COUNT     ; subtract 1 from counter
+                    BGT         BEGINOPCODE         ; branch to opcode conversion
+                    BRA         PROMPTRUNAGAIN      ; if equal end program by prompting to run again
+
+DEC_LOOP_COUNT      SUBI.B      #$1,PAUSE_COUNT     ; subtract 1 from counter
                     RTS                             ; return
                     
 PAUSE               LEA         PAUSE_MSG,A1        ; put pause message into a1
@@ -198,7 +200,7 @@ PAUSE               LEA         PAUSE_MSG,A1        ; put pause message into a1
                     SUBA.L      A1,A1               ; clear a1
                     MOVE.B      #2,D0               ; trap task 5 grabs a single character
                     TRAP        #15                 ; trap #15 I/O
-                    MOVE.W      #30,PAUSE_COUNT     ; reset counter to 30
+                    MOVE.B      #30,PAUSE_COUNT     ; reset counter to 30
                     JSR         CLEAR_SCREEN        ; clear the screen
                     BRA         MAIN_LOOP_RUN       ; branch to continue looping
 
@@ -287,7 +289,7 @@ PROMPTRUNAGAIN
 RESET               JSR         CLEAR_SCREEN        ; subroutine to clear screen
                     JSR         CLEAR_DATA          ; subroutine to clear data registers
                     JSR         CLEAR_ADDRESS       ; subroutine to clear address registers
-                    *MOVE.W      #30,PAUSE_COUNT     ; Initialize to 30
+                    *MOVE.B      #30,PAUSE_COUNT     ; Initialize to 30
                     BRA         START               ; branch back to start
                     
 CLEAR_SCREEN        MOVE.B      #11,D0              ; clear the screen
@@ -2415,11 +2417,6 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
-
-
-
-
-
 
 
 

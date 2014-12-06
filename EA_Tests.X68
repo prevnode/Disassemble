@@ -7,6 +7,22 @@
     ORG    $8888
 START:                  ; first instruction of program
     
+    
+    
+*------------------NEG VARIANTS--------------------------------
+    NEG.B       D0
+    NEG.B       (A1)
+    NEG.B       (A2)+
+    NEG.B       $34643699
+    NEG.B       $6991
+    NEG.W       (A0)
+    NEG.W       $1000
+    NEG.W       $10004000
+    NEG.L       -(A0)
+    NEG.L       (A0)
+    NEG.L       (A3)
+    
+*--------------------CMP VARIANTS------------------------------
     CMPA        D3,A2
     CMPA        A2,A4
     CMPA        $1234,A3
@@ -82,6 +98,7 @@ CMPVARIANTS
 * Put variables and constants here
 
     END    START        ; last line of source
+
 
 
 
