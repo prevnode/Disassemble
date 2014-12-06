@@ -46,35 +46,37 @@ TESTDATA
     *NEG.L   D3<----------Decodes as movem
     *NEG.L   (A5)<----------Decodes as movem
 
-    NEG.B   D4
-    NEG     D1
-    NEG.W   D2
-    NEG.B   $1234
-    NEG.W   $1234
-    
-    
-    JSR     ENDPROGRAM
-    JSR     TESTDATA
-    JSR     ENDTESTDATA
-    ASL.W   #3,D0
-    ROL     #5,D3
-    LSL     #3,D0
-    ROL     D3,D5
-    LSL     D5,D3
-    LSL.B   D5,D3
-    BHI     TESTJSR    
-    *BCC     TESTJSR
-    BNE     TESTJSR
-    BLT     TESTJSR 
-    BHI     TESTJSR 
-    LSR.W   D0,D1
-    LSL.W   D0,D1
-    ROL.W   D0,D1
-    ROR.W   D0,D1
-    NEG     D0
-    NOT     D0
-    RTS
-    JSR     TESTJSR
+*    NEG.B   D4
+*    NEG     D1
+*    NEG.W   D2
+*    NEG.B   $1234
+*    NEG.W   $1234    
+*    
+*    JSR     ENDPROGRAM
+*    JSR     TESTDATA
+*    JSR     ENDTESTDATA
+*    ASL.W   #3,D0
+*    ROL     #5,D3
+*    LSL     #3,D0
+*    ROL     D3,D5
+*    LSL     D5,D3
+*    LSL.B   D5,D3
+*    BHI     TESTJSR    
+*    *BCC     TESTJSR
+*    BNE     TESTJSR
+*    BLT     TESTJSR 
+*    BHI     TESTJSR 
+*    LSR.W   D0,D1
+*    LSL.W   D0,D1
+*    ROL.W   D0,D1
+*    ROR.W   D0,D1
+*    NEG     D0
+*    NOT     D0
+*    RTS
+*    JSR     TESTJSR
+
+    ADD $1234,D2
+    ADD D2,$1234
     
 TESTJSR
     RTS
@@ -1533,6 +1535,12 @@ getlongea
 fin_eachk
         RTS
         
+*-------------------------------Multiply and Divide--------------------------------------
+MULDIV
+        JSR     LOAD12BY3
+        JSR     EAWCHKS
+        RTS
+        
         
 *-----------------------------Expansion to Operand Arithemitic-----------------------------
 *Moves data from the expansion words into operand registers
@@ -2337,10 +2345,16 @@ MOVEM_EA
         
 *---------------------------MULS_EA------------------------------------
 MULS_EA
-
+        JSR     MULDIV
+        
         LEA     MULS_OP,A1
         MOVE.B  #14,D0
         TRAP    #15
+        
+        *
+        CMP.B   #7,D4       ;D4 Holds bits 8-6
+        BEQ     PRINT_BYTE
+        
         
         MOVE.B  #0,NUM_EXP_WRDS
         BRA PRINT
@@ -2372,13 +2386,27 @@ NEG_EA
         
 *---------------------------NOT_EA------------------------------------
 NOT_EA
+        MOVE.B  #0,NUM_EXP_WRDS
+        MOVE.B  #1,NUM_OPERANDS ;Not always has a single operand
+        JSR     LOAD12BY3
+        MOVE.L  D2,D4           ;Only one operand with neg need to move
+        MOVE.L  D3,D5           ;What 12by3 calls operand 2 to operand 1
+        JSR     EAWCHKS
 
         LEA     NOT_OP,A1
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.B  #0,NUM_EXP_WRDS
-        BRA PRINT
+         MOVE.L  MASK_7_6,D7
+        ANDI.L  #$00C00000,D7   ;Work around the sign extension   
+        JSR     APPLYMASK       ;Size is in D7
+        
+        CMP.B   #0,D7           ;Check for size
+        BEQ     PRINT_BYTE
+        CMP.B   #1,D7           
+        BEQ     PRINT_WORD
+        CMP.B   #2,D7
+        BEQ     PRINT_LONG
         
 *---------------------------ORI_EA------------------------------------
 ORI_EA
