@@ -188,7 +188,7 @@ MAIN_LOOP_RUN       JSR         DEC_LOOP_COUNT      ; branh to decrement the cou
                     MOVE.L      A5,D1               ; move the starting address to d1
                     MOVE.L      A6,D2               ; move the ending address to d2
                     CMP.L       D1,D2               ; check if starting address and ending address are equal
-                    BGT         BEGINOPCODE         ; branch to opcode conversion
+                    BGT         START_DECODE        ; branch to opcode conversion
                     BRA         PROMPTRUNAGAIN      ; if equal end program by prompting to run again
 
 DEC_LOOP_COUNT      SUBI.B      #$1,PAUSE_COUNT     ; subtract 1 from counter
@@ -203,6 +203,44 @@ PAUSE               LEA         PAUSE_MSG,A1        ; put pause message into a1
                     MOVE.B      #30,PAUSE_COUNT     ; reset counter to 30
                     JSR         CLEAR_SCREEN        ; clear the screen
                     BRA         MAIN_LOOP_RUN       ; branch to continue looping
+                    
+START_DECODE        JSR         ADDR_HEX
+                    LEA         TAB,A1         ; print the bad message part 2
+                    MOVE.B      #14,D0              ; trap task #14 to print the message to screen
+                    TRAP        #15                 ; trap #15 I/O
+                    BRA         BEGINOPCODE
+
+ADDR_HEX            CLR         D0                 ; clear d0
+                    CLR         D2
+                    CLR         D3
+                    MOVE.B      #8,D0              ; set counter to 8
+
+ADDR_PUSH_LOOP      CMPI.B      #$0,D0             ; is counter at 0
+                    BEQ         ADDR_HEX_PULL           ; if counter = 0 branch to hex_pull
+                    MOVE.B      D1,D3              ; move LSB to d3
+                    LSR.L       #4,D1              ; shift register right
+                    ANDI.B      #$F,D3             ; and F to get the least significant nibble
+                    CMPI.B      #$A,D3             ; is nibble a number
+                    BLT         ADDR_HEX_NUM            ; nibble is number, branch to hex_num
+                    BRA         ADDR_HEX_ALP            ; nibble is a letter, branch to hex_alp
+            
+ADDR_HEX_NUM        ADDI.B      #$30,D3            ; add #$30 to nibble to get ascii number
+                    BRA         ADDR_HEX_AGAIN          ; branch to hex_again to continue loop
+ADDR_HEX_ALP        ADD.B       #$37,D3            ; add #$37 to nibble to get ascii letter
+                    BRA         ADDR_HEX_AGAIN          ; branch to hex_again to contiune loop
+ADDR_HEX_AGAIN      MOVE.B      D3,-(SP)           ; move letter to stack
+                    SUBI.B      #$1,D0             ; decrement counter
+                    BRA         ADDR_PUSH_LOOP          ; branch to loop
+
+ADDR_HEX_PULL       MOVE.B      #$8,D1             ; set counter to 8
+ADDR_PULL_LOOP      MOVE.B      (SP)+,HEX_MSG      ; get char from stack
+                    LEA         HEX_MSG,A1         ; print out the MSB char
+                    MOVE        #14,D0             ; trap task #14 to print the message to screen
+                    TRAP        #15                ; trap #15 I/O
+                    SUBI.B      #$1,D1             ; decrement counter
+                    CMPI.B      #$0,D1             ; check if counter is 0
+                    BGT         ADDR_PULL_LOOP          ; counter is not 0, loop again
+                    RTS                             ; return
 
 *--------------------STARTHEX & ENDHEX-------------------------------
 * prompt the user for a starting address in hex
@@ -2417,10 +2455,6 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
-
-
-
-
 
 
 *~Font name~Courier New~
