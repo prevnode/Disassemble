@@ -43,6 +43,16 @@ TESTDATA
     *SUBA    D0,A1
     *SUB     D0,D1
     *ADDQ    #1,D1
+    *NEG.L   D3<----------Decodes as movem
+    *NEG.L   (A5)<----------Decodes as movem
+
+    NEG.B   D4
+    NEG     D1
+    NEG.W   D2
+    NEG.B   $1234
+    NEG.W   $1234
+    
+    
     JSR     ENDPROGRAM
     JSR     TESTDATA
     JSR     ENDTESTDATA
@@ -1487,7 +1497,7 @@ EAWCHKS
         CMP.B   #6,D4
         BEQ     PRINT_BAD
         CMP.B   #7,D4    
-        BNE     operand1
+        BNE     operandea
         CMP.B   #2,D5       ;Register 2 - 3 are unsupported
         BEQ     PRINT_BAD
         CMP.B   #3,D5
@@ -1500,7 +1510,7 @@ immediateea
         
 operandea
         CMP.B   #7,D4       ;Look at operand 1 mode
-        BLT     fin_exp     ;Opcodes below 7 don't use expansion words
+        BLT     fin_eachk   ;Opcodes below 7 don't use expansion words
         CMP     #0,D5       ;Register 0 is word addressing
         BEQ     getwordea   ;Single word
         CMP     #1,D5
@@ -1520,6 +1530,8 @@ getlongea
         ADD.B   #2,NUM_EXP_WRDS
         RTS   
         
+fin_eachk
+        RTS
         
         
 *-----------------------------Expansion to Operand Arithemitic-----------------------------
@@ -2335,15 +2347,28 @@ MULS_EA
         
 *---------------------------NEG_EA------------------------------------
 NEG_EA
-        
+        MOVE.B  #0,NUM_EXP_WRDS
+        MOVE.B  #1,NUM_OPERANDS ;Neg always has a single operand
         JSR     LOAD12BY3
-        JSR     EAWCHKS
+        MOVE.L  D2,D4           ;Only one operand with neg need to move
+        MOVE.L  D3,D5           ;What 12by3 calls operand 2 to operand 1
+        JSR     EAWCHKS       
+        
         LEA     NEG_OP,A1
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.B  #0,NUM_EXP_WRDS
-        BRA PRINT
+        MOVE.L  MASK_7_6,D7
+        ANDI.L  #$00C00000,D7   ;Work around the sign extension   
+        JSR     APPLYMASK       ;Size is in D7
+        
+        CMP.B   #0,D7           ;Check for size
+        BEQ     PRINT_BYTE
+        CMP.B   #1,D7           
+        BEQ     PRINT_WORD
+        CMP.B   #2,D7
+        BEQ     PRINT_LONG     
+       
         
 *---------------------------NOT_EA------------------------------------
 NOT_EA
@@ -2443,6 +2468,7 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
