@@ -1424,20 +1424,19 @@ immediateea
         
         
 getwordea
-        CLR     D4          ;Clear the register before copy expansion word
-        MOVE.W  (A4)+,D4
+        CLR     D3          ;Clear the register before copy expansion word D3 holds register
+        MOVE.W  (A4)+,D3
         ADD.B   #1,NUM_EXP_WRDS
         RTS
         
 getlongea
-        CLR     D5          ;Clear the register before copy expansion word
-        MOVE.L  (A4)+,D4
+        CLR     D3          ;Clear the register before copy expansion word D3 holds register
+        MOVE.L  (A4)+,D3
         ADD.B   #2,NUM_EXP_WRDS
         RTS   
         
 fin_eachk
-        RTS
-        
+        RTS        
 *-------------------------------Multiply and Divide--------------------------------------
 MULDIV
         JSR     LOAD12BY3
@@ -2407,6 +2406,7 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
