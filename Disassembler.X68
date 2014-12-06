@@ -1017,7 +1017,7 @@ jmp_table_0100_11109        JMP code_0100_000
                             JMP code_0100_101
 
                             JMP code_0100_110
-
+        
                             JMP code_0100_111
   
 
@@ -1095,7 +1095,7 @@ code_0110_000     BRA   BRA_EA
 
 code_0110_001     BRA   BHI_EA
 
-code_0110_010     BRA   BCC_EA 
+code_0110_010     BRA   PRINT_BAD 
 
 code_0110_011     JSR   Check_8
                   CMPI  #0,D0
@@ -1109,6 +1109,7 @@ code_0110_101     BRA   PRINT_BAD
 code_0110_110     BRA   BLT_EA
 
 code_0110_111     BRA   PRINT_BAD                
+
 
 *------------------------------------End Bucket 0110---------------------------------
 
@@ -1252,27 +1253,27 @@ code1101       JSR          Check_43           ;if addx
 
 
 
-*-----------------------------End Bucket 1110---------------------------------------
+*-----------------------------End Bucket 1110---------------------------------------TestTag
 *supported opcodes
 *LSR, LSL, ROL, ROR
 
-code1110       JSR          Check_11109         ;if LS R or L memory shift         
-               CMPI         #1,D0
+code1110       JSR          Check_43                 
+               CMPI         #0,D0           ;if AS R or L memory shift
+               BEQ          AS_
+               CMPI         #1,D0           ;if LS R or L memory shift
                BEQ          LS_
-               
-               JSR          Check_11109         ;else if RO R or L memory rotate       
-               CMPI         #3,D0
+               CMPI         #3,D0           ;if RO R or L memory shift
                BEQ          RO_
                
-               JSR          Check_43            ;else if LS R or L register shift             
-               CMPI         #1,D0
+               JSR          Check_11109      
+               CMPI         #0,D0           ;if AS R or L register shift
+               BEQ          AS_
+               CMPI         #1,D0           ;if LS R or L register shift
                BEQ          LS_
-               
-               JSR          Check_43            ;else if RO R or L register rotate  
-               CMPI         #3,D0
+               CMPI         #3,D0           ;if RO R or L register shift
                BEQ          RO_
-               
-               BRA          PRINT_BAD           ;anything else is not supported
+ 
+               BRA          PRINT_BAD        ;anything else is not supported
                
 *know that it is LS, check to see if right or left shift               
 LS_            JSR          Check_8
@@ -1286,6 +1287,13 @@ RO_            JSR          Check_8
                CMPI         #1,D0
                BEQ          ROL_EA
                BRA          ROR_EA
+               
+               
+*know that it is AS, check to see if right or left rotate 
+AS_            JSR          Check_8
+               CMPI         #1,D0
+               BEQ          ASL_EA
+               BRA          ASR_EA
 
                      
 *-----------------------------End Bucket 1110---------------------------------------
@@ -1300,8 +1308,7 @@ code1111       BRA      PRINT_BAD
 *-----------------------------End Bucket 1111---------------------------------------
 
 
-
-*--------------------------------------------------end opcode-----------------------------------------------------
+*---------------------------------------end opcode-------------------------------------------------------------------------
 
 
 
@@ -2400,6 +2407,7 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
