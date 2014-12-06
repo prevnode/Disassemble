@@ -34,6 +34,7 @@
 
 * Put variables and constants here
 *------------------------------------------Opcode Constants----------------------------------------------------
+PAUSE_COUNT         DC.B        30                  ; COUNTER
 BEQ_OP              DC.B        'BEQ',0
 ADD_OP              DC.B        'ADD',0
 ADDA_OP             DC.B        'ADDA',0
@@ -83,7 +84,7 @@ NUM_EXP_WRDS        DS.B        1                   ; Number of expansion words 
                     
 NUM_OPERANDS        DS.B        1                   ; Number of operands for the current instruction valid range: 1 or 2
                     
-PAUSE_COUNT         DC.W        30                  ; COUNTER
+
 PAUSE_MSG           DC.B        'Dissambler paused. Press any key to continue...',0
 EL                  DC.B        '',CR,LF,0          ; End Line
 OP_COMMA            DC.B        ',',0
@@ -134,7 +135,7 @@ MASK_13_12          EQU     %00110000000000000000000000000000
 MASK_11_9           EQU     %00001110000000000000000000000000
 MASK_8_6            EQU     %00000001110000000000000000000000
 MASK_7_6            EQU     %00000000110000000000000000000000
-MASK_7_0            EQU     %000000001111111100000000000000
+MASK_7_0            EQU     %00000000111111110000000000000000
 MASK_5_3            EQU     %00000000001110000000000000000000
 MASK_2_0            EQU     %00000000000001110000000000000000
 
@@ -155,7 +156,8 @@ START:              ORG         $1000               ; first instruction of progr
 MAIN
                     MOVE.B      #0,NUM_EXP_WRDS     ; Initialize to 0
                     MOVE.B      #0,NUM_OPERANDS     ; Initialize to 0
-                    *MOVE.B      #30,PAUSE_COUNT     ; Initialize to 30
+                    MOVE.B      #0,PAUSE_COUNT      ; RESET PUASE_COUNT
+                    MOVE.B      #30,PAUSE_COUNT     ; Initialize to 30
                     JSR         SPLASH_SCREEN       ; Display splash screen
                     BRA         STARTHEX            ; get starting hex address
                     
@@ -180,16 +182,16 @@ MAIN_LOOP
                     BRA         MAIN_LOOP_RUN       ; branch to the main loop
 
 MAIN_LOOP_RUN       JSR         DEC_LOOP_COUNT      ; branh to decrement the counter
-                    CMPI.W      #$0,PAUSE_COUNT     ; check if counter is at 0
+                    CMPI.B      #$0,PAUSE_COUNT     ; check if counter is at 0
                     BEQ         PAUSE               ; counter == 0, pause the program
                                     
                     MOVE.L      A5,D1               ; move the starting address to d1
                     MOVE.L      A6,D2               ; move the ending address to d2
                     CMP.L       D1,D2               ; check if starting address and ending address are equal
-                    BEQ         PROMPTRUNAGAIN      ; if equal end program by prompting to run again
-                    BRA         BEGINOPCODE         ; branch to opcode conversion
-                    
-DEC_LOOP_COUNT      SUBI.W      #$1,PAUSE_COUNT     ; subtract 1 from counter
+                    BGT         START_DECODE        ; branch to opcode conversion
+                    BRA         PROMPTRUNAGAIN      ; if equal end program by prompting to run again
+
+DEC_LOOP_COUNT      SUBI.B      #$1,PAUSE_COUNT     ; subtract 1 from counter
                     RTS                             ; return
                     
 PAUSE               LEA         PAUSE_MSG,A1        ; put pause message into a1
@@ -198,9 +200,47 @@ PAUSE               LEA         PAUSE_MSG,A1        ; put pause message into a1
                     SUBA.L      A1,A1               ; clear a1
                     MOVE.B      #2,D0               ; trap task 5 grabs a single character
                     TRAP        #15                 ; trap #15 I/O
-                    MOVE.W      #30,PAUSE_COUNT     ; reset counter to 30
+                    MOVE.B      #30,PAUSE_COUNT     ; reset counter to 30
                     JSR         CLEAR_SCREEN        ; clear the screen
                     BRA         MAIN_LOOP_RUN       ; branch to continue looping
+                    
+START_DECODE        JSR         ADDR_HEX
+                    LEA         TAB,A1         ; print the bad message part 2
+                    MOVE.B      #14,D0              ; trap task #14 to print the message to screen
+                    TRAP        #15                 ; trap #15 I/O
+                    BRA         BEGINOPCODE
+
+ADDR_HEX            CLR         D0                 ; clear d0
+                    CLR         D2
+                    CLR         D3
+                    MOVE.B      #8,D0              ; set counter to 8
+
+ADDR_PUSH_LOOP      CMPI.B      #$0,D0             ; is counter at 0
+                    BEQ         ADDR_HEX_PULL           ; if counter = 0 branch to hex_pull
+                    MOVE.B      D1,D3              ; move LSB to d3
+                    LSR.L       #4,D1              ; shift register right
+                    ANDI.B      #$F,D3             ; and F to get the least significant nibble
+                    CMPI.B      #$A,D3             ; is nibble a number
+                    BLT         ADDR_HEX_NUM            ; nibble is number, branch to hex_num
+                    BRA         ADDR_HEX_ALP            ; nibble is a letter, branch to hex_alp
+            
+ADDR_HEX_NUM        ADDI.B      #$30,D3            ; add #$30 to nibble to get ascii number
+                    BRA         ADDR_HEX_AGAIN          ; branch to hex_again to continue loop
+ADDR_HEX_ALP        ADD.B       #$37,D3            ; add #$37 to nibble to get ascii letter
+                    BRA         ADDR_HEX_AGAIN          ; branch to hex_again to contiune loop
+ADDR_HEX_AGAIN      MOVE.B      D3,-(SP)           ; move letter to stack
+                    SUBI.B      #$1,D0             ; decrement counter
+                    BRA         ADDR_PUSH_LOOP          ; branch to loop
+
+ADDR_HEX_PULL       MOVE.B      #$8,D1             ; set counter to 8
+ADDR_PULL_LOOP      MOVE.B      (SP)+,HEX_MSG      ; get char from stack
+                    LEA         HEX_MSG,A1         ; print out the MSB char
+                    MOVE        #14,D0             ; trap task #14 to print the message to screen
+                    TRAP        #15                ; trap #15 I/O
+                    SUBI.B      #$1,D1             ; decrement counter
+                    CMPI.B      #$0,D1             ; check if counter is 0
+                    BGT         ADDR_PULL_LOOP          ; counter is not 0, loop again
+                    RTS                             ; return
 
 *--------------------STARTHEX & ENDHEX-------------------------------
 * prompt the user for a starting address in hex
@@ -287,7 +327,7 @@ PROMPTRUNAGAIN
 RESET               JSR         CLEAR_SCREEN        ; subroutine to clear screen
                     JSR         CLEAR_DATA          ; subroutine to clear data registers
                     JSR         CLEAR_ADDRESS       ; subroutine to clear address registers
-                    *MOVE.W      #30,PAUSE_COUNT     ; Initialize to 30
+                    *MOVE.B      #30,PAUSE_COUNT     ; Initialize to 30
                     BRA         START               ; branch back to start
                     
 CLEAR_SCREEN        MOVE.B      #11,D0              ; clear the screen
@@ -1985,27 +2025,31 @@ CMPA_EA
                 MOVE.B  #2,NUM_OPERANDS           
                
                 JSR     LOAD12BY3
-*Calculate the number of expansion words
-                CMP     #7,D2               ;Source mode determines if expansion words needed
-                BLT     cmpa_output         ;Modes less than 7 don't have words
-                JSR     INCREMENT_WRD_CNT   ;Mode 7 has at least 1 expansion word
-                CMP     #0,D3               ;Look at register
-                BEQ     cmpa_output         ;Source register of 0 is short word so already incremented once
-                CMP     #1,D3               ;Source register of 4 is imediate data need to look at atribute (opmode)
-                BNE     cmpa_op_mod         ;If register is not one (earlier checked 0) then it is 4 which means immediate
-                JSR     INCREMENT_WRD_CNT   ;Register 1 means long word add one expansion
-                BRA     cmpa_output         ;Thats all folks
-cmpa_op_mod     CMP     #2,D3               ;Source register 4 immediate data need to check attribute (opmode)
-                BNE     cmpa_output         ;Byte or Word only add a single word already done when we hit mode 7 so done
-                JSR     INCREMENT_WRD_CNT   ;Opmode 2 eauals long word so one more expansion
-cmpa_output
+                JSR     EXP2OPER
+**Calculate the number of expansion words
+*                CMP     #7,D2               ;Source mode determines if expansion words needed
+*                BLT     cmpa_output         ;Modes less than 7 don't have words
+*                JSR     INCREMENT_WRD_CNT   ;Mode 7 has at least 1 expansion word
+*                CMP     #0,D3               ;Look at register
+*                BEQ     cmpa_output         ;Source register of 0 is short word so already incremented once
+*                CMP     #1,D3               ;Source register of 4 is imediate data need to look at atribute (opmode)
+*                BNE     cmpa_op_mod         ;If register is not one (earlier checked 0) then it is 4 which means immediate
+*                JSR     INCREMENT_WRD_CNT   ;Register 1 means long word add one expansion
+*                BRA     cmpa_output         ;Thats all folks
+*cmpa_op_mod     CMP     #2,D3               ;Source register 4 immediate data need to check attribute (opmode)
+*                BNE     cmpa_output         ;Byte or Word only add a single word already done when we hit mode 7 so done
+*                JSR     INCREMENT_WRD_CNT   ;Opmode 2 eauals long word so one more expansion
+*cmpa_output
+
+*                
+                MOVE.L  D4,D1               ;D1 will determine size
+                MOVE.L  #1,D4               ;Operand 2 is always address register
+
+                
                 *Print opcode
                 LEA     CMPA_OP,A1
                 MOVE.B  #14,D0
                 TRAP    #15
-                
-                MOVE.L  D4,D1               ;D1 will determine size
-                MOVE.L  #1,D4               ;Destination is always an address register
                 *Print attribute
                 CMP     #3,D1               ;Destination mode (opmode) determines attribute
                 BLT     PRINT_BAD           ;No mode below 3 are valid
@@ -2013,6 +2057,7 @@ cmpa_output
                 BEQ     PRINT_WORD          ;Mode 3 is equal to word    
                 CMP     #7,D1
                 BEQ     PRINT_LONG          ;Mode 7 is equal to long
+                
                     
                 
 *------------------------------------CMPI_EA--------------------------------------
@@ -2410,12 +2455,6 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
-
-
-
-
-
-
 
 
 
