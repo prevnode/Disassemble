@@ -75,8 +75,12 @@ TESTDATA
 *    RTS
 *    JSR     TESTJSR
 
-    ADD $1234,D2
-    ADD D2,$1234
+*    ADD $1234,D2
+*    ADD D2,$1234
+
+    MULS    D2,D3
+    MULS    $1234,D4
+    MULS    (A5),D6
     
 TESTJSR
     RTS
@@ -1492,43 +1496,45 @@ shift   LSR.L   D1,D0           ;Shift bits to the least sig bit
 EAWCHKS
         MOVE.B  #0,NUM_EXP_WRDS
         MOVE.L  A5,A4       ;Make a copy of the opcode pointer
-        ADD.L   #2,A4       ;Advance to first expansion word (assumes on exists)
+        ADD.L   #2,A4       ;Advance to first expansion word (assumes one exists)
         
-        CMP.B   #5,D4       ;Mode 5-6 are displacement and unsupported
-        BEQ     PRINT_BAD
-        CMP.B   #6,D4
-        BEQ     PRINT_BAD
-        CMP.B   #7,D4    
-        BNE     operandea
-        CMP.B   #2,D5       ;Register 2 - 3 are unsupported
-        BEQ     PRINT_BAD
-        CMP.B   #3,D5
-        BEQ     PRINT_BAD
+        CMP.B   #5,D2       ;D2 holds bits 5-3 EA Mode
+        BEQ     PRINT_BAD   ;Mode 5 unsupported
+        CMP.B   #6,D2
+        BEQ     PRINT_BAD   ;Mode 6 unsupported
+        CMP.B   #2,D2       
+        BEQ     PRINT_BAD   ;Mode 2 unsupported
+        CMP.B   #3,D2
+        BEQ     PRINT_BAD   ;Mode 3 unsupported
+        
+        CMP.B   #7,D2       
+        BLT     fin_eachk   ;Modes below 7 don't use expansion words
+        
+        *Mode 7 is W,L or I need to check register
+        CMP     #0,D3       ;D3 holds bits 2-0 EA register
+        BEQ     getwordea   ;Single word
+        CMP     #1,D3
+        BEQ     getlongea   ;Long word
+        CMP     #4,D3       ;Signifies immediate data
+        BEQ     immediateea
+        BRA     PRINT_BAD   ;Other registers with mode 7 are unsupported
+        
         
 immediateea
         CMP     #2,D6       ;Size data register
         BEQ     getlongea   ;2 indicates long word
         BRA     getwordea   ;1 or 3 use word
         
-operandea
-        CMP.B   #7,D4       ;Look at operand 1 mode
-        BLT     fin_eachk   ;Opcodes below 7 don't use expansion words
-        CMP     #0,D5       ;Register 0 is word addressing
-        BEQ     getwordea   ;Single word
-        CMP     #1,D5
-        BEQ     getlongea   ;Long word
-        CMP     #4,D5       ;Signifies immediate data
-        BEQ     immediateea
         
 getwordea
-        CLR     D5          ;Clear the register before copy expansion word
-        MOVE.W  (A4)+,D5
+        CLR     D4          ;Clear the register before copy expansion word
+        MOVE.W  (A4)+,D4
         ADD.B   #1,NUM_EXP_WRDS
         RTS
         
 getlongea
         CLR     D5          ;Clear the register before copy expansion word
-        MOVE.L  (A4)+,D5
+        MOVE.L  (A4)+,D4
         ADD.B   #2,NUM_EXP_WRDS
         RTS   
         
@@ -1539,6 +1545,12 @@ fin_eachk
 MULDIV
         JSR     LOAD12BY3
         JSR     EAWCHKS
+        
+        CMP     #0,D3       ;D3 holds 8-6 indicates size
+        *BEQ     
+        
+mul_long
+        
         RTS
         
         
@@ -2345,6 +2357,7 @@ MOVEM_EA
         
 *---------------------------MULS_EA------------------------------------
 MULS_EA
+        
         JSR     MULDIV
         
         LEA     MULS_OP,A1
@@ -2354,10 +2367,11 @@ MULS_EA
         *
         CMP.B   #7,D4       ;D4 Holds bits 8-6
         BEQ     PRINT_BYTE
+        CMP.B   #0,D4
+        BEQ     PRINT_BYTE
         
         
-        MOVE.B  #0,NUM_EXP_WRDS
-        BRA PRINT
+      
         
 *---------------------------NEG_EA------------------------------------
 NEG_EA
