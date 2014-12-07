@@ -7,9 +7,12 @@
     ORG    $8888
 START:                  ; first instruction of program
 
-    LEA         TESTJMP,A1
-    LEA         $1234,A2
-
+*    LEA         TESTJMP,A1
+*    LEA         $1234,A2
+    MULS.W      $1234,D2
+    MULS        D3,D4
+    DIVS        $12345678,D3
+    DIVS        D6,D7
 
 *------------------NOT VARIANTS--------------------------------
     
@@ -170,6 +173,8 @@ CMPVARIANTS
 * Put variables and constants here
 
     END    START        ; last line of source
+
+
 
 
 
