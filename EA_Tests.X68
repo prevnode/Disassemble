@@ -17,6 +17,16 @@ START:                  ; first instruction of program
     ADD.B   -(A6),D2
     ADD.L   $1234,D7
    
+   
+*---------------------SUB VARIANTS-----------------------------
+    SUB     $1234,D5
+    SUB     D5,$1234
+    SUB     D7,D6
+    SUB     $12345678,D2
+    SUB     (A2),D3
+    SUB     (A3)+,D4
+    SUB.B   -(A6),D2
+    SUB.L   $1234,D7
 
 *--------------------MOVEM VARIANTS--------------------------
     MOVEM.L     A0-A3/D0-D7, -(A7)
@@ -190,6 +200,7 @@ CMPVARIANTS
 * Put variables and constants here
 
     END    START        ; last line of source
+
 
 
 

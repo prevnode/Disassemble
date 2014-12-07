@@ -2161,30 +2161,16 @@ ADD_EA
         BEQ     PRINT_BYTE          ;Opmode 4 is byte
         CMP.B   #5,D7
         BEQ     PRINT_WORD          ;Opmode 5 is word
-        BRA     PRINT_LONG          ;Opmode 6 is long
-
-        
-        
+        BRA     PRINT_LONG          ;Opmode 6 is long        
         
 ea_dn
         MOVE.L  D4,D7               ;D7 holds holds opmode determines size
         MOVE.L  #0,D4               ;D4 is always Dn mode
         CMP.B   #0,D7               
         BEQ     PRINT_BYTE
-        *ADD.B   #1,NUM_EXP_WRDS
         CMP.B   #1,D7
         BEQ     PRINT_WORD
-        *ADD.B   #1,NUM_EXP_WRDS
-        BRA     PRINT_LONG
-        
-
-
-        *JSR     EXP2OPERAR
-        
-       
-        
-        
-        
+        BRA     PRINT_LONG       
         
         
 *-----------------------------------ADDA_EA-------------------------------------
@@ -2947,14 +2933,38 @@ RTS_EA
         BRA PRINT 
         
 *-------------------------------SUB_EA-------------------------------
-SUB_EA
-
+SUB_EA       
+        MOVE.B  #2,NUM_OPERANDS
+        MOVE.B  #0,NUM_EXP_WRDS
+        JSR     LOAD12BY3
+        JSR     EAWCHKS             ;Counts expansion words an moves into data reg
+        
         LEA     SUB_OP,A1
         MOVE.B  #14,D0
         TRAP    #15
+
+        CMP.B   #2,D4               ;D4 holds Opmode determines size and order of operands
+        BLE     sub_ea_dn               ;0-2 indicate EA->Dn
+        JSR     SWAPOPERANDS        ;>2 indicates Dn->EA
+        MOVE.L  D2,D7               ;D7 holds holds opmode determines size
+        MOVE.L  #0,D2               ;Operator is always Dn mode
+        CMP.B   #4,D7               
+        BEQ     PRINT_BYTE          ;Opmode 4 is byte
+        CMP.B   #5,D7
+        BEQ     PRINT_WORD          ;Opmode 5 is word
+        BRA     PRINT_LONG          ;Opmode 6 is long        
         
-        MOVE.B  #0,NUM_EXP_WRDS
-        BRA PRINT
+sub_ea_dn
+        MOVE.L  D4,D7               ;D7 holds holds opmode determines size
+        MOVE.L  #0,D4               ;D4 is always Dn mode
+        CMP.B   #0,D7               
+        BEQ     PRINT_BYTE
+        CMP.B   #1,D7
+        BEQ     PRINT_WORD
+        BRA     PRINT_LONG 
+
+        
+     
         
 *-----------------------------SUBA_EA---------------------------------
 SUBA_EA
