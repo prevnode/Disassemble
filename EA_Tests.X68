@@ -6,8 +6,65 @@
 *-----------------------------------------------------------
     ORG    $8888
 START:                  ; first instruction of program
+
     LEA         TESTJMP,A1
     LEA         $1234,A2
+
+
+*------------------NOT VARIANTS--------------------------------
+    
+    NOT.B       (A1)
+    NOT.B       (A2)+
+    NOT.B       D0
+    NOT.B       $34643699
+    NOT.B       $6991
+    NOT.W       (A0)
+    NOT.W       $1000
+    NOT.W       $10004000
+    NOT.W       D4
+    NOT.L       -(A0)
+    NOT.L       (A0)
+    NOT.L       (A3)
+    NOT.L       D3
+
+*---------------SHIFT VARIANTS-----------------------------------
+    
+    ASL.B       #3,D0
+    ASL.W       #%100,D0
+    ASL.L       #3,D0
+    ASL         (A0)+
+    
+    ASR.B       #$3,D3
+    ASR.W       #3,D0
+    ASR.L       #3,D0
+
+    LSL.B       #3,D0
+    LSL.W       D1,D0
+    LSL.L       D3,D4
+    LSL         $1000
+    
+    LSR.B       #3,D0
+    LSR.W       #3,D0
+    LSR.L       #3,D0
+    LSR         $10004000
+    
+    ROR.B       #3,D0
+    ROR.W       #3,D0
+    ROR.L       #3,D0
+    ROR         (A1)
+
+    ROL.B       #3,D0
+    ROL.W       #3,D0
+    ROL         -(A2)
+    
+
+*---------------LEA VARIANTS-----------------------------------
+
+*most likely moves an inproper number of times
+    LEA         $3453, A6
+    LEA         $10004000, A3
+    
+
 *------------------BCC VARIANTS--------------------------------
     
     BEQ         TESTJMP ; prints 0000FFFF on displacement
@@ -113,6 +170,7 @@ CMPVARIANTS
 * Put variables and constants here
 
     END    START        ; last line of source
+
 
 
 

@@ -54,7 +54,7 @@ DIVS_OP             DC.B        'DIVS',0
 EOR_OP              DC.B        'EOR',0
 EORI_OP             DC.B        'EORI',0
 JSR_OP              DC.B        'JSR',HT,0
-LEA_OP              DC.B        'LEA',0
+LEA_OP              DC.B        'LEA',HT,0
 LSL_OP              DC.B        'LSL',0
 LSR_OP              DC.B        'LSR',0
 MOVE_OP             DC.B        'MOVE',0
@@ -1038,7 +1038,7 @@ code0011         BRA        MOVE_EA
 
 *------------------------------------Begin Bucket 0100------------------------------- 
 * supported opcodes
-* MOVEM, NEG, DIVISL, JSR, LEA, MULSL, NOT, RTS
+* MOVEM, NEG, JSR, LEA, NOT, RTS
 
                  
                 
@@ -1099,10 +1099,7 @@ code_0100_100   BRA         PRINT_BAD
                   
 code_0100_101   BRA         PRINT_BAD 
    
-code_0100_110   JSR         Check_876  ;if/else for divis/muls 
-                CMPI.B      #1,D0
-                *BEQ         DIVIS_EA    
-                BRA         MULS_EA        
+code_0100_110   BRA         PRINT_BAD    
 
 code_0100_111   JSR         Check_876  ;if/else for jsr/rts
                 CMPI.B      #2,D0
@@ -2491,6 +2488,8 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
+
 
 
 *~Font name~Courier New~
