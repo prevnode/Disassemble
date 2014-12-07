@@ -7,10 +7,33 @@
     ORG    $8888
 START:                  ; first instruction of program
 
-*    LEA         TESTJMP,A1
-*    LEA         $1234,A2
+*---------------LEA VARIANTS-----------------------------------
+
+    LEA         $3453, A6
+    LEA         $10004000, A3
+    LEA         (A5),A6
+
+
+*--------------------MOVEA VARIANTS---------------------------
+    MOVEA.W     D1,A2
+    MOVEA.L     D1,A2
+    MOVEA.W     -(A6),A2
+    MOVEA.L     -(A6),A2
+    MOVEA.W     #$1600,A2
+    MOVEA.L     #$1600,A2
+    MOVEA.L     #$FFFF,A2
+    MOVEA.L     #$16001234,A2
+    MOVEA.W     #14,A2
+    MOVEA.L     #14,A2
+    MOVEA.L     $1600,A2
+    MOVEA.W     $1600,A2
+    MOVEA.W     $16001234,A2
+
+*---------------------------MULUS VARIANTS---------------------
     MULS.W      $1234,D2
     MULS        D3,D4
+    
+*-----------------------------DIVS VARIANTS--------------------
     DIVS        $12345678,D3
     DIVS        D6,D7
 
@@ -61,16 +84,10 @@ START:                  ; first instruction of program
     ROL         -(A2)
     
 
-*---------------LEA VARIANTS-----------------------------------
-
-*most likely moves an inproper number of times
-    LEA         $3453, A6
-    LEA         $10004000, A3
-    
 
 *------------------BCC VARIANTS--------------------------------
     
-    BEQ         TESTJMP ; prints 0000FFFF on displacement
+    BEQ         TESTJMP 
     BLT         TESTJMP
     BNE         TESTJMP
     BHI         TESTJMP
@@ -109,20 +126,7 @@ TESTJMP
     CMP         #14,D2
     CMP.L       #$12345,D2   
     
-*--------------------MOVEA VARIANTS---------------------------
-    MOVEA.W     D1,A2
-    MOVEA.L     D1,A2
-    MOVEA.W     -(A6),A2
-    MOVEA.L     -(A6),A2
-    MOVEA.W     #$1600,A2
-    MOVEA.L     #$1600,A2
-    MOVEA.L     #$FFFF,A2
-    MOVEA.L     #$16001234,A2
-    MOVEA.W     #14,A2
-    MOVEA.L     #14,A2
-    MOVEA.L     $1600,A2
-    MOVEA.W     $1600,A2
-    MOVEA.W     $16001234,A2
+
     
     
 *----------------------MOVE VARIANTS--------------------------
@@ -173,12 +177,6 @@ CMPVARIANTS
 * Put variables and constants here
 
     END    START        ; last line of source
-
-
-
-
-
-
 
 
 *~Font name~Courier New~

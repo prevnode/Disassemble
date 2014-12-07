@@ -1351,7 +1351,10 @@ code0001         BRA        MOVE_EA
 *------------------------------------Begin Bucket 0010-------------------------------
 *supported opcodes
 *MOVE.L, MOVEA.L
-code0010         BRA        MOVE_EA
+code0010         JSR        Check_876
+                 CMPI       #1,D0
+                 BEQ        MOVEA_EA
+                 BRA        MOVE_EA
 *------------------------------------End Bucket 0010---------------------------------
 
 
@@ -1359,7 +1362,11 @@ code0010         BRA        MOVE_EA
 *------------------------------------Begin Bucket 0011-------------------------------
 *supported opcodes
 *MOVE.W, MOVEA.W
-code0011         BRA        MOVE_EA
+code0011         JSR        Check_876
+                 CMPI       #1,D0
+                 BEQ        MOVEA_EA
+                 BRA        MOVE_EA
+
 *------------------------------------End Bucket 0011---------------------------------
 
 
@@ -1370,18 +1377,7 @@ code0011         BRA        MOVE_EA
 
                  
                 
-code0100         JSR     Check_11109
-                 CMPI.B  #2, D0
-                 BEQ     NEG_EA
-
-                 JSR     Check_987          ;check movem and lea first, they are different than the rest
-                 CMPI.B  #1, D0             
-                 BEQ     MOVEM_EA
-
-                 JSR     Check_876
-                 CMPI.B  #7, D0
-                 BEQ     LEA_EA 
-
+code0100         
   
 
                  JSR     CLEAR_DATA                    ; Clear all of the Registers    
@@ -1414,25 +1410,97 @@ jmp_table_0100_11109        JMP code_0100_000
                             JMP code_0100_111
   
 
-          
-code_0100_000   BRA         PRINT_BAD 
+; each bucket is required to check if it is not MOVEM or LEA, since the bits 
+; that define those OPCODES are further from the left than the rest.           
+code_0100_000    JSR     Check_876
+                 CMPI.B  #7, D0
+                 BEQ     LEA_EA 
+                 
+                 JSR     Check_987         
+                 CMPI.B  #1, D0             
+                 BEQ     MOVEM_EA
 
-code_0100_001   BRA         PRINT_BAD
+                 BRA     PRINT_BAD 
+
+code_0100_001    JSR     Check_876
+                 CMPI.B  #7, D0
+                 BEQ     LEA_EA 
+                 
+                 JSR     Check_987         
+                 CMPI.B  #1, D0             
+                 BEQ     MOVEM_EA
+
+                 BRA     PRINT_BAD 
+
      
-code_0100_010   BRA         NEG_EA
-   
-code_0100_011   BRA         NOT_EA
-  
-code_0100_100   BRA         PRINT_BAD
-                  
-code_0100_101   BRA         PRINT_BAD 
-   
-code_0100_110   BRA         PRINT_BAD    
+code_0100_010 
+                 JSR     Check_876
+                 CMPI.B  #7, D0
+                 BEQ     LEA_EA 
+                 
+                 JSR     Check_987         
+                 CMPI.B  #1, D0             
+                 BEQ     MOVEM_EA
 
-code_0100_111   JSR         Check_876  ;if/else for jsr/rts
-                CMPI.B      #2,D0
-                BEQ         JSR_EA   
-                BRA         RTS_EA        
+                 BRA     NEG_EA
+   
+code_0100_011    JSR     Check_876
+                 CMPI.B  #7, D0
+                 BEQ     LEA_EA 
+                 
+                 JSR     Check_987         
+                 CMPI.B  #1, D0             
+                 BEQ     MOVEM_EA
+
+                 BRA     NOT_EA
+
+  
+code_0100_100    JSR     Check_876
+                 CMPI.B  #7, D0
+                 BEQ     LEA_EA 
+                 
+                 JSR     Check_987         
+                 CMPI.B  #1, D0             
+                 BEQ     MOVEM_EA
+
+                 BRA     PRINT_BAD 
+
+                  
+code_0100_101    JSR     Check_876
+                 CMPI.B  #7, D0
+                 BEQ     LEA_EA 
+                 
+                 JSR     Check_987         
+                 CMPI.B  #1, D0             
+                 BEQ     MOVEM_EA
+
+                 BRA     PRINT_BAD 
+
+   
+code_0100_110    JSR     Check_876
+                 CMPI.B  #7, D0
+                 BEQ     LEA_EA 
+                 
+                 JSR     Check_987         
+                 CMPI.B  #1, D0             
+                 BEQ     MOVEM_EA
+
+                 BRA     PRINT_BAD 
+   
+
+code_0100_111    JSR     Check_876  ;if/else for jsr/rts
+                 CMPI.B  #2,D0
+                 BEQ     JSR_EA
+
+                 JSR     Check_876
+                 CMPI.B  #7, D0
+                 BEQ     LEA_EA 
+                 
+                 JSR     Check_987         
+                 CMPI.B  #1, D0             
+                 BEQ     MOVEM_EA
+
+                 BRA     RTS_EA        
  
 
 *------------------------------------End Bucket 0100---------------------------------
@@ -1789,10 +1857,6 @@ EAWCHKS
         BEQ     PRINT_BAD   ;Mode 5 unsupported
         CMP.B   #6,D2
         BEQ     PRINT_BAD   ;Mode 6 unsupported
-        CMP.B   #2,D2       
-        BEQ     PRINT_BAD   ;Mode 2 unsupported
-        CMP.B   #3,D2
-        BEQ     PRINT_BAD   ;Mode 3 unsupported
         
         CMP.B   #7,D2       
         BLT     fin_eachk   ;Modes below 7 don't use expansion words
@@ -2518,26 +2582,54 @@ jsr_2   MOVE.L  (A4),D3
 *---------------------------LEA_EA------------------------------------
 LEA_EA
 
+        MOVE.B  #2,NUM_OPERANDS ;Always 2 operands
         LEA     LEA_OP,A1
         MOVE.B  #14,D0
         TRAP    #15
         
         JSR     LOAD12BY3
-        *Need to swap order of operands
-        MOVE.L  D5,D7       ;Make a copy of op2 reg
-        MOVE.L  D3,D5       ;Move a op1 reg into place
-        MOVE.L  D7,D3       ;Move op2 reg into place
-        MOVE.L  D4,D2       ;Op1 mode into place
         MOVE.L  #1,D4       ;Op2 always An
+        JSR     EAWCHKS
+        BRA     PRINT_LONG
+        
+        *Need to swap order of operands
+*        MOVE.L  D5,D7       ;Make a copy of op2 reg
+*        MOVE.L  D3,D5       ;Move a op1 reg into place
+*        MOVE.L  D7,D3       ;Move op2 reg into place
+*        MOVE.L  D4,D2       ;Op1 mode into place
+
         
         *Get the data
-        MOVE.L  A5,A4       ;Copy of the current opcode pointer
-        ADD.L   #2,A4       ;Advance one word
-        MOVE.L  (A4),D3     ;Move the EA into place
+*        MOVE.L  A5,A4       ;Copy of the current opcode pointer
+*        ADD.L   #2,A4       ;Advance one word
+*        
+*        CMP.L   #5,D2       ;D2 should hold EA mode
+*        BEQ     PRINT_BAD   ;Mode unsuppported
+*        CMP.L   #6,D2       ;D2 should hold EA mode
+*        BEQ     PRINT_BAD   ;Mode unsupported
+*        CMP.L   #7,D2       ;D2 holds EA mode
+*        BLE     lea_zero    ;Assume mode 5 no expansion words
+*        *Mode 7 need to check EA register
+*        CMP.L   #0,D3       ;D3 Holds EA register
+*        BEQ     lea_word    ;0 indicates word addressing
+*        CMP.L   #1,D3       ;D3 holds EA register
+*        BGE     PRINT_BAD   ;Registers 2-3 are unsupported
+*        *Register equals 1
+*        MOVE.L  (A4),D3     ;Move the EA into place
+*        MOVE.B  #2,NUM_EXP_WRDS
+*        BRA PRINT_LONG        
+*        
+*lea_zero
+*        MOVE.B  #0,NUM_EXP_WRDS
+*        BRA     PRINT_LONG
+*        
+*lea_word
+*        MOVE.W  (A4),D3     ;Move single word into place for display
+*        MOVE.B  #1,NUM_EXP_WRDS
+*        BRA     PRINT_LONG      
         
-        MOVE.B  #2,NUM_OPERANDS
-        MOVE.B  #2,NUM_EXP_WRDS
-        BRA PRINT_Long
+        
+        
         
 *---------------------------LSL_EA------------------------------------
 LSL_EA
@@ -2603,52 +2695,55 @@ MOVEA_EA
                 MOVE.B  #0,NUM_EXP_WRDS
                 MOVE.B  #2,NUM_OPERANDS             ; MOVEA always has 2 operands
                 
-                MOVE    #1,D4                       ; MOVEA always has a destination address register
-                
-                MOVE.L  #MASK_13_12,D7              ; Mask for size
-                JSR     APPLYMASK
-                MOVE.L  D7,D0                       ; Move for exmpansion wrd and attribute calculations
-                
                 JSR     LOAD12BY3
 
+                MOVE.L  #MASK_13_12,D7              ; Mask for size
+                JSR     APPLYMASK                
+                MOVE    D7,D6                       ;D6 holds size when calling ea2oper
+                
+                MOVE    #1,D4                       ; MOVEA always has a destination address register
+                
+                JSR     EXP2OPER
+               
+                
                 LEA     MOVEA_OP,A1
                 MOVE.B  #14,D0
                 TRAP    #15
                
                 
-                *Calculate the number of expansion words
-                CMP.W   #7,D2
-                BLT     movea_attribute             ; Source mode less than 7 lack expansion words
-                JSR     INCREMENT_WRD_CNT
-                
-                CMP.W   #0,D3                       ; Source reg determines size of expansion
-                BEQ     movea_attribute             ; Source reg 0 has only 1 expansion word
-                
-                CMP.W   #1,D3                       ; Source reg 1 has second expansion word
-                BNE     chk_sreg_4                  ; Need to look at 
-                JSR     INCREMENT_WRD_CNT           ; Source Reg 1 has second word
-                BRA     movea_attribute             ; No more expansion words
-                
-                
-chk_sreg_4      CMP.W   #4,D3                       ; Source reg 4 with mode 7 is immediate
-                BNE     movea_unsupported           ; With source mode 7 supported registers are 0,1,4 only
-                CMP.W   #2,D0                       ; Size indicates numb of exp words with immediate
-                BNE     PRINT_WORD                  ; Size of 3 indicates word so only 1 expansion
-                JSR     INCREMENT_WRD_CNT           ; Size of 2 indicates long so need another expansion
-                BRA     PRINT_LONG          
-                
+*                *Calculate the number of expansion words
+*                CMP.W   #7,D2
+*                BLT     movea_attribute             ; Source mode less than 7 lack expansion words
+*                JSR     INCREMENT_WRD_CNT
+*                
+*                CMP.W   #0,D3                       ; Source reg determines size of expansion
+*                BEQ     movea_attribute             ; Source reg 0 has only 1 expansion word
+*                
+*                CMP.W   #1,D3                       ; Source reg 1 has second expansion word
+*                BNE     chk_sreg_4                  ; Need to look at 
+*                JSR     INCREMENT_WRD_CNT           ; Source Reg 1 has second word
+*                BRA     movea_attribute             ; No more expansion words
+*                
+*                
+*chk_sreg_4      CMP.W   #4,D3                       ; Source reg 4 with mode 7 is immediate
+*                BNE     movea_unsupported           ; With source mode 7 supported registers are 0,1,4 only
+*                CMP.W   #2,D0                       ; Size indicates numb of exp words with immediate
+*                BNE     PRINT_WORD                  ; Size of 3 indicates word so only 1 expansion
+*                JSR     INCREMENT_WRD_CNT           ; Size of 2 indicates long so need another expansion
+*                BRA     PRINT_LONG          
+*                
 
                 
                 *Calculate attribute
 movea_attribute
-                CMP.W   #2,D0                       ; Size determines attribute
+                CMP.W   #2,D6                       ; Size determines attribute
                 BEQ     PRINT_LONG                  ; 2 is long
                 BRA     PRINT_WORD                  ; 3 is word (No check for invalid values)
 
               
-
-movea_unsupported
-                BRA     PRINT_BAD
+*
+*movea_unsupported
+*                BRA     PRINT_BAD
         
 *---------------------------------MOVEM_EA--------------------------
 MOVEM_EA
