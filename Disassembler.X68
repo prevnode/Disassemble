@@ -54,7 +54,7 @@ DIVS_OP             DC.B        'DIVS',0
 EOR_OP              DC.B        'EOR',0
 EORI_OP             DC.B        'EORI',0
 JSR_OP              DC.B        'JSR',HT,0
-LEA_OP              DC.B        'LEA',HT,0
+LEA_OP              DC.B        'LEA',0
 LSL_OP              DC.B        'LSL',0
 LSR_OP              DC.B        'LSR',0
 MOVE_OP             DC.B        'MOVE',0
@@ -359,7 +359,7 @@ PRINT               CMPI.B      #$0,NUM_OPERANDS    ; check to see if opcode has
                     BEQ         PRINT_RETURN        ; return to main loop if no operands
                     
                     JSR         PRINT_OPMODE1_PRE   ; print the first opmode preface symbol
-                    JSR         PRINT_OPMODE1_POST  ; print the first opmode post symbol
+                    JSR         PRINT_OPMODE1_POST
                     CMPI.B      #$1,NUM_OPERANDS    ; check if opcode has 2 operands
                     BEQ         PRINT_RETURN        ; return to main loop if opcode has 1 operand
                     
@@ -1571,10 +1571,8 @@ fin_eachk
 MULDIV
         JSR     LOAD12BY3
         JSR     EAWCHKS
-        
-        CMP     #0,D3       ;D3 holds 8-6 indicates size
-        *BEQ     
-        
+        MOVE.B  #2,NUM_OPERANDS
+        MOVE.L  #0,D4       ;Op2 mode is always Dn
 mul_long
         
         RTS
@@ -2167,13 +2165,13 @@ CMPI_EA
                 
 *---------------------------DIVS_EA------------------------------------
 DIVS_EA
+        JSR     MULDIV
 
         LEA     DIVS_OP,A1
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.B  #0,NUM_EXP_WRDS
-        BRA PRINT              
+        BRA PRINT_WORD
                 
                 
 *-------------------------------EOR_EA---------------------------------------------------------
@@ -2410,13 +2408,7 @@ MULS_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        *
-        CMP.B   #7,D4       ;D4 Holds bits 8-6
-        BEQ     PRINT_BYTE
-        CMP.B   #0,D4
-        BEQ     PRINT_BYTE
-        
-        
+        BRA     PRINT_WORD       
       
         
 *---------------------------NEG_EA------------------------------------
@@ -2556,7 +2548,6 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
-
 
 
 
