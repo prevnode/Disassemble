@@ -423,7 +423,9 @@ MODE1_PRE001        LEA         SP1,A1              ; print pre symbols for opmo
 MODE1_PRE010        LEA         SP2,A1              ; print pre symbols for opmode (An)
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
+                    JSR         PRINT_OPREG1        ; print the address/data register number
                     RTS
+                    
 MODE1_PRE011        LEA         SP3,A1              ; print pre symbols for opmode (An)+
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
@@ -2455,6 +2457,7 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
