@@ -721,7 +721,7 @@ CONFIGURE_JMP
                  
                  RTS                     ; return
                  
-*------------------------------Configure JMP----------------------------------                 
+*------------------------------ end Configure JMP--------------------------------                 
 
 *each of the below functions masks and then shifts the bits that 
 * the function is labeld as
@@ -981,7 +981,11 @@ code0011         BRA        MOVE_EA
 
                  
                 
-code0100         JSR     Check_987          ;check movem and lea first, they are different than the rest
+code0100         JSR     Check_11109
+                 CMPI.B  #2, D0
+                 BEQ     NEG_EA
+
+                 JSR     Check_987          ;check movem and lea first, they are different than the rest
                  CMPI.B  #1, D0             
                  BEQ     MOVEM_EA
 
@@ -1253,7 +1257,7 @@ code1101       JSR          Check_43           ;if addx
 
 
 
-*-----------------------------End Bucket 1110---------------------------------------TestTag
+*-----------------------------End Bucket 1110---------------------------------------
 *supported opcodes
 *LSR, LSL, ROL, ROR
 
