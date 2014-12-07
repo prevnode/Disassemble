@@ -54,7 +54,7 @@ DIVS_OP             DC.B        'DIVS',0
 EOR_OP              DC.B        'EOR',0
 EORI_OP             DC.B        'EORI',0
 JSR_OP              DC.B        'JSR',HT,0
-LEA_OP              DC.B        'LEA',HT,0
+LEA_OP              DC.B        'LEA',0
 LSL_OP              DC.B        'LSL',0
 LSR_OP              DC.B        'LSR',0
 MOVE_OP             DC.B        'MOVE',0
@@ -359,6 +359,7 @@ PRINT               CMPI.B      #$0,NUM_OPERANDS    ; check to see if opcode has
                     BEQ         PRINT_RETURN        ; return to main loop if no operands
                     
                     JSR         PRINT_OPMODE1_PRE   ; print the first opmode preface symbol
+                    JSR         PRINT_OPMODE1_POST
                     CMPI.B      #$1,NUM_OPERANDS    ; check if opcode has 2 operands
                     BEQ         PRINT_RETURN        ; return to main loop if opcode has 1 operand
                     
@@ -1022,7 +1023,10 @@ code0001         BRA        MOVE_EA
 *------------------------------------Begin Bucket 0010-------------------------------
 *supported opcodes
 *MOVE.L, MOVEA.L
-code0010         BRA        MOVE_EA
+code0010         JSR        Check_876
+                 CMPI       #1,D0
+                 BEQ        MOVEA_EA
+                 BRA        MOVE_EA
 *------------------------------------End Bucket 0010---------------------------------
 
 
@@ -1030,7 +1034,11 @@ code0010         BRA        MOVE_EA
 *------------------------------------Begin Bucket 0011-------------------------------
 *supported opcodes
 *MOVE.W, MOVEA.W
-code0011         BRA        MOVE_EA
+code0011         JSR        Check_876
+                 CMPI       #1,D0
+                 BEQ        MOVEA_EA
+                 BRA        MOVE_EA
+
 *------------------------------------End Bucket 0011---------------------------------
 
 
@@ -1041,18 +1049,7 @@ code0011         BRA        MOVE_EA
 
                  
                 
-code0100         JSR     Check_11109
-                 CMPI.B  #2, D0
-                 BEQ     NEG_EA
-
-                 JSR     Check_987          ;check movem and lea first, they are different than the rest
-                 CMPI.B  #1, D0             
-                 BEQ     MOVEM_EA
-
-                 JSR     Check_876
-                 CMPI.B  #7, D0
-                 BEQ     LEA_EA 
-
+code0100         
   
 
                  JSR     CLEAR_DATA                    ; Clear all of the Registers    
@@ -1085,25 +1082,97 @@ jmp_table_0100_11109        JMP code_0100_000
                             JMP code_0100_111
   
 
-          
-code_0100_000   BRA         PRINT_BAD 
+; each bucket is required to check if it is not MOVEM or LEA, since the bits 
+; that define those OPCODES are further from the left than the rest.           
+code_0100_000    JSR     Check_876
+                 CMPI.B  #7, D0
+                 BEQ     LEA_EA 
+                 
+                 JSR     Check_987         
+                 CMPI.B  #1, D0             
+                 BEQ     MOVEM_EA
 
-code_0100_001   BRA         PRINT_BAD
+                 BRA     PRINT_BAD 
+
+code_0100_001    JSR     Check_876
+                 CMPI.B  #7, D0
+                 BEQ     LEA_EA 
+                 
+                 JSR     Check_987         
+                 CMPI.B  #1, D0             
+                 BEQ     MOVEM_EA
+
+                 BRA     PRINT_BAD 
+
      
-code_0100_010   BRA         NEG_EA
-   
-code_0100_011   BRA         NOT_EA
-  
-code_0100_100   BRA         PRINT_BAD
-                  
-code_0100_101   BRA         PRINT_BAD 
-   
-code_0100_110   BRA         PRINT_BAD    
+code_0100_010 
+                 JSR     Check_876
+                 CMPI.B  #7, D0
+                 BEQ     LEA_EA 
+                 
+                 JSR     Check_987         
+                 CMPI.B  #1, D0             
+                 BEQ     MOVEM_EA
 
-code_0100_111   JSR         Check_876  ;if/else for jsr/rts
-                CMPI.B      #2,D0
-                BEQ         JSR_EA   
-                BRA         RTS_EA        
+                 BRA     NEG_EA
+   
+code_0100_011    JSR     Check_876
+                 CMPI.B  #7, D0
+                 BEQ     LEA_EA 
+                 
+                 JSR     Check_987         
+                 CMPI.B  #1, D0             
+                 BEQ     MOVEM_EA
+
+                 BRA     NOT_EA
+
+  
+code_0100_100    JSR     Check_876
+                 CMPI.B  #7, D0
+                 BEQ     LEA_EA 
+                 
+                 JSR     Check_987         
+                 CMPI.B  #1, D0             
+                 BEQ     MOVEM_EA
+
+                 BRA     PRINT_BAD 
+
+                  
+code_0100_101    JSR     Check_876
+                 CMPI.B  #7, D0
+                 BEQ     LEA_EA 
+                 
+                 JSR     Check_987         
+                 CMPI.B  #1, D0             
+                 BEQ     MOVEM_EA
+
+                 BRA     PRINT_BAD 
+
+   
+code_0100_110    JSR     Check_876
+                 CMPI.B  #7, D0
+                 BEQ     LEA_EA 
+                 
+                 JSR     Check_987         
+                 CMPI.B  #1, D0             
+                 BEQ     MOVEM_EA
+
+                 BRA     PRINT_BAD 
+   
+
+code_0100_111    JSR     Check_876  ;if/else for jsr/rts
+                 CMPI.B  #2,D0
+                 BEQ     JSR_EA
+
+                 JSR     Check_876
+                 CMPI.B  #7, D0
+                 BEQ     LEA_EA 
+                 
+                 JSR     Check_987         
+                 CMPI.B  #1, D0             
+                 BEQ     MOVEM_EA
+
+                 BRA     RTS_EA        
  
 
 *------------------------------------End Bucket 0100---------------------------------
@@ -2503,8 +2572,6 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
-
-
 
 *~Font name~Courier New~
 *~Font size~10~
