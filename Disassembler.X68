@@ -387,6 +387,14 @@ PRINT_BAD           CLR         D2                  ; clear d2
                     MOVE.B      #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     BRA         MAIN_LOOP           ; branch back to main loop to decode next opword
+					
+PRINT_MOVEM			LEA			TAB,A1
+					MOVE.B		#14,D0
+					TRAP		#15
+					LEA			BAD_MSG2,A1
+					MOVE.B		#14,D0
+					TRAP		#15
+					BRA			MAIN_LOOP
                                 
 *----------------------PRINT OPMODE PRE--------------------------------
 * print the preface operand mode symbol(s)
