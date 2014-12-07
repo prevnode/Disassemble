@@ -1037,7 +1037,7 @@ code0011         BRA        MOVE_EA
 
 *------------------------------------Begin Bucket 0100------------------------------- 
 * supported opcodes
-* MOVEM, NEG, DIVISL, JSR, LEA, MULSL, NOT, RTS
+* MOVEM, NEG, JSR, LEA, NOT, RTS
 
                  
                 
@@ -1098,10 +1098,7 @@ code_0100_100   BRA         PRINT_BAD
                   
 code_0100_101   BRA         PRINT_BAD 
    
-code_0100_110   JSR         Check_876  ;if/else for divis/muls 
-                CMPI.B      #1,D0
-                *BEQ         DIVIS_EA    
-                BRA         MULS_EA        
+code_0100_110   BRA         PRINT_BAD    
 
 code_0100_111   JSR         Check_876  ;if/else for jsr/rts
                 CMPI.B      #2,D0
@@ -2198,8 +2195,22 @@ LEA_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.B  #0,NUM_EXP_WRDS
-        BRA PRINT
+        JSR     LOAD12BY3
+        *Need to swap order of operands
+        MOVE.L  D5,D7       ;Make a copy of op2 reg
+        MOVE.L  D3,D5       ;Move a op1 reg into place
+        MOVE.L  D7,D3       ;Move op2 reg into place
+        MOVE.L  D4,D2       ;Op1 mode into place
+        MOVE.L  #1,D4       ;Op2 always An
+        
+        *Get the data
+        MOVE.L  A5,A4       ;Copy of the current opcode pointer
+        ADD.L   #2,A4       ;Advance one word
+        MOVE.L  (A4),D3     ;Move the EA into place
+        
+        MOVE.B  #2,NUM_OPERANDS
+        MOVE.B  #2,NUM_EXP_WRDS
+        BRA PRINT_Long
         
 *---------------------------LSL_EA------------------------------------
 LSL_EA
@@ -2476,7 +2487,6 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
-
 
 *~Font name~Courier New~
 *~Font size~10~
