@@ -7,6 +7,18 @@
     ORG    $8888
 START:                  ; first instruction of program
 
+*-----------------SUBA VARIANTS---------------------------
+    SUBA.W  $1234,A6
+    SUBA.L  $5678,A5
+    SUBA    D5,A6
+    SUBA    -(A3),A4
+
+*--------------------ADDA VARIANTS---------------------------
+    ADDA.W  $1234,A6
+    ADDA.L  $5678,A5
+    ADDA    D5,A6
+    ADDA    -(A3),A4
+
 *---------------------ADD VARIANTS-----------------------------
     ADD     $1234,D5
     ADD     D5,$1234
@@ -200,6 +212,7 @@ CMPVARIANTS
 * Put variables and constants here
 
     END    START        ; last line of source
+
 
 
 

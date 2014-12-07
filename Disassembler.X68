@@ -2175,12 +2175,22 @@ ea_dn
         
 *-----------------------------------ADDA_EA-------------------------------------
 ADDA_EA
-        LEA     ADDA_OP,A1
+
+        MOVE.B  #2,NUM_OPERANDS
+        MOVE.B  #0,NUM_EXP_WRDS
+        JSR     LOAD12BY3
+        JSR     EAWCHKS             ;Counts expansion words an moves into data reg
+        
+        LEA     ADDA_OP,A1          ;Print opcode name
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.B  #0,NUM_EXP_WRDS
-        BRA PRINT
+        MOVE.L  D4,D7               ;Make a copy for size compare
+        MOVE.L  #1,D4               ;Operand 2 is always An mode
+        CMP.B   #3,D7               ;D7 holds opmode
+        BEQ     PRINT_WORD          ;Opmode 3 is word
+        BRA     PRINT_LONG          ;Assume opmode 7 = long           
+
   
 *-------------------------------------ADDQ_EA-----------------------------------
 ADDQ_EA
@@ -2968,13 +2978,21 @@ sub_ea_dn
         
 *-----------------------------SUBA_EA---------------------------------
 SUBA_EA
-
+        MOVE.B  #2,NUM_OPERANDS
+        MOVE.B  #0,NUM_EXP_WRDS
+        JSR     LOAD12BY3
+        JSR     EAWCHKS             ;Counts expansion words an moves into data reg
+        
         LEA     SUBA_OP,A1
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.B  #0,NUM_EXP_WRDS
-        BRA PRINT
+        MOVE.L  D4,D7               ;Make a copy for size compare
+        MOVE.L  #1,D4               ;Operand 2 is always An mode
+        CMP.B   #3,D7               ;D7 holds opmode
+        BEQ     PRINT_WORD          ;Opmode 3 is word
+        BRA     PRINT_LONG          ;Assume opmode 7 = long      
+       
         
 *---------------------------SUBI_EA------------------------------------
 SUBI_EA
