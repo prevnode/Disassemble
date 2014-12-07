@@ -2328,11 +2328,11 @@ NEG_EA
         MOVE.L  D3,D5           ;What 12by3 calls operand 2 to operand 1
         JSR     EAWCHKS       
         
-        LEA     NEG_OP,A1
+        LEA     NEG_OP,A1       
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  MASK_7_6,D7
+        MOVE.L  MASK_7_6,D7     
         ANDI.L  #$00C00000,D7   ;Work around the sign extension   
         JSR     APPLYMASK       ;Size is in D7
         

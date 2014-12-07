@@ -18,9 +18,10 @@ START:                  ; first instruction of program
 TESTJMP      
     
 *------------------NEG VARIANTS--------------------------------
-    NEG.B       D0
+    
     NEG.B       (A1)
     NEG.B       (A2)+
+    NEG.B       D0
     NEG.B       $34643699
     NEG.B       $6991
     NEG.W       (A0)
@@ -109,6 +110,7 @@ CMPVARIANTS
 * Put variables and constants here
 
     END    START        ; last line of source
+
 
 
 
