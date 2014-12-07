@@ -53,7 +53,7 @@ CMPI_OP             DC.B        'CMPI',0
 DIVS_OP             DC.B        'DIVS',0
 EOR_OP              DC.B        'EOR',0
 EORI_OP             DC.B        'EORI',0
-JSR_OP              DC.B        'JSR',0
+JSR_OP              DC.B        'JSR',HT,0
 LEA_OP              DC.B        'LEA',0
 LSL_OP              DC.B        'LSL',0
 LSR_OP              DC.B        'LSR',0
@@ -391,10 +391,21 @@ PRINT_BAD           CLR         D2                  ; clear d2
 PRINT_MOVEM			LEA			TAB,A1
 					MOVE.B		#14,D0
 					TRAP		#15
+					*BRA         PRINT_MOVEM_OP
 					LEA			BAD_MSG2,A1
 					MOVE.B		#14,D0
 					TRAP		#15
 					BRA			MAIN_LOOP
+					
+*MMA7
+*					
+*PRINT_MOVEM_OP      
+*MM1                 MOVE.L      D3,D1
+*                    ADDI.W      #$8000
+*                    CMPI.W      #0,D1
+*                    BEQ         MM2
+                    
+                    
                                 
 *----------------------PRINT OPMODE PRE--------------------------------
 * print the preface operand mode symbol(s)
@@ -2466,6 +2477,7 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
