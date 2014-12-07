@@ -2298,8 +2298,8 @@ MOVEM_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.B  #0,NUM_EXP_WRDS
-        BRA PRINT
+        MOVE.B  #1,NUM_EXP_WRDS
+        BRA PRINT_MOVEM
         
 *---------------------------MULS_EA------------------------------------
 MULS_EA
@@ -2456,6 +2456,7 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
