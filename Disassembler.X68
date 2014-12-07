@@ -34,6 +34,7 @@
 
 * Put variables and constants here
 *------------------------------------------Opcode Constants----------------------------------------------------
+PAUSE_COUNT         DC.B        30                  ; COUNTER
 BEQ_OP              DC.B        'BEQ',0
 ADD_OP              DC.B        'ADD',0
 ADDA_OP             DC.B        'ADDA',0
@@ -83,7 +84,7 @@ NUM_EXP_WRDS        DS.B        1                   ; Number of expansion words 
                     
 NUM_OPERANDS        DS.B        1                   ; Number of operands for the current instruction valid range: 1 or 2
                     
-PAUSE_COUNT         DC.W        30                  ; COUNTER
+
 PAUSE_MSG           DC.B        'Dissambler paused. Press any key to continue...',0
 EL                  DC.B        '',CR,LF,0          ; End Line
 OP_COMMA            DC.B        ',',0
@@ -155,7 +156,8 @@ START:              ORG         $1000               ; first instruction of progr
 MAIN
                     MOVE.B      #0,NUM_EXP_WRDS     ; Initialize to 0
                     MOVE.B      #0,NUM_OPERANDS     ; Initialize to 0
-                    *MOVE.B      #30,PAUSE_COUNT     ; Initialize to 30
+                    MOVE.B      #0,PAUSE_COUNT      ; RESET PUASE_COUNT
+                    MOVE.B      #30,PAUSE_COUNT     ; Initialize to 30
                     JSR         SPLASH_SCREEN       ; Display splash screen
                     BRA         STARTHEX            ; get starting hex address
                     
@@ -2411,6 +2413,7 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
