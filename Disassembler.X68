@@ -1025,7 +1025,7 @@ code0011         BRA        MOVE_EA
 
 *------------------------------------Begin Bucket 0100------------------------------- 
 * supported opcodes
-* MOVEM, NEG, DIVISL, JSR, LEA, MULSL, NOT, RTS
+* MOVEM, NEG, JSR, LEA, NOT, RTS
 
                  
                 
@@ -1086,10 +1086,7 @@ code_0100_100   BRA         PRINT_BAD
                   
 code_0100_101   BRA         PRINT_BAD 
    
-code_0100_110   JSR         Check_876  ;if/else for divis/muls 
-                CMPI.B      #1,D0
-                *BEQ         DIVIS_EA    
-                BRA         MULS_EA        
+code_0100_110   BRA         PRINT_BAD    
 
 code_0100_111   JSR         Check_876  ;if/else for jsr/rts
                 CMPI.B      #2,D0
@@ -2464,6 +2461,7 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
