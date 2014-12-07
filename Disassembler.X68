@@ -1856,8 +1856,8 @@ ASR_EA
         
 *---------------------Bcc Common-------------------------------------
 BCCCOM
-    MOVE        #7,D3               ;Always print as address
-    MOVE        A5,A4               ;Make a copy of opcode pointer
+    MOVE        #7,D2               ;Always print as address
+    MOVE.L      A5,A4               ;Make a copy of opcode pointer
     ADD         #2,A4               ;Point to first expansion word (assume it exists)
     MOVE.B      #1,NUM_OPERANDS     ;One operand corresponds to displacement
     MOVE.B      #7,D2               ;Set the first operand to display hex
@@ -2477,15 +2477,6 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
-
-
-
-
-
-
-
-
-
 
 *~Font name~Courier New~
 *~Font size~10~
