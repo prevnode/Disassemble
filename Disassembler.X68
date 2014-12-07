@@ -182,7 +182,7 @@ MAIN_LOOP
                     BRA         MAIN_LOOP_RUN       ; branch to the main loop
 
 MAIN_LOOP_RUN       JSR         DEC_LOOP_COUNT      ; branh to decrement the counter
-                    CMPI.W      #$0,PAUSE_COUNT     ; check if counter is at 0
+                    CMPI.B      #$0,PAUSE_COUNT     ; check if counter is at 0
                     BEQ         PAUSE               ; counter == 0, pause the program
                                     
                     MOVE.L      A5,D1               ; move the starting address to d1
@@ -191,7 +191,7 @@ MAIN_LOOP_RUN       JSR         DEC_LOOP_COUNT      ; branh to decrement the cou
                     BEQ         PROMPTRUNAGAIN      ; if equal end program by prompting to run again
                     BRA         BEGINOPCODE         ; branch to opcode conversion
                     
-DEC_LOOP_COUNT      SUBI.W      #$1,PAUSE_COUNT     ; subtract 1 from counter
+DEC_LOOP_COUNT      SUBI.B      #$1,PAUSE_COUNT     ; subtract 1 from counter
                     RTS                             ; return
                     
 PAUSE               LEA         PAUSE_MSG,A1        ; put pause message into a1
@@ -200,7 +200,7 @@ PAUSE               LEA         PAUSE_MSG,A1        ; put pause message into a1
                     SUBA.L      A1,A1               ; clear a1
                     MOVE.B      #2,D0               ; trap task 5 grabs a single character
                     TRAP        #15                 ; trap #15 I/O
-                    MOVE.W      #30,PAUSE_COUNT     ; reset counter to 30
+                    MOVE.B      #30,PAUSE_COUNT     ; reset counter to 30
                     JSR         CLEAR_SCREEN        ; clear the screen
                     BRA         MAIN_LOOP_RUN       ; branch to continue looping
 
@@ -289,7 +289,7 @@ PROMPTRUNAGAIN
 RESET               JSR         CLEAR_SCREEN        ; subroutine to clear screen
                     JSR         CLEAR_DATA          ; subroutine to clear data registers
                     JSR         CLEAR_ADDRESS       ; subroutine to clear address registers
-                    *MOVE.W      #30,PAUSE_COUNT     ; Initialize to 30
+                    *MOVE.B      #30,PAUSE_COUNT     ; Initialize to 30
                     BRA         START               ; branch back to start
                     
 CLEAR_SCREEN        MOVE.B      #11,D0              ; clear the screen
@@ -2412,6 +2412,7 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
