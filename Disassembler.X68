@@ -131,6 +131,23 @@ SE5                 DC.B        '',0
 SE6                 DC.B        '',0
 SE7                 DC.B        '',0
 
+MMA7    DC.W    'A7 ',0
+MMA6    DC.W    'A6 ',0
+MMA5    DC.W    'A5 ',0
+MMA4    DC.W    'A4 ',0
+MMA3    DC.W    'A3 ',0
+MMA2    DC.W    'A2 ',0
+MMA1    DC.W    'A1 ',0
+MMA0    DC.W    'A0 ',0
+MMD7    DC.W    'D7 ',0
+MMD6    DC.W    'D6 ',0
+MMD5    DC.W    'D5 ',0
+MMD4    DC.W    'D4 ',0
+MMD3    DC.W    'D3 ',0
+MMD2    DC.W    'D2 ',0
+MMD1    DC.W    'D1 ',0
+MMD0    DC.W    'D0 ',0
+
 MASK_13_12          EQU     %00110000000000000000000000000000
 MASK_11_9           EQU     %00001110000000000000000000000000
 MASK_8_6            EQU     %00000001110000000000000000000000
@@ -391,19 +408,330 @@ PRINT_BAD           CLR         D2                  ; clear d2
 PRINT_MOVEM			LEA			TAB,A1
 					MOVE.B		#14,D0
 					TRAP		#15
-					*BRA         PRINT_MOVEM_OP
-					LEA			BAD_MSG2,A1
-					MOVE.B		#14,D0
-					TRAP		#15
-					BRA			MAIN_LOOP
+*					*BRA         PRINT_MOVEM_OP
+*					LEA			BAD_MSG2,A1
+*					MOVE.B		#14,D0
+*					TRAP		#15
+*					BRA			MAIN_LOOP
 					
-*MMA7
-*					
-*PRINT_MOVEM_OP      
-*MM1                 MOVE.L      D3,D1
-*                    ADDI.W      #$8000
-*                    CMPI.W      #0,D1
-*                    BEQ         MM2
+PRINT_LIST_EA       CLR         D1
+                    CMPI.B      #$6,D4
+					BNE         PRINT_EA_LIST
+					MOVE.W      D3,D1
+					JSR         MOVEM_LIST_EA
+					LEA         OP_COMMA,A1         ; move comma string to A1
+                    MOVE        #14,D0              ; trap task #14 to print the message to screen
+                    TRAP        #15                 ; trap #15 I/O
+                    JSR         PRINT_OPMODE2_PRE   ; print the second opmode preface symbol
+					BRA         PRINT_RETURN
+					
+PRINT_EA_LIST       JSR         PRINT_OPMODE2_PRE   ; print the second opmode preface symbo
+                    LEA         OP_COMMA,A1         ; move comma string to A1
+                    MOVE        #14,D0              ; trap task #14 to print the message to screen
+                    TRAP        #15                 ; trap #15 I/O
+                    MOVE.W      D5,D1
+                    JSR         MOVEM_EA_LIST
+                    BRA         PRINT_RETURN
+					
+MOVEM_LIST_EA
+        BRA     MMNGA7
+        
+MMNGA7  CLR     D0
+        MOVE.W  D1,D0
+        ANDI.W  #$8000,D0
+        CMPI.W  #$8000,D0
+        BNE     MMNGA6
+        LEA     MMA7,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+        
+MMNGA6  CLR     D0
+        MOVE.W  D1,D0
+        ANDI.W  #$4000,D0
+        CMPI.W  #$4000,D0
+        BNE     MMNGA5
+        LEA     MMA6,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+        
+MMNGA5  CLR     D0
+        MOVE.W  D1,D0
+        ANDI.W  #$2000,D0
+        CMPI.W  #$2000,D0
+        BNE     MMNGA4
+        LEA     MMA5,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+        
+MMNGA4  CLR     D0
+        MOVE.W  D1,D0
+        ANDI.W  #$1000,D0
+        CMPI.W  #$1000,D0
+        BNE     MMNGA3
+        LEA     MMA4,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+		
+MMNGA3  CLR     D0
+        MOVE.W  D1,D0
+        ANDI.W  #$0800,D0
+        CMPI.W  #$0800,D0
+        BNE     MMNGA2
+        LEA     MMA3,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+		
+MMNGA2  CLR     D0
+        MOVE.W  D1,D0
+        ANDI.W  #$0400,D0
+        CMPI.W  #$0400,D0
+        BNE     MMNGA1
+        LEA     MMA2,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+		
+MMNGA1  CLR     D0
+        MOVE.W  D1,D0
+        ANDI.W  #$0200,D0
+        CMPI.W  #$0200,D0
+        BNE     MMNGA0
+        LEA     MMA1,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+		
+MMNGA0  CLR     D0
+        MOVE.W  D1,D0
+        ANDI.W  #$0100,D0
+        CMPI.W  #$0100,D0
+        BNE     MMNGD7
+        LEA     MMA0,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+
+MMNGD7  CLR     D0
+        MOVE.W  D1,D0
+        ANDI.W  #$0080,D0
+        CMPI.W  #$0080,D0
+        BNE     MMNGD6
+        LEA     MMD7,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+		
+MMNGD6  CLR     D0
+        MOVE.W  D1,D0
+        ANDI.W  #$0040,D0
+        CMPI.W  #$0040,D0
+        BNE     MMNGD5
+        LEA     MMD6,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+		
+MMNGD5  CLR     D0
+        MOVE.W  D1,D0
+        ANDI.W  #$0020,D0
+        CMPI.W  #$0020,D0
+        BNE     MMNGD4
+        LEA     MMD5,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+		
+MMNGD4  CLR     D0
+        MOVE.W  D1,D0
+        ANDI.W  #$0010,D0
+        CMPI.W  #$0010,D0
+        BNE     MMNGD3
+        LEA     MMD4,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+		
+MMNGD3  CLR     D0
+        MOVE.W  D1,D0
+        ANDI.W  #$0008,D0
+        CMPI.W  #$0008,D0
+        BNE     MMNGD2
+        LEA     MMD3,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+		
+MMNGD2  CLR     D0
+        MOVE.W  D1,D0
+        ANDI.W  #$0004,D0
+        CMPI.W  #$0004,D0
+        BNE     MMNGD1
+        LEA     MMD2,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+		
+MMNGD1  CLR     D0
+        MOVE.W  D1,D0
+        ANDI.W  #$0002,D0
+        CMPI.W  #$0002,D0
+        BNE     MMNGD0
+        LEA     MMD1,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+		
+MMNGD0  CLR     D0
+        MOVE.W  D1,D0
+        ANDI.W  #$0001,D0
+        CMPI.W  #$0001,D0
+        BNE     MMNGFINISH
+        LEA     MMD0,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+		
+MMNGFINISH
+        RTS
+        
+MOVEM_EA_LIST
+        BRA     MMNSD0
+
+MMNSD0  CLR     D0
+        MOVE.W  D1,D0
+        ANDI.W  #$0001,D0
+        CMPI.W  #$0001,D0
+        BNE     MMNGD1
+        LEA     MMD0,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+		
+MMNSD1  CLR     D0
+        MOVE.W  D1,D0
+        ANDI.W  #$0002,D0
+        CMPI.W  #$0002,D0
+        BNE     MMNSD2
+        LEA     MMD1,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+
+MMNSD2  CLR     D0
+        MOVE.W  D1,D0
+        ANDI.W  #$0004,D0
+        CMPI.W  #$0004,D0
+        BNE     MMNSD3
+        LEA     MMD2,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+		
+MMNSD3  CLR     D0
+        MOVE.W  D1,D0
+        ANDI.W  #$0008,D0
+        CMPI.W  #$0008,D0
+        BNE     MMNSD4
+        LEA     MMD3,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+		
+MMNSD4  CLR     D0
+        MOVE.W  D1,D0
+        ANDI.W  #$0010,D0
+        CMPI.W  #$0010,D0
+        BNE     MMNSD5
+        LEA     MMD4,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+		
+MMNSD5  CLR     D0
+        MOVE.W  D1,D0
+        ANDI.W  #$0020,D0
+        CMPI.W  #$0020,D0
+        BNE     MMNSD6
+        LEA     MMD5,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+		
+MMNSD6  CLR     D0
+        MOVE.W  D1,D0
+        ANDI.W  #$0040,D0
+        CMPI.W  #$0040,D0
+        BNE     MMNSD7
+        LEA     MMD6,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+		
+MMNSD7  CLR     D0
+        MOVE.W  D1,D0
+        ANDI.W  #$0080,D0
+        CMPI.W  #$0080,D0
+        BNE     MMNSA0
+        LEA     MMD7,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+		
+MMNSA0  CLR     D0
+        MOVE.W  D1,D0
+        ANDI.W  #$0100,D0
+        CMPI.W  #$0100,D0
+        BNE     MMNSA1
+        LEA     MMA0,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+		
+MMNSA1  CLR     D0
+        MOVE.W  D1,D0
+        ANDI.W  #$0200,D0
+        CMPI.W  #$0200,D0
+        BNE     MMNSA2
+        LEA     MMA1,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+		
+MMNSA2  CLR     D0
+        MOVE.W  D1,D0
+        ANDI.W  #$0400,D0
+        CMPI.W  #$0400,D0
+        BNE     MMNSA3
+        LEA     MMA2,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+		
+MMNSA3  CLR     D0
+        MOVE.W  D1,D0
+        ANDI.W  #$0800,D0
+        CMPI.W  #$0800,D0
+        BNE     MMNSA4
+        LEA     MMA3,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+		
+MMNSA4  CLR     D0
+        MOVE.W  D1,D0
+        ANDI.W  #$1000,D0
+        CMPI.W  #$1000,D0
+        BNE     MMNSA5
+        LEA     MMA4,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+		
+MMNSA5  CLR     D0
+        MOVE.W  D1,D0
+        ANDI.W  #$2000,D0
+        CMPI.W  #$2000,D0
+        BNE     MMNSA6
+        LEA     MMA5,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+		
+MMNSA6  CLR     D0
+        MOVE.W  D1,D0
+        ANDI.W  #$4000,D0
+        CMPI.W  #$4000,D0
+        BNE     MMNSA7
+        LEA     MMA6,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+		
+MMNSA7  CLR     D0
+        MOVE.W  D1,D0
+        ANDI.W  #$8000,D0
+        CMPI.W  #$8000,D0
+        BNE     MMNSFINISH
+        LEA     MMA7,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+		
+MMNSFINISH
+		RTS
                     
                     
                                 
@@ -2602,6 +2930,7 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 *~Font name~Courier New~
