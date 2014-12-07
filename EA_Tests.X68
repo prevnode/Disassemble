@@ -7,6 +7,13 @@
     ORG    $8888
 START:                  ; first instruction of program
 
+*---------------LEA VARIANTS-----------------------------------
+
+    LEA         $3453, A6
+    LEA         $10004000, A3
+    LEA         (A5),A6
+
+
 *--------------------MOVEA VARIANTS---------------------------
     MOVEA.W     D1,A2
     MOVEA.L     D1,A2
@@ -77,11 +84,6 @@ START:                  ; first instruction of program
     ROL         -(A2)
     
 
-*---------------LEA VARIANTS-----------------------------------
-
-    LEA         $3453, A6
-    LEA         $10004000, A3
-    
 
 *------------------BCC VARIANTS--------------------------------
     
@@ -175,6 +177,7 @@ CMPVARIANTS
 * Put variables and constants here
 
     END    START        ; last line of source
+
 
 
 

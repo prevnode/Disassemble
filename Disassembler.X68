@@ -1460,10 +1460,6 @@ EAWCHKS
         BEQ     PRINT_BAD   ;Mode 5 unsupported
         CMP.B   #6,D2
         BEQ     PRINT_BAD   ;Mode 6 unsupported
-        CMP.B   #2,D2       
-        BEQ     PRINT_BAD   ;Mode 2 unsupported
-        CMP.B   #3,D2
-        BEQ     PRINT_BAD   ;Mode 3 unsupported
         
         CMP.B   #7,D2       
         BLT     fin_eachk   ;Modes below 7 don't use expansion words
@@ -2189,26 +2185,54 @@ jsr_2   MOVE.L  (A4),D3
 *---------------------------LEA_EA------------------------------------
 LEA_EA
 
+        MOVE.B  #2,NUM_OPERANDS ;Always 2 operands
         LEA     LEA_OP,A1
         MOVE.B  #14,D0
         TRAP    #15
         
         JSR     LOAD12BY3
-        *Need to swap order of operands
-        MOVE.L  D5,D7       ;Make a copy of op2 reg
-        MOVE.L  D3,D5       ;Move a op1 reg into place
-        MOVE.L  D7,D3       ;Move op2 reg into place
-        MOVE.L  D4,D2       ;Op1 mode into place
         MOVE.L  #1,D4       ;Op2 always An
+        JSR     EAWCHKS
+        BRA     PRINT_LONG
+        
+        *Need to swap order of operands
+*        MOVE.L  D5,D7       ;Make a copy of op2 reg
+*        MOVE.L  D3,D5       ;Move a op1 reg into place
+*        MOVE.L  D7,D3       ;Move op2 reg into place
+*        MOVE.L  D4,D2       ;Op1 mode into place
+
         
         *Get the data
-        MOVE.L  A5,A4       ;Copy of the current opcode pointer
-        ADD.L   #2,A4       ;Advance one word
-        MOVE.L  (A4),D3     ;Move the EA into place
+*        MOVE.L  A5,A4       ;Copy of the current opcode pointer
+*        ADD.L   #2,A4       ;Advance one word
+*        
+*        CMP.L   #5,D2       ;D2 should hold EA mode
+*        BEQ     PRINT_BAD   ;Mode unsuppported
+*        CMP.L   #6,D2       ;D2 should hold EA mode
+*        BEQ     PRINT_BAD   ;Mode unsupported
+*        CMP.L   #7,D2       ;D2 holds EA mode
+*        BLE     lea_zero    ;Assume mode 5 no expansion words
+*        *Mode 7 need to check EA register
+*        CMP.L   #0,D3       ;D3 Holds EA register
+*        BEQ     lea_word    ;0 indicates word addressing
+*        CMP.L   #1,D3       ;D3 holds EA register
+*        BGE     PRINT_BAD   ;Registers 2-3 are unsupported
+*        *Register equals 1
+*        MOVE.L  (A4),D3     ;Move the EA into place
+*        MOVE.B  #2,NUM_EXP_WRDS
+*        BRA PRINT_LONG        
+*        
+*lea_zero
+*        MOVE.B  #0,NUM_EXP_WRDS
+*        BRA     PRINT_LONG
+*        
+*lea_word
+*        MOVE.W  (A4),D3     ;Move single word into place for display
+*        MOVE.B  #1,NUM_EXP_WRDS
+*        BRA     PRINT_LONG      
         
-        MOVE.B  #2,NUM_OPERANDS
-        MOVE.B  #2,NUM_EXP_WRDS
-        BRA PRINT_Long
+        
+        
         
 *---------------------------LSL_EA------------------------------------
 LSL_EA
@@ -2479,6 +2503,7 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 *~Font name~Courier New~
