@@ -2424,7 +2424,34 @@ MOVEM_EA
         TRAP    #15
         
         MOVE.B  #1,NUM_EXP_WRDS
-        BRA PRINT_MOVEM
+        MOVE.B  #2,NUM_OPERANDS
+        
+        JSR     LOAD12BY3
+        
+        
+        MOVE.L  A5,A4       ;Make a copy of current opcode pointer
+        MOVE.W  (A4)+,D0     ;Make a copy of opcode to do test on dir bit
+        MOVE.L  #10,D1      ;10th bit is dir
+        BTST    D1,D0       ;Test the bit
+        BEQ     reg_mem     ;Dir 0 is register to memeory
+        BRA     mem_reg     ;Dir 1 is memory to register
+        
+        
+        
+reg_mem
+        *EA is second operand
+        MOVE.L  D2,D4       ;Move mode to op2
+        MOVE.L  D3,D5       ;Move reg to op2
+        MOVE.L  #6,D2       ;6 indicates list to print_movem
+        MOVE.W  (A4),D3     ;Register list
+        BRA     PRINT_MOVEM
+        
+mem_reg
+        *EA is first operand
+        MOVE.L  #6,D4       ;6 indicates list to print_movem
+        MOVE.W  (A4),D5     ;Register list
+        BRA     PRINT_MOVEM
+        
         
 *---------------------------MULS_EA------------------------------------
 MULS_EA

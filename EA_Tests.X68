@@ -7,6 +7,10 @@
     ORG    $8888
 START:                  ; first instruction of program
 
+
+*--------------------MOVEM VARIANTS--------------------------
+    MOVEM.L     A0-A3/D0-D7, -(A7)
+    
 *---------------LEA VARIANTS-----------------------------------
 
     LEA         $3453, A6
@@ -147,8 +151,7 @@ TESTJMP
     MOVE.L    #1455,A6
     MOVE.L    #145555,D6
     
-*--------------------MOVEM VARIANTS--------------------------
-    MOVEM.L     A0-A3/D0-D7, -(A7)
+
 
 *----------------------CMP VARIANTS--------------------------
 CMPVARIANTS
@@ -177,6 +180,7 @@ CMPVARIANTS
 * Put variables and constants here
 
     END    START        ; last line of source
+
 
 
 *~Font name~Courier New~
