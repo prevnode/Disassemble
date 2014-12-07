@@ -49,34 +49,34 @@ TESTDATA
 *    NEG.B   D4
 *    NEG     D1
 *    NEG.W   D2
-*    NEG.B   $1234
-*    NEG.W   $1234    
-*    
-*    JSR     ENDPROGRAM
-*    JSR     TESTDATA
-*    JSR     ENDTESTDATA
-*    ASL.W   #3,D0
-*    ROL     #5,D3
-*    LSL     #3,D0
-*    ROL     D3,D5
-*    LSL     D5,D3
-*    LSL.B   D5,D3
-*    BHI     TESTJSR    
-*    *BCC     TESTJSR
-*    BNE     TESTJSR
-*    BLT     TESTJSR 
-*    BHI     TESTJSR 
-*    LSR.W   D0,D1
-*    LSL.W   D0,D1
-*    ROL.W   D0,D1
-*    ROR.W   D0,D1
-*    NEG     D0
-*    NOT     D0
-*    RTS
-*    JSR     TESTJSR
+    NEG.B   $1234
+    NEG.W   $1234    
+    
+    JSR     ENDPROGRAM
+    JSR     TESTDATA
+    JSR     ENDTESTDATA
+    ASL.W   #3,D0
+    ROL     #5,D3
+    LSL     #3,D0
+    ROL     D3,D5
+    LSL     D5,D3
+    LSL.B   D5,D3
+    BHI     TESTJSR    
+    *BCC     TESTJSR
+    BNE     TESTJSR
+    BLT     TESTJSR 
+    BHI     TESTJSR 
+    LSR.W   D0,D1
+    LSL.W   D0,D1
+    ROL.W   D0,D1
+    ROR.W   D0,D1
+    NEG     D0
+    NOT     D0
+    RTS
+    JSR     TESTJSR
 
-*    ADD $1234,D2
-*    ADD D2,$1234
+    ADD $1234,D2
+    ADD D2,$1234
 
     MULS    D2,D3
     MULS    $1234,D4
@@ -1527,14 +1527,14 @@ immediateea
         
         
 getwordea
-        CLR     D4          ;Clear the register before copy expansion word
-        MOVE.W  (A4)+,D4
+        CLR     D3          ;Clear the register before copy expansion word D3 holds register
+        MOVE.W  (A4)+,D3
         ADD.B   #1,NUM_EXP_WRDS
         RTS
         
 getlongea
-        CLR     D5          ;Clear the register before copy expansion word
-        MOVE.L  (A4)+,D4
+        CLR     D3          ;Clear the register before copy expansion word D3 holds register
+        MOVE.L  (A4)+,D3
         ADD.B   #2,NUM_EXP_WRDS
         RTS   
         
@@ -2378,8 +2378,8 @@ NEG_EA
         MOVE.B  #0,NUM_EXP_WRDS
         MOVE.B  #1,NUM_OPERANDS ;Neg always has a single operand
         JSR     LOAD12BY3
-        MOVE.L  D2,D4           ;Only one operand with neg need to move
-        MOVE.L  D3,D5           ;What 12by3 calls operand 2 to operand 1
+        *MOVE.L  D2,D4           ;Only one operand with neg need to move
+        *MOVE.L  D3,D5           ;What 12by3 calls operand 2 to operand 1
         JSR     EAWCHKS       
         
         LEA     NEG_OP,A1
@@ -2510,6 +2510,7 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
