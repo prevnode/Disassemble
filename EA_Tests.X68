@@ -6,7 +6,8 @@
 *-----------------------------------------------------------
     ORG    $8888
 START:                  ; first instruction of program
-
+    LEA         TESTJMP,A1
+    LEA         $1234,A2
 *------------------BCC VARIANTS--------------------------------
     
     BEQ         TESTJMP ; prints 0000FFFF on displacement
@@ -112,6 +113,7 @@ CMPVARIANTS
 * Put variables and constants here
 
     END    START        ; last line of source
+
 
 
 
