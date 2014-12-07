@@ -2367,52 +2367,55 @@ MOVEA_EA
                 MOVE.B  #0,NUM_EXP_WRDS
                 MOVE.B  #2,NUM_OPERANDS             ; MOVEA always has 2 operands
                 
-                MOVE    #1,D4                       ; MOVEA always has a destination address register
-                
-                MOVE.L  #MASK_13_12,D7              ; Mask for size
-                JSR     APPLYMASK
-                MOVE.L  D7,D0                       ; Move for exmpansion wrd and attribute calculations
-                
                 JSR     LOAD12BY3
 
+                MOVE.L  #MASK_13_12,D7              ; Mask for size
+                JSR     APPLYMASK                
+                MOVE    D7,D6                       ;D6 holds size when calling ea2oper
+                
+                MOVE    #1,D4                       ; MOVEA always has a destination address register
+                
+                JSR     EXP2OPER
+               
+                
                 LEA     MOVEA_OP,A1
                 MOVE.B  #14,D0
                 TRAP    #15
                
                 
-                *Calculate the number of expansion words
-                CMP.W   #7,D2
-                BLT     movea_attribute             ; Source mode less than 7 lack expansion words
-                JSR     INCREMENT_WRD_CNT
-                
-                CMP.W   #0,D3                       ; Source reg determines size of expansion
-                BEQ     movea_attribute             ; Source reg 0 has only 1 expansion word
-                
-                CMP.W   #1,D3                       ; Source reg 1 has second expansion word
-                BNE     chk_sreg_4                  ; Need to look at 
-                JSR     INCREMENT_WRD_CNT           ; Source Reg 1 has second word
-                BRA     movea_attribute             ; No more expansion words
-                
-                
-chk_sreg_4      CMP.W   #4,D3                       ; Source reg 4 with mode 7 is immediate
-                BNE     movea_unsupported           ; With source mode 7 supported registers are 0,1,4 only
-                CMP.W   #2,D0                       ; Size indicates numb of exp words with immediate
-                BNE     PRINT_WORD                  ; Size of 3 indicates word so only 1 expansion
-                JSR     INCREMENT_WRD_CNT           ; Size of 2 indicates long so need another expansion
-                BRA     PRINT_LONG          
-                
+*                *Calculate the number of expansion words
+*                CMP.W   #7,D2
+*                BLT     movea_attribute             ; Source mode less than 7 lack expansion words
+*                JSR     INCREMENT_WRD_CNT
+*                
+*                CMP.W   #0,D3                       ; Source reg determines size of expansion
+*                BEQ     movea_attribute             ; Source reg 0 has only 1 expansion word
+*                
+*                CMP.W   #1,D3                       ; Source reg 1 has second expansion word
+*                BNE     chk_sreg_4                  ; Need to look at 
+*                JSR     INCREMENT_WRD_CNT           ; Source Reg 1 has second word
+*                BRA     movea_attribute             ; No more expansion words
+*                
+*                
+*chk_sreg_4      CMP.W   #4,D3                       ; Source reg 4 with mode 7 is immediate
+*                BNE     movea_unsupported           ; With source mode 7 supported registers are 0,1,4 only
+*                CMP.W   #2,D0                       ; Size indicates numb of exp words with immediate
+*                BNE     PRINT_WORD                  ; Size of 3 indicates word so only 1 expansion
+*                JSR     INCREMENT_WRD_CNT           ; Size of 2 indicates long so need another expansion
+*                BRA     PRINT_LONG          
+*                
 
                 
                 *Calculate attribute
 movea_attribute
-                CMP.W   #2,D0                       ; Size determines attribute
+                CMP.W   #2,D6                       ; Size determines attribute
                 BEQ     PRINT_LONG                  ; 2 is long
                 BRA     PRINT_WORD                  ; 3 is word (No check for invalid values)
 
               
-
-movea_unsupported
-                BRA     PRINT_BAD
+*
+*movea_unsupported
+*                BRA     PRINT_BAD
         
 *---------------------------------MOVEM_EA--------------------------
 MOVEM_EA
@@ -2572,6 +2575,7 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 *~Font name~Courier New~
 *~Font size~10~
