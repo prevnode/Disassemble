@@ -53,8 +53,8 @@ CMPI_OP             DC.B        'CMPI',0
 DIVS_OP             DC.B        'DIVS',0
 EOR_OP              DC.B        'EOR',0
 EORI_OP             DC.B        'EORI',0
-JSR_OP              DC.B        'JSR',0
-LEA_OP              DC.B        'LEA',0
+JSR_OP              DC.B        'JSR',HT,0
+LEA_OP              DC.B        'LEA',HT,0
 LSL_OP              DC.B        'LSL',0
 LSR_OP              DC.B        'LSR',0
 MOVE_OP             DC.B        'MOVE',0
@@ -391,10 +391,21 @@ PRINT_BAD           CLR         D2                  ; clear d2
 PRINT_MOVEM			LEA			TAB,A1
 					MOVE.B		#14,D0
 					TRAP		#15
+					*BRA         PRINT_MOVEM_OP
 					LEA			BAD_MSG2,A1
 					MOVE.B		#14,D0
 					TRAP		#15
 					BRA			MAIN_LOOP
+					
+*MMA7
+*					
+*PRINT_MOVEM_OP      
+*MM1                 MOVE.L      D3,D1
+*                    ADDI.W      #$8000
+*                    CMPI.W      #0,D1
+*                    BEQ         MM2
+                    
+                    
                                 
 *----------------------PRINT OPMODE PRE--------------------------------
 * print the preface operand mode symbol(s)
@@ -431,7 +442,9 @@ MODE1_PRE001        LEA         SP1,A1              ; print pre symbols for opmo
 MODE1_PRE010        LEA         SP2,A1              ; print pre symbols for opmode (An)
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
+                    JSR         PRINT_OPREG1        ; print the address/data register number
                     RTS
+                    
 MODE1_PRE011        LEA         SP3,A1              ; print pre symbols for opmode (An)+
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
@@ -1840,8 +1853,8 @@ ASR_EA
         
 *---------------------Bcc Common-------------------------------------
 BCCCOM
-    MOVE        #7,D3               ;Always print as address
-    MOVE        A5,A4               ;Make a copy of opcode pointer
+    MOVE        #7,D2               ;Always print as address
+    MOVE.L      A5,A4               ;Make a copy of opcode pointer
     ADD         #2,A4               ;Point to first expansion word (assume it exists)
     MOVE.B      #1,NUM_OPERANDS     ;One operand corresponds to displacement
     MOVE.B      #7,D2               ;Set the first operand to display hex
@@ -2461,11 +2474,6 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
-
-
-
-
-
 
 
 
