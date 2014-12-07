@@ -6,8 +6,10 @@
 *-----------------------------------------------------------
     ORG    $8888
 START:                  ; first instruction of program
+
+*------------------BCC VARIANTS--------------------------------
     
-    BEQ         TESTJMP
+    BEQ         TESTJMP ; prints 0000FFFF on displacement
     BLT         TESTJMP
     BNE         TESTJMP
     BHI         TESTJMP
@@ -15,7 +17,7 @@ START:                  ; first instruction of program
     JSR         TESTJMP
     RTS  
 
-TESTJMP      
+TESTJMP       
     
 *------------------NEG VARIANTS--------------------------------
     
@@ -110,26 +112,6 @@ CMPVARIANTS
 * Put variables and constants here
 
     END    START        ; last line of source
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
