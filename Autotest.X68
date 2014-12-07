@@ -36,6 +36,16 @@
 TESTDATA
 
 *ericks testing opcodes
+
+    BEQ         TESTJMP
+    BLT         TESTJMP
+    BNE         TESTJMP
+    BHI         TESTJMP
+    BRA         TESTJMP
+    JSR         TESTJMP
+    RTS
+    
+TESTJMP
     *CMPI    #1,D0
     *SUBI #1,D0
     *EORI  #1,D0
@@ -2510,6 +2520,7 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
