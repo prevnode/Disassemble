@@ -54,7 +54,7 @@ DIVS_OP             DC.B        'DIVS',0
 EOR_OP              DC.B        'EOR',0
 EORI_OP             DC.B        'EORI',0
 JSR_OP              DC.B        'JSR',HT,0
-LEA_OP              DC.B        'LEA',0
+LEA_OP              DC.B        'LEA',HT,0
 LSL_OP              DC.B        'LSL',0
 LSR_OP              DC.B        'LSR',0
 MOVE_OP             DC.B        'MOVE',0
@@ -2477,6 +2477,7 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
