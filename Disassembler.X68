@@ -1029,7 +1029,8 @@ code0100         JSR     Check_11109
 
                  JSR     Check_987          ;check movem and lea first, they are different than the rest
                  CMPI.B  #1, D0             
-                 BEQ     MOVEM_EA
+                 BEQ     
+                 
 
                  JSR     Check_876
                  CMPI.B  #7, D0
@@ -1445,10 +1446,10 @@ EAWCHKS
         BEQ     PRINT_BAD   ;Mode 5 unsupported
         CMP.B   #6,D2
         BEQ     PRINT_BAD   ;Mode 6 unsupported
-        CMP.B   #2,D2       
-        BEQ     PRINT_BAD   ;Mode 2 unsupported
-        CMP.B   #3,D2
-        BEQ     PRINT_BAD   ;Mode 3 unsupported
+        *CMP.B   #2,D2       
+        *BEQ     PRINT_BAD   ;Mode 2 unsupported
+        *CMP.B   #3,D2
+        *BEQ     PRINT_BAD   ;Mode 3 unsupported
         
         CMP.B   #7,D2       
         BLT     fin_eachk   ;Modes below 7 don't use expansion words
@@ -2299,8 +2300,12 @@ MOVEM_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.B  #0,NUM_EXP_WRDS
-        BRA PRINT
+
+        MOVE.B  #1,NUM_EXP_WRDS
+        MOVE.L  A5,A4               ;Make a copy of opcode pointer
+        ADDI.L  #2,A4               ;Advance A6 to next word
+        MOVE.L  (A4),D3             ;Set expansion word to operand1
+        BRA PRINT_MOVEM
         
 *---------------------------MULS_EA------------------------------------
 MULS_EA
@@ -2329,11 +2334,11 @@ NEG_EA
         MOVE.L  D3,D5           ;What 12by3 calls operand 2 to operand 1
         JSR     EAWCHKS       
         
-        LEA     NEG_OP,A1
+        LEA     NEG_OP,A1       
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  MASK_7_6,D7
+        MOVE.L  MASK_7_6,D7     
         ANDI.L  #$00C00000,D7   ;Work around the sign extension   
         JSR     APPLYMASK       ;Size is in D7
         
