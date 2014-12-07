@@ -1503,10 +1503,8 @@ fin_eachk
 MULDIV
         JSR     LOAD12BY3
         JSR     EAWCHKS
-        
-        CMP     #0,D3       ;D3 holds 8-6 indicates size
-        *BEQ     
-        
+        MOVE.B  #2,NUM_OPERANDS
+        MOVE.L  #0,D4       ;Op2 mode is always Dn
 mul_long
         
         RTS
@@ -2099,13 +2097,13 @@ CMPI_EA
                 
 *---------------------------DIVS_EA------------------------------------
 DIVS_EA
+        JSR     MULDIV
 
         LEA     DIVS_OP,A1
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.B  #0,NUM_EXP_WRDS
-        BRA PRINT              
+        BRA PRINT_WORD
                 
                 
 *-------------------------------EOR_EA---------------------------------------------------------
@@ -2342,13 +2340,7 @@ MULS_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-        *
-        CMP.B   #7,D4       ;D4 Holds bits 8-6
-        BEQ     PRINT_BYTE
-        CMP.B   #0,D4
-        BEQ     PRINT_BYTE
-        
-        
+        BRA     PRINT_WORD       
       
         
 *---------------------------NEG_EA------------------------------------
