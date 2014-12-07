@@ -387,6 +387,14 @@ PRINT_BAD           CLR         D2                  ; clear d2
                     MOVE.B      #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     BRA         MAIN_LOOP           ; branch back to main loop to decode next opword
+					
+PRINT_MOVEM			LEA			TAB,A1
+					MOVE.B		#14,D0
+					TRAP		#15
+					LEA			BAD_MSG2,A1
+					MOVE.B		#14,D0
+					TRAP		#15
+					BRA			MAIN_LOOP
                                 
 *----------------------PRINT OPMODE PRE--------------------------------
 * print the preface operand mode symbol(s)
@@ -1029,8 +1037,7 @@ code0100         JSR     Check_11109
 
                  JSR     Check_987          ;check movem and lea first, they are different than the rest
                  CMPI.B  #1, D0             
-                 BEQ     
-                 
+                 BEQ     MOVEM_EA
 
                  JSR     Check_876
                  CMPI.B  #7, D0
@@ -1446,10 +1453,10 @@ EAWCHKS
         BEQ     PRINT_BAD   ;Mode 5 unsupported
         CMP.B   #6,D2
         BEQ     PRINT_BAD   ;Mode 6 unsupported
-        *CMP.B   #2,D2       
-        *BEQ     PRINT_BAD   ;Mode 2 unsupported
-        *CMP.B   #3,D2
-        *BEQ     PRINT_BAD   ;Mode 3 unsupported
+        CMP.B   #2,D2       
+        BEQ     PRINT_BAD   ;Mode 2 unsupported
+        CMP.B   #3,D2
+        BEQ     PRINT_BAD   ;Mode 3 unsupported
         
         CMP.B   #7,D2       
         BLT     fin_eachk   ;Modes below 7 don't use expansion words
@@ -1834,11 +1841,11 @@ ASR_EA
         BEQ     PRINT_WORD
         CMP.B   #2,D6
         BEQ     PRINT_LONG
-        BRA     ENDPROGRAM      ;In case something went wrong
-
+        BRA     ENDPROGRAM      ;In case something went wrong                
         
 *---------------------Bcc Common-------------------------------------
 BCCCOM
+    MOVE        #7,D3               ;Always print as address
     MOVE        A5,A4               ;Make a copy of opcode pointer
     ADD         #2,A4               ;Point to first expansion word (assume it exists)
     MOVE.B      #1,NUM_OPERANDS     ;One operand corresponds to displacement
@@ -1852,6 +1859,7 @@ BCCCOM
     BEQ         bcc2                ;FF indicates long word displacement
     BRA         bcc0                ;Any other value is the actual displacement
     
+   
 bcc0
     MOVE.B      D7,D3               ;Displacement less than 8 bits 
     MOVE.B      #0,NUM_EXP_WRDS
@@ -2300,11 +2308,7 @@ MOVEM_EA
         MOVE.B  #14,D0
         TRAP    #15
         
-
         MOVE.B  #1,NUM_EXP_WRDS
-        MOVE.L  A5,A4               ;Make a copy of opcode pointer
-        ADDI.L  #2,A4               ;Advance A6 to next word
-        MOVE.L  (A4),D3             ;Set expansion word to operand1
         BRA PRINT_MOVEM
         
 *---------------------------MULS_EA------------------------------------
@@ -2334,11 +2338,11 @@ NEG_EA
         MOVE.L  D3,D5           ;What 12by3 calls operand 2 to operand 1
         JSR     EAWCHKS       
         
-        LEA     NEG_OP,A1       
+        LEA     NEG_OP,A1
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  MASK_7_6,D7     
+        MOVE.L  MASK_7_6,D7
         ANDI.L  #$00C00000,D7   ;Work around the sign extension   
         JSR     APPLYMASK       ;Size is in D7
         
