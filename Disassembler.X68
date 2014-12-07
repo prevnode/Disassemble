@@ -155,7 +155,7 @@ START:              ORG         $1000               ; first instruction of progr
 MAIN
                     MOVE.B      #0,NUM_EXP_WRDS     ; Initialize to 0
                     MOVE.B      #0,NUM_OPERANDS     ; Initialize to 0
-                    MOVE.B      #30,PAUSE_COUNT     ; Initialize to 30
+                    *MOVE.B      #30,PAUSE_COUNT     ; Initialize to 30
                     JSR         SPLASH_SCREEN       ; Display splash screen
                     BRA         STARTHEX            ; get starting hex address
                     
@@ -287,7 +287,7 @@ PROMPTRUNAGAIN
 RESET               JSR         CLEAR_SCREEN        ; subroutine to clear screen
                     JSR         CLEAR_DATA          ; subroutine to clear data registers
                     JSR         CLEAR_ADDRESS       ; subroutine to clear address registers
-                    MOVE.W      #30,PAUSE_COUNT     ; Initialize to 30
+                    *MOVE.W      #30,PAUSE_COUNT     ; Initialize to 30
                     BRA         START               ; branch back to start
                     
 CLEAR_SCREEN        MOVE.B      #11,D0              ; clear the screen
@@ -441,7 +441,7 @@ PUSH_LOOP           CMPI.B       #$0,D0             ; is counter at 0
                     MOVE.B       D1,D3              ; move LSB to d3
                     LSR.L        #4,D1              ; shift register right
                     ANDI.B       #$F,D3             ; and F to get the least significant nibble
-                    CMPI.B       #$9,D3             ; is nibble a number
+                    CMPI.B       #$A,D3             ; is nibble a number
                     BLT          HEX_NUM            ; nibble is number, branch to hex_num
                     BRA          HEX_ALP            ; nibble is a letter, branch to hex_alp
             
@@ -601,7 +601,7 @@ PUSH_LOOP2          CMPI.B       #$0,D0             ; is counter at 0
                     MOVE.B       D1,D5              ; move LSB to d3
                     LSR.L        #4,D1              ; shift register right
                     ANDI.B       #$F,D5             ; and F to get the least significant nibble
-                    CMPI.B       #$9,D5             ; is nibble a number
+                    CMPI.B       #$A,D5             ; is nibble a number
                     BLT          HEX_NUM2           ; nibble is number, branch to hex_num
                     BRA          HEX_ALP2           ; nibble is a letter, branch to hex_alp
             
@@ -2407,6 +2407,7 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
