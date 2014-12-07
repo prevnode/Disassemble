@@ -359,7 +359,6 @@ PRINT               CMPI.B      #$0,NUM_OPERANDS    ; check to see if opcode has
                     BEQ         PRINT_RETURN        ; return to main loop if no operands
                     
                     JSR         PRINT_OPMODE1_PRE   ; print the first opmode preface symbol
-                    JSR         PRINT_OPMODE1_POST  ; print the first opmode post symbol
                     CMPI.B      #$1,NUM_OPERANDS    ; check if opcode has 2 operands
                     BEQ         PRINT_RETURN        ; return to main loop if opcode has 1 operand
                     
@@ -2477,6 +2476,7 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 *~Font name~Courier New~
 *~Font size~10~
