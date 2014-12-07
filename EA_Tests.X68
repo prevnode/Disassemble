@@ -7,6 +7,16 @@
     ORG    $8888
 START:                  ; first instruction of program
 
+*---------------------ADD VARIANTS-----------------------------
+    ADD     $1234,D5
+    ADD     D5,$1234
+    ADD     D7,D6
+    ADD     $12345678,D2
+    ADD     (A2),D3
+    ADD     (A3)+,D4
+    ADD.B   -(A6),D2
+    ADD.L   $1234,D7
+   
 
 *--------------------MOVEM VARIANTS--------------------------
     MOVEM.L     A0-A3/D0-D7, -(A7)
@@ -180,6 +190,7 @@ CMPVARIANTS
 * Put variables and constants here
 
     END    START        ; last line of source
+
 
 
 

@@ -1904,6 +1904,8 @@ mul_long
         
 *-----------------------------Expansion to Operand Arithemitic-----------------------------
 *Moves data from the expansion words into operand registers
+*Assumes Load12by3 has been run
+
 *D2 operand 1 Opmode
 *D3 operand 1 register
 *D4 operand 2 mode
@@ -1914,18 +1916,18 @@ EXP2OPERAR
         MOVE.L  A5,A4   ;Make a copy of the opcode pointer
         ADD.L   #2,A4   ;Advance to first expansion word (assumes one exists)
         
-*chk_unsupported1
-*        CMP.B   #5,D2       ;Mode 5-6 are displacement and unsupported
-*        BEQ     PRINT_BAD
-*        CMP.B   #6,D2
-*        BEQ     PRINT_BAD
-*        CMP.B   #7,D2    
-*        BNE     check_unsupported2
-*        CMP.B   #2,D3
-*        BEQ     PRINT_BAD
-*        CMP.B   #3,D3
-*        BEQ     PRINT_BAD
-*        BRA     check_unsupported2
+chk_unsupported1
+        CMP.B   #5,D2       ;Mode 5-6 are displacement and unsupported
+        BEQ     PRINT_BAD
+        CMP.B   #6,D2
+        BEQ     PRINT_BAD
+        CMP.B   #7,D2    
+        BNE     check_unsupported2
+        CMP.B   #2,D3
+        BEQ     PRINT_BAD
+        CMP.B   #3,D3
+        BEQ     PRINT_BAD
+        BRA     check_unsupported2
         
 chk_unsupported2
         CMP.B   #5,D4       ;Mode 5-6 are displacement and unsupported
@@ -2122,18 +2124,66 @@ LOAD12BY3
                 JSR     APPLYMASK
                 MOVE.L  D7,D3               ;Move the ea register for display
                 RTS                   
+*--------------------------------Swap Operands-------------------------------
+*Swaps the constents of data registers that correspond to operands 1 and 2
+*D2->D4
+*D3->D5
+*D4->D2
+*D5->D3
+
+SWAPOPERANDS
+        MOVE.L  D2,D7       ;Make a copy
+        MOVE.L  D4,D2       ;Swap mode into op1
+        MOVE.L  D7,D4       ;Swap mode into op2
+        MOVE.L  D3,D7       ;Make a copy
+        MOVE.L  D5,D3       ;Swap register into op1
+        MOVE.L  D7,D5       ;Swap register into op2
+        RTS
+        
 
 *------------------------------------ADD_EA------------------------------------
 ADD_EA
         MOVE.B  #2,NUM_OPERANDS
+        MOVE.B  #0,NUM_EXP_WRDS
         JSR     LOAD12BY3
-        JSR     EXP2OPERAR
+        JSR     EAWCHKS        
         
         LEA     ADD_OP,A1
         MOVE    #14,D0
         TRAP    #15
+
+        CMP.B   #2,D4               ;D4 holds Opmode determines size and order of operands
+        BLE     ea_dn               ;0-2 indicate EA->Dn
+        JSR     SWAPOPERANDS        ;>2 indicates Dn->EA
+        MOVE.L  D2,D7               ;D7 holds holds opmode determines size
+        MOVE.L  #0,D2               ;Operator is always Dn mode
+        CMP.B   #4,D7               
+        BEQ     PRINT_BYTE          ;Opmode 4 is byte
+        CMP.B   #5,D7
+        BEQ     PRINT_WORD          ;Opmode 5 is word
+        BRA     PRINT_LONG          ;Opmode 6 is long
+
         
-        BRA     PRINT_BYTE
+        
+        
+ea_dn
+        MOVE.L  D4,D7               ;D7 holds holds opmode determines size
+        MOVE.L  #0,D4               ;D4 is always Dn mode
+        CMP.B   #0,D7               
+        BEQ     PRINT_BYTE
+        *ADD.B   #1,NUM_EXP_WRDS
+        CMP.B   #1,D7
+        BEQ     PRINT_WORD
+        *ADD.B   #1,NUM_EXP_WRDS
+        BRA     PRINT_LONG
+        
+
+
+        *JSR     EXP2OPERAR
+        
+       
+        
+        
         
         
         
@@ -2930,6 +2980,7 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
