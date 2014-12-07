@@ -188,9 +188,9 @@ MAIN_LOOP_RUN       JSR         DEC_LOOP_COUNT      ; branh to decrement the cou
                     MOVE.L      A5,D1               ; move the starting address to d1
                     MOVE.L      A6,D2               ; move the ending address to d2
                     CMP.L       D1,D2               ; check if starting address and ending address are equal
-                    BEQ         PROMPTRUNAGAIN      ; if equal end program by prompting to run again
-                    BRA         BEGINOPCODE         ; branch to opcode conversion
-                    
+                    BGT         BEGINOPCODE         ; branch to opcode conversion
+                    BRA         PROMPTRUNAGAIN      ; if equal end program by prompting to run again
+
 DEC_LOOP_COUNT      SUBI.B      #$1,PAUSE_COUNT     ; subtract 1 from counter
                     RTS                             ; return
                     
@@ -2412,6 +2412,7 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
