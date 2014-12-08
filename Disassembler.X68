@@ -2223,12 +2223,38 @@ addq_size
         
 *---------------------------AND_EA------------------------------------
 AND_EA
-        LEA     AND_OP,A1
-        MOVE.B  #14,D0
-        TRAP    #15
-        
+
+        MOVE.B  #2,NUM_OPERANDS
         MOVE.B  #0,NUM_EXP_WRDS
-        BRA PRINT
+        JSR     LOAD12BY3
+        JSR     EAWCHKS        
+        
+        LEA     AND_OP,A1
+        MOVE    #14,D0
+        TRAP    #15
+
+        CMP.B   #2,D4               ;D4 holds Opmode determines size and order of operands
+        BLE     and_ea_dn           ;0-2 indicate EA->Dn
+        JSR     SWAPOPERANDS        ;>2 indicates Dn->EA
+        MOVE.L  D2,D7               ;D7 holds holds opmode determines size
+        MOVE.L  #0,D2               ;Operator is always Dn mode
+        CMP.B   #4,D7               
+        BEQ     PRINT_BYTE          ;Opmode 4 is byte
+        CMP.B   #5,D7
+        BEQ     PRINT_WORD          ;Opmode 5 is word
+        BRA     PRINT_LONG          ;Opmode 6 is long        
+        
+and_ea_dn
+        MOVE.L  D4,D7               ;D7 holds holds opmode determines size
+        MOVE.L  #0,D4               ;D4 is always Dn mode
+        CMP.B   #0,D7               
+        BEQ     PRINT_BYTE
+        CMP.B   #1,D7
+        BEQ     PRINT_WORD
+        BRA     PRINT_LONG
+        
+        
+        
 *---------------------------Shift Common-----------------------------
 SHIFTCOM
 *Bits 11-9 -> D5
@@ -3031,6 +3057,7 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 

@@ -7,6 +7,17 @@
     ORG    $8888
 START:                  ; first instruction of program
 
+*---------------------AND VARIANTS-----------------------------
+    AND     $1234,D5
+    AND     D5,$1234
+    AND     D7,D6
+    AND     $12345678,D2
+    AND     (A2),D3
+    AND     (A3)+,D4
+    AND.B   -(A6),D2
+    AND.L   $1234,D7
+
+
 *--------------------------SUBI VARIANTS----------------
     SUBI    #45,$1234
     SUBI    #$AA,D6
@@ -224,6 +235,7 @@ CMPVARIANTS
 * Put variables and constants here
 
     END    START        ; last line of source
+
 
 
 
