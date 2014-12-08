@@ -2194,12 +2194,32 @@ ADDA_EA
   
 *-------------------------------------ADDQ_EA-----------------------------------
 ADDQ_EA
+        MOVE.B  #2,NUM_OPERANDS
+        JSR     LOAD12BY3
+        JSR     EAWCHKS
+        JSR     SWAPOPERANDS
+        
+        MOVE.L  #7,D2               ;Operand1 is always immediate      
+        
         LEA     ADDQ_OP,A1
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.B  #0,NUM_EXP_WRDS
-        BRA PRINT
+        CMP.B   #0,D3               ;D3 holds immediate data
+        BNE     addq_size           ;Values other than 0 are face value
+        MOVE.L  #8,D3               ;Value 0 = 8 for addq
+        
+addq_size
+        MOVE.L  MASK_7_6,D7         ;Field indicates size of data, register or memory
+        ANDI.L  #$00C00000,D7       ;Work around the sign extension
+        JSR     APPLYMASK
+        
+        CMP.B   #0,D7               ;D7 holds size field
+        BEQ     PRINT_BYTE          ;0 indicates byte
+        CMP.B   #1,D7           
+        BEQ     PRINT_WORD
+        BRA     PRINT_LONG        
+      
         
 *---------------------------AND_EA------------------------------------
 AND_EA

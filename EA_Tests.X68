@@ -7,6 +7,13 @@
     ORG    $8888
 START:                  ; first instruction of program
 
+*------------------------ADDQ VARIANTS---------------
+    ADDQ    #3,D5
+    ADDQ.W  #7,$12345678
+    ADDQ.L  #5,$2468
+    ADDQ.B  #8,$12345678
+
+
 *-----------------SUBA VARIANTS---------------------------
     SUBA.W  $1234,A6
     SUBA.L  $5678,A5
