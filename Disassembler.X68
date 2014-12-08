@@ -1307,7 +1307,7 @@ code_0000_000     JSR   Check_876           ;if btst else ori
 code_0000_001     JSR   Check_876           ;if btst else subi
                   CMPI  #4,D0
                   BEQ   BTST_EA
-                  *BRA   SUBI_EA 
+                  BRA   SUBI_EA 
 
 code_0000_010     JSR   Check_876           ;if btst else unsupported
                   CMPI  #4,D0   
@@ -3016,6 +3016,9 @@ SUBA_EA
         
 *---------------------------SUBI_EA------------------------------------
 SUBI_EA
+        JSR     LOAD12BY3
+        JSR     EAWCHKS
+        
         LEA     SUBI_OP,A1
         MOVE.B  #14,D0
         TRAP    #15

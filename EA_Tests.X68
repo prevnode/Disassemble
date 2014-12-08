@@ -7,6 +7,11 @@
     ORG    $8888
 START:                  ; first instruction of program
 
+*--------------------------SUBI VARIANTS----------------
+    SUBI    #45,$1234
+    SUBI    #$AA,D6
+    SUBI    #$ABCD,$12345678
+
 *------------------------ADDQ VARIANTS---------------
     ADDQ    #3,D5
     ADDQ.W  #7,$12345678
