@@ -1996,7 +1996,7 @@ getlong2a
         ADD.B   #2,NUM_EXP_WRDS
         BRA     fin_expa
 
-
+                
 fin_expa
         RTS
         
@@ -2592,36 +2592,18 @@ DIVS_EA
                 
 *-------------------------------EOR_EA---------------------------------------------------------
 EOR_EA
-                CLR     NUM_EXP_WRDS
+                MOVE.B  #0,NUM_EXP_WRDS
                 MOVE.B  #2,NUM_OPERANDS     ;Eor always has 2 operands
+                JSR     LOAD12BY3
+                MOVE.L  D4,D6
+                JSR     SWAPOPERANDS
+                JSR     EAWCHKS
                 
-                    
-                MOVE.L  #MASK_11_9,D7       ;Load the mask for destination register
-                JSR     APPLYMASK
-                MOVE.L  D7,D3               ;Move the destination register to be displayed
-                   
-                MOVE.L  #MASK_8_6,D7        ;Load the mask for opmode register
-                JSR     APPLYMASK   
-                MOVE.L  D7,D2               ;Move the opmode to be displayed                
-                   
-                MOVE.L  #MASK_5_3,D7        ;Load the mask for EA mode
-                JSR     APPLYMASK
-                MOVE.L  D7,D4               ;Move the EA mode to be displayed
+                LEA     DIVS_OP,A1
+                MOVE.B  #14,D0
+                TRAP    #15
                 
-                MOVE.L  #MASK_2_0,D7        ;Load the mask for EA register
-                JSR     APPLYMASK
-                MOVE.L  D7,D5               ;Move the EA register to be displayed
-                
-                *Count Expansion words
-                CMP.W   #7,D2               ;Mode 7 has at least one expansion word
-                BLT     fin_eor_ea          ;Modes below 7 do not have expansion words
-                JSR     INCREMENT_WRD_CNT   ;Mode is 7
-                CMP.W   #1,D3               ;Register determines if a second expansion is needed
-                BLT     fin_eor_ea          ;Register 0 only has one word
-                JSR     INCREMENT_WRD_CNT   ;Register 1 needs a second word                
-fin_eor_ea
-                BRA     PRINT
-                
+                BRA     PRINT           
 *---------------------------EORI_EA------------------------------------
 EORI_EA
 
@@ -3057,6 +3039,7 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
