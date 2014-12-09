@@ -7,6 +7,18 @@
     ORG    $8888
 START:                  ; first instruction of program
 
+
+*--------------------BTST VARIANTS-----------------------
+    BTST    #12345678,D2
+    BTST.L  #$12345678, D2
+    BTST    #$12345678, D2
+    BTST    D3,#1234
+    BTST    D7,D2
+    BTST.L  D7,D2
+    BTST    D7,$1600
+    BTST    D7,$12345678
+    BTST    #1,D7
+    
 *---------------------AND VARIANTS-----------------------------
     AND     $1234,D5
     AND     D5,$1234
@@ -217,14 +229,7 @@ CMPVARIANTS
     CMP         #14,D2
     CMP.L       #$12345,D2
     
-    *--------------------BTST VARIANTS-----------------------
-    BTST    D3,#1234
-    BTST    D7,D2
-    BTST    D7,$1600
-    BTST    D7,$12345678
-    BTST    #12345678,D2
-    BTST.L  #$12345678, D2
-    BTST    #$12345678, D2
+
 
 
     
@@ -235,6 +240,9 @@ CMPVARIANTS
 * Put variables and constants here
 
     END    START        ; last line of source
+
+
+
 
 
 

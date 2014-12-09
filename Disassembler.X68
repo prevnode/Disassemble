@@ -2416,70 +2416,35 @@ BTST_EA
         MOVE.B  #0,NUM_EXP_WRDS
         MOVE.B  #2,NUM_OPERANDS ;
         
-        MOVE.L  #MASK_8_6,D7    ;Mask determines immediate data source
-        JSR     APPLYMASK       
-        MOVE.L  D7,D2           ;Move for comparrison (will not be displayed)
-        
-        MOVE.L  #MASK_5_3,D7    ;Mask for EA mode
-        JSR     APPLYMASK
-        MOVE.L  D7,D4           ;Move mode for display
-        
-        MOVE.L  #MASK_2_0,D7    ;Mask for ea register
-        JSR     APPLYMASK       
-        MOVE.L  D7,D5           ;Move ea register for display
-        
-        CMP.B   #4,D2           ;4 indicates BIT NUMBER DYNAMIC
-        BNE     btst_im         ;Immediate if not 4 (assume 0)
-        
-*Dynamic
-        
-        MOVE.L  #MASK_11_9,D7   ;Mask for destination register
-        JSR     APPLYMASK
-        MOVE.L  D7,D3           ;Move register for display
-        
-        CLR     D2              
-        MOVE.B  #0,D2           ;Dynamic always uses data register
-        
-        CMP.B   #7,D4           ;D4 should be EA Mode
-        BLT     btst_lss7       ;Modes less than 7
-        *Mode = 7
-        JSR     INCREMENT_WRD_CNT ;Mode 7 has at least 1 expansion word
-        CMP.B   #0,D5           ;Look at EA Register
-        BEQ     PRINT_BYTE      ;EA Register 0 has only one expansion word and byte attribute
-        CMP.B   #4,D5           ;Look at EA Register
-        BEQ     PRINT_BYTE      ;EA Register 4 also has only one expansion word and byte attribute
-        CMP.B   #1,D5           ;Look at EA Register
-        BNE     btst_bad        ;INVAID
-        JSR     INCREMENT_WRD_CNT ;Ea register 1 indicates long attribute with 2 expansion words
-        BRA     PRINT_LONG                         
-        
-btst_lss7
-        CMP.B   #0,D4           ;Only supported modes are 0,2-4
-        BEQ     PRINT_BYTE      ;Data register is the only long attribute
-        CMP.B   #4,D4           ;Only supported modes are 0,2-4
-        BGT     btst_bad        ;Unsupported address mode
-        BRA     PRINT_BYTE      ;EA Modes 2-4 are all byte sized                
-        
-btst_bad    
-        BRA     PRINT_BAD
-        
-        
-btst_im
-        MOVE.B  #5,D2           ;First operand mode is immediate
-        MOVE.B  #2,NUM_EXP_WRDS ;Immediate btst always has 2 words
-        MOVE.L  A5,D0           ;Move the first operator from the expansion word
-        ADDI.L  #2,D0
-        MOVE.L  D0,A4
-        MOVE.W (A4),D3
-        BSR     print_btst      ;Print the opcode
-        BRA     PRINT_LONG      ;Immediate is always long        
-        
-print_btst
-        *Print opcode
+        JSR     LOAD12BY3
+        JSR     EAWCHKS
+        JSR     SWAPOPERANDS           
+
+
         LEA     BTST_OP,A1
         MOVE.B  #14,D0
         TRAP    #15
-        RTS
+        
+        CMP.B   #4,D2           ;D2 determines if register is dynamic
+        BEQ     btst_dynamic
+        MOVE.L  #7,D2
+        MOVE.L  A5,A4
+        ADD.L   #2,A4
+        MOVE.W  (A4),D3
+        CMP.B   #0,D4
+        MOVE.B  #1,NUM_EXP_WRDS
+        BEQ     PRINT_LONG
+        BRA     PRINT_BYTE
+        
+        
+btst_dynamic        
+        CLR.L   D2
+        CMP.B   #0,D4
+        BEQ     PRINT_LONG
+        BRA     PRINT_BYTE
+
+        
+
         
 *---------------------------------CMP_EA-----------------------------------------
 *Parse the effective address of a cmp opcode
@@ -3039,6 +3004,7 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
