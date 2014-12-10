@@ -6,6 +6,14 @@
 *-----------------------------------------------------------
     ORG    $8888
 START:                  ; first instruction of program
+
+*-----------------EORI Variants-------------------
+    EORI        #$21,D2
+    EORI        #$129,$1234
+    EORI.L      #$FE,$12345678
+    EORI.L      #$ABCDEFAD,D7
+
+
 *----------------------CMPI VARIANTS----------------
     CMPI        #3, D0
     CMPI        #$454, $2324
@@ -268,6 +276,7 @@ TESTJMP
 * Put variables and constants here
 
     END    START        ; last line of source
+
 
 
 

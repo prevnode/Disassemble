@@ -2726,13 +2726,17 @@ EOR_EA
                 BRA     PRINT           
 *---------------------------EORI_EA------------------------------------
 EORI_EA
-
-        LEA     EORI_OP,A1
-        MOVE.B  #14,D0
-        TRAP    #15
+        JSR     IMMEAS          ;Moves data into registers for display D7 holds size
         
-        MOVE.B  #0,NUM_EXP_WRDS
-        BRA PRINT
+        LEA     EORI_OP,A1      ;Print opcode
+        MOVE.B  #14,D0
+        TRAP    #15       
+        
+        CMP.B   #0,D7           ;D7 holds size
+        BEQ     PRINT_BYTE      ;0 indicates byte
+        CMP.B   #1,D7
+        BEQ     PRINT_WORD      ;1 indicates word
+        BRA     PRINT_LONG      ;2 indicates long 
         
 *---------------------------JSR_EA------------------------------------
 JSR_EA
@@ -3160,6 +3164,7 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
