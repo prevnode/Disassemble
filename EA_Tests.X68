@@ -6,6 +6,12 @@
 *-----------------------------------------------------------
     ORG    $8888
 START:                  ; first instruction of program
+*----------------------CMPI VARIANTS----------------
+    CMPI        #3, D0
+    CMPI        #$454, $2324
+    CMPI.W      #$4564, D3
+    CMPI.L      #$AB,$12345678  
+
 
 *--------------------------SUBI VARIANTS----------------
     
@@ -219,11 +225,6 @@ TESTJMP
     
     
 *--------------------CMP VARIANTS------------------------------
-
-*    CMPI        #3, D0
-*    CMPI        #$454, $2324
-*    CMPI.W      #$4564, D3   
-
     CMPA        D3,A2
     CMPA        A2,A4
     CMPA        $1234,A3
@@ -267,6 +268,7 @@ TESTJMP
 * Put variables and constants here
 
     END    START        ; last line of source
+
 
 
 

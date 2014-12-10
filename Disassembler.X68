@@ -2683,12 +2683,18 @@ im_fin
                 
 *------------------------------------CMPI_EA--------------------------------------
 CMPI_EA
-        JSR     LOAD12BY3
-        JSR     EXP2OPER        
-               
-        LEA     CMPI_OP,A1
+        JSR     IMMEAS          ;Moves data into registers for display D7 holds size
+        
+        LEA     CMPI_OP,A1      ;Print opcode
         MOVE.B  #14,D0
-        TRAP    #15
+        TRAP    #15       
+        
+        CMP.B   #0,D7           ;D7 holds size
+        BEQ     PRINT_BYTE      ;0 indicates byte
+        CMP.B   #1,D7
+        BEQ     PRINT_WORD      ;1 indicates word
+        BRA     PRINT_LONG      ;2 indicates long 
+        
                 
         BRA     PRINT
                 
@@ -3154,6 +3160,7 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
