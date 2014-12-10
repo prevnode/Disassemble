@@ -7,7 +7,41 @@
     ORG    $8888
 START:                  ; first instruction of program
 
+    
+    ASL.B       #3,D0
+    ASL.W       #%100,D0
+    ASL.L       #3,D0
+    ASL         (A0)+ ;output ROL.L $E603E640
+    
+    ASR.B       #$3,D3 
+    ASR.W       #3,D0
+    ASR.L       #3,D0
 
+    LSL.B       #3,D0
+    LSL.W       D1,D0
+    LSL.L       D3,D4
+   ; LSL         $1000
+    
+    LSR.B       #3,D0
+    LSR.W       #3,D0
+    LSR.L       #3,D0
+   ; LSR         $10004000
+    
+    ROR.B       #3,D0
+    ROR.W       #3,D0
+    ROR.L       #3,D0
+   ; ROR         (A1)
+
+    ROL.B       #3,D0
+    ROL.W       #3,D0
+   ; ROL         -(A2)
+
+
+*--------------------------SUBI VARIANTS----------------
+*    SUBI    #$ABCD,$12345678
+*    SUBI    #45,$1234
+*    SUBI    #$AA,D6
+*    SUBI    #$5,$1234   
 *--------------------BTST VARIANTS-----------------------
     BTST    #12345678,D2
     BTST.L  #$12345678, D2
@@ -28,12 +62,6 @@ START:                  ; first instruction of program
     AND     (A3)+,D4
     AND.B   -(A6),D2
     AND.L   $1234,D7
-
-
-*--------------------------SUBI VARIANTS----------------
-    SUBI    #45,$1234
-    SUBI    #$AA,D6
-    SUBI    #$ABCD,$12345678
 
 *------------------------ADDQ VARIANTS---------------
     ADDQ    #3,D5
@@ -129,9 +157,9 @@ START:                  ; first instruction of program
     ASL.B       #3,D0
     ASL.W       #%100,D0
     ASL.L       #3,D0
-    ASL         (A0)+
+    ASL         (A0)+ ;output ROL.L $E603E640
     
-    ASR.B       #$3,D3
+    ASR.B       #$3,D3 ;output MULS.L $3,D0
     ASR.W       #3,D0
     ASR.L       #3,D0
 
@@ -156,7 +184,7 @@ START:                  ; first instruction of program
     
 
 
-*------------------BCC VARIANTS--------------------------------
+*------------------BCC VARIANTS + RTS/JSR-----------------------
     
     BEQ         TESTJMP 
     BLT         TESTJMP
@@ -179,25 +207,35 @@ TESTJMP
     NEG.W       $1000
     NEG.W       $10004000
     NEG.W       D4
-    NEG.L       -(A0)
-    NEG.L       (A0)
+    NEG.L       -(A0) ; prints MOVEM, then garbage
+    NEG.L       (A0)  ; same here
     NEG.L       (A3)
     NEG.L       D3
     
     
 *--------------------CMP VARIANTS------------------------------
+
+    CMPI        #3, D0
+    CMPI        #$454, $2324
+    CMPI.W      #$4564, D3   
+
     CMPA        D3,A2
     CMPA        A2,A4
     CMPA        $1234,A3
 
     CMP         D1,D2           ;Data register direct
     CMP         A1,D2           ;Address register direct
-    CMP         $0010,D2        ;
+    CMP.W       $0010,D2        ;
     CMP         $1234FFFF,D2
     CMP         #14,D2
     CMP.L       #$12345,D2   
     
-
+    CMP         D1,D2           ;Data register direct
+    CMP         A1,D2           ;Address register direct
+    CMP         $0010,D2        ;
+    CMP         $1234FFFF,D2
+    CMP         #14,D2
+    CMP.L       #$12345,D2
     
     
 *----------------------MOVE VARIANTS--------------------------
@@ -220,14 +258,7 @@ TESTJMP
     
 
 
-*----------------------CMP VARIANTS--------------------------
-CMPVARIANTS
-    CMP         D1,D2           ;Data register direct
-    CMP         A1,D2           ;Address register direct
-    CMP         $0010,D2        ;
-    CMP         $1234FFFF,D2
-    CMP         #14,D2
-    CMP.L       #$12345,D2
+
     
 
 
@@ -240,6 +271,8 @@ CMPVARIANTS
 * Put variables and constants here
 
     END    START        ; last line of source
+
+
 
 
 

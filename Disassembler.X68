@@ -225,7 +225,7 @@ START_DECODE        JSR         ADDR_HEX
                     LEA         TAB,A1              ; print the bad message part 2
                     MOVE.B      #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
-                    BRA         BEGINOPCODE
+                    BRA         BEGINOPCODE         ;testopcode
 
 ADDR_HEX            CLR         D0                  ; clear d0
                     CLR         D2                  ; clear D2
@@ -1302,19 +1302,19 @@ jmp_table_0000_11109        JMP code_0000_000
 code_0000_000     JSR   Check_876           ;if btst else ori
                   CMPI  #4,D0
                   BEQ   BTST_EA
-                  *BRA  ORI_EA   
+                  BRA   ORI_EA   
 
-code_0000_001     JSR   Check_876           ;if btst else subi
+code_0000_001     JSR   Check_876          ;if btst else unsupported    
                   CMPI  #4,D0
-                  BEQ   BTST_EA
-                  BRA   SUBI_EA 
-
-code_0000_010     JSR   Check_876           ;if btst else unsupported
-                  CMPI  #4,D0   
                   BEQ   BTST_EA
                   BRA   PRINT_BAD 
 
-code_0000_011     JSR   Check_876           ;if btst else unsupported
+code_0000_010     JSR   Check_876            ;if btst else subi
+                  CMPI  #4,D0   
+                  BEQ   BTST_EA
+                  BRA   SUBI_EA 
+
+code_0000_011     JSR   Check_876           ;if btst else unsupported     
                   CMPI  #4,D0
                   BEQ   BTST_EA
                   BRA   PRINT_BAD 
@@ -1324,12 +1324,12 @@ code_0000_100     BRA   BTST_EA
 code_0000_101     JSR   Check_876           ;if btst else eori
                   CMPI  #4,D0
                   BEQ   BTST_EA
-                  *BRA   EORI_EA 
+                  BRA   EORI_EA 
 
 code_0000_110     JSR   Check_876           ;if btst else cmpi
                   CMPI  #4,D0
                   BEQ   BTST_EA
-                  *BRA   CMPI_EA 
+                  BRA   CMPI_EA 
 
 code_0000_111     JSR   Check_876           ;if btst else unsupported
                   CMPI  #4,D0
@@ -1415,42 +1415,26 @@ jmp_table_0100_11109        JMP code_0100_000
 code_0100_000    JSR     Check_876
                  CMPI.B  #7, D0
                  BEQ     LEA_EA 
-                 
-                 JSR     Check_987         
-                 CMPI.B  #1, D0             
-                 BEQ     MOVEM_EA
 
                  BRA     PRINT_BAD 
 
 code_0100_001    JSR     Check_876
                  CMPI.B  #7, D0
                  BEQ     LEA_EA 
-                 
-                 JSR     Check_987         
-                 CMPI.B  #1, D0             
-                 BEQ     MOVEM_EA
 
                  BRA     PRINT_BAD 
 
      
-code_0100_010 
-                 JSR     Check_876
+code_0100_010    JSR     Check_876
                  CMPI.B  #7, D0
                  BEQ     LEA_EA 
-                 
-                 JSR     Check_987         
-                 CMPI.B  #1, D0             
-                 BEQ     MOVEM_EA
 
                  BRA     NEG_EA
+                 
    
 code_0100_011    JSR     Check_876
                  CMPI.B  #7, D0
                  BEQ     LEA_EA 
-                 
-                 JSR     Check_987         
-                 CMPI.B  #1, D0             
-                 BEQ     MOVEM_EA
 
                  BRA     NOT_EA
 
@@ -1469,10 +1453,6 @@ code_0100_100    JSR     Check_876
 code_0100_101    JSR     Check_876
                  CMPI.B  #7, D0
                  BEQ     LEA_EA 
-                 
-                 JSR     Check_987         
-                 CMPI.B  #1, D0             
-                 BEQ     MOVEM_EA
 
                  BRA     PRINT_BAD 
 
@@ -1488,17 +1468,13 @@ code_0100_110    JSR     Check_876
                  BRA     PRINT_BAD 
    
 
-code_0100_111    JSR     Check_876  ;if/else for jsr/rts
+code_0100_111    JSR     Check_876  ;if/else for jsr/rts/lea
                  CMPI.B  #2,D0
                  BEQ     JSR_EA
 
                  JSR     Check_876
                  CMPI.B  #7, D0
                  BEQ     LEA_EA 
-                 
-                 JSR     Check_987         
-                 CMPI.B  #1, D0             
-                 BEQ     MOVEM_EA
 
                  BRA     RTS_EA        
  
@@ -1715,7 +1691,15 @@ code1101       JSR          Check_43           ;if addx
 *supported opcodes
 *LSR, LSL, ROL, ROR
 
-code1110       JSR          Check_43                 
+code1110       JSR          Check_11109      
+               CMPI         #0,D0           ;if AS R or L register shift
+               BEQ          A__
+               CMPI         #1,D0           ;if LS R or L register shift
+               BEQ          L__
+               CMPI         #3,D0           ;if RO R or L register shift
+               BEQ          R__
+
+               JSR          Check_43                
                CMPI         #0,D0           ;if AS R or L memory shift
                BEQ          AS_
                CMPI         #1,D0           ;if LS R or L memory shift
@@ -1723,15 +1707,43 @@ code1110       JSR          Check_43
                CMPI         #3,D0           ;if RO R or L memory shift
                BEQ          RO_
                
-               JSR          Check_11109      
-               CMPI         #0,D0           ;if AS R or L register shift
-               BEQ          AS_
-               CMPI         #1,D0           ;if LS R or L register shift
-               BEQ          LS_
-               CMPI         #3,D0           ;if RO R or L register shift
-               BEQ          RO_
- 
                BRA          PRINT_BAD        ;anything else is not supported
+               
+L__            JSR          Check_43                
+               CMPI         #0,D0           ;if AS R or L memory shift
+               BEQ          AS_
+               CMPI         #1,D0           ;if LS R or L memory shift
+               BEQ          LS_
+               CMPI         #3,D0           ;if RO R or L memory shift
+               BEQ          RO_
+               
+               BRA          LS_        ;anything else is not supported
+
+            
+R__            JSR          Check_43                
+               CMPI         #0,D0           ;if AS R or L memory shift
+               BEQ          AS_
+               CMPI         #1,D0           ;if LS R or L memory shift
+               BEQ          LS_
+               CMPI         #3,D0           ;if RO R or L memory shift
+               BEQ          RO_
+               
+               BRA          RO_        ;anything else is not supported
+
+
+A__            JSR          Check_43                
+               CMPI         #0,D0           ;if AS R or L memory shift
+               BEQ          AS_
+               CMPI         #1,D0           ;if LS R or L memory shift
+               BEQ          LS_
+               CMPI         #3,D0           ;if RO R or L memory shift
+               BEQ          RO_
+               
+               BRA          AS_       ;anything else is not supported
+
+
+               
+
                
 *know that it is LS, check to see if right or left shift               
 LS_            JSR          Check_8
@@ -2321,7 +2333,7 @@ ASL_EA
 ASR_EA
         JSR     SHIFTCOM
         
-        LEA     MULS_OP,A1
+        LEA     ASR_OP,A1
         MOVE.B  #14,D0
         TRAP    #15
         
@@ -3004,6 +3016,8 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
+
 
 
 
