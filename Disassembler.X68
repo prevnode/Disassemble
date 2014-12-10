@@ -2384,13 +2384,9 @@ shift_dreg
         RTS
         
 memory_shifts
-        MOVE.B  #1,NUM_OPERANDS
-        MOVE.B  #2,NUM_EXP_WRDS
-        MOVE.L  #7,D2               ;EA mode is first operand in this situation
-        MOVE.L  A5,A4
-        ADD.L   #2,A4
-        MOVE.L  (A4),D3             ;Displacement is always a long word
+        JSR     EAWCHKS
         MOVE.L  #2,D6               ;D6 will hold the size 0 = byte, 1 = word, 2 = long
+        MOVE.B  #1,NUM_OPERANDS
         RTS
         
         
@@ -3190,6 +3186,7 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
