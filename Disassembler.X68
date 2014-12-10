@@ -2583,11 +2583,14 @@ CMPA_EA
                 MOVE.B  #0,NUM_EXP_WRDS
                 MOVE.B  #2,NUM_OPERANDS           
                
-                JSR     LOAD12BY3
-                JSR     EXP2OPER
+                JSR     LOAD12BY3                
                
                 MOVE.L  D4,D1               ;D1 will determine size
                 MOVE.L  #1,D4               ;Operand 2 is always address register
+                CMP     #7,D1
+                BNE     cmp_eawchks
+                MOVE.L  #2,D6               ;EAWCHKS expects size in d6 with 2 as long
+cmp_eawchks     JSR     EAWCHKS
 
                 
                 *Print opcode
