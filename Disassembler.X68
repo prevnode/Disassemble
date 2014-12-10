@@ -2711,18 +2711,24 @@ DIVS_EA
                 
 *-------------------------------EOR_EA---------------------------------------------------------
 EOR_EA
-                MOVE.B  #0,NUM_EXP_WRDS
-                MOVE.B  #2,NUM_OPERANDS     ;Eor always has 2 operands
-                JSR     LOAD12BY3
-                MOVE.L  D4,D6
-                JSR     SWAPOPERANDS
-                JSR     EAWCHKS
+        MOVE.B  #2,NUM_OPERANDS     ;Eor always has 2 operands
+        JSR     LOAD12BY3               
+        JSR     EAWCHKS
+        JSR     SWAPOPERANDS
                 
-                LEA     DIVS_OP,A1
-                MOVE.B  #14,D0
-                TRAP    #15
+        MOVE.L  D2,D7
+        MOVE.L  #0,D2
                 
-                BRA     PRINT           
+        LEA     EOR_OP,A1
+        MOVE.B  #14,D0
+        TRAP    #15
+                
+        CMP.B   #4,D7
+        BEQ     PRINT_BYTE
+        CMP.B   #5,D7
+        BEQ     PRINT_WORD
+        BRA     PRINT_LONG
+           
 *---------------------------EORI_EA------------------------------------
 EORI_EA
         JSR     IMMEAS          ;Moves data into registers for display D7 holds size
@@ -3163,6 +3169,7 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 

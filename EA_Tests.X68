@@ -7,6 +7,13 @@
     ORG    $8888
 START:                  ; first instruction of program
 
+*--------------EOR Varitants-------------
+    EOR     D2,$ACDB
+    EOR.L   D7,-(A4)
+    EOR     D3,$87654321
+    EOR.B   D2,(A6)+
+
+
 *-----------------EORI Variants-------------------
     EORI        #$21,D2
     EORI        #$129,$1234
@@ -35,7 +42,7 @@ START:                  ; first instruction of program
     ASL.B       #3,D0
     ASL.W       #%100,D0
     ASL.L       #3,D0
-    ASL         (A0)+ ;output ROL.L $E603E640
+    ASL         (A0)+ ;output ROL.L $E603E640 (Assembler converts to ROL need further investigation)
     
     ASR.B       #$3,D3 
     ASR.W       #3,D0
@@ -44,21 +51,21 @@ START:                  ; first instruction of program
     LSL.B       #3,D0
     LSL.W       D1,D0
     LSL.L       D3,D4
-   ; LSL         $1000
+    LSL         $1000
     
     LSR.B       #3,D0
     LSR.W       #3,D0
     LSR.L       #3,D0
-   ; LSR         $10004000
+    LSR         $10004000
     
     ROR.B       #3,D0
     ROR.W       #3,D0
     ROR.L       #3,D0
-   ; ROR         (A1)
+    ROR         (A1)
 
     ROL.B       #3,D0
     ROL.W       #3,D0
-   ; ROL         -(A2)
+    ROL         -(A2)
 
    
 *--------------------BTST VARIANTS-----------------------
@@ -276,6 +283,7 @@ TESTJMP
 * Put variables and constants here
 
     END    START        ; last line of source
+
 
 
 
