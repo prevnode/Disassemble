@@ -2435,22 +2435,31 @@ BCCCOM
     BEQ         bcc1                ;0 indicates word displacement
     CMP.B       #$FF,D7             ;D7 holds displacement bits
     BEQ         bcc2                ;FF indicates long word displacement
-    BRA         bcc0                ;Any other value is the actual displacement
-    
+    BRA         bcc0                ;Any other value is the actual displacement    
    
 bcc0
-    MOVE.B      D7,D3               ;Displacement less than 8 bits 
+    CLR         D3
+    MOVE.B      D7,D3               ;Displacement of 8 bits need to complement
+    NEG.B       D3                  ;Get 2s complement
+    ADD.L       #%1,D3               :Add a bit         
+    ADD.L       A5,D3               ;Calculate actual mem location
+    ADD.L       #2,D3               ;ADD 2 bytes
     MOVE.B      #0,NUM_EXP_WRDS
     BRA         PRINT_WORD
     
 bcc1
-    MOVE.W      (A4),D3
+    CLR         D3
+    MOVE.W      (A5),D3
+    ADD.L       A5,D3               ;Calculate actual mem location need to add a word
     MOVE.B      #1,NUM_EXP_WRDS
     BRA         PRINT_WORD
     
 bcc2    
     MOVE.L      #2,NUM_EXP_WRDS
-    MOVE.W      (A4),D3
+    CLR         D3
+    MOVE.W      (A5),D3
+    ADD.L       A5,D3               ;Calculate actual mem location need to add a word
+    MOVE.B      #2,NUM_EXP_WRDS
     BRA         PRINT_LONG
 
         
@@ -3169,6 +3178,7 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 

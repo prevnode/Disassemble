@@ -7,11 +7,26 @@
     ORG    $8888
 START:                  ; first instruction of program
 
+
 *--------------EOR Varitants-------------
-    EOR     D2,$ACDB
+JMP EOR     D2,$ACDB
     EOR.L   D7,-(A4)
     EOR     D3,$87654321
-    EOR.B   D2,(A6)+
+J0  EOR.B   D2,(A6)+
+    
+    
+*------------------BCC VARIANTS + RTS/JSR-----------------------
+    BEQ         J4
+    BEQ         J3
+J4  BEQ         J2
+    BEQ         JMP 
+J2  BLT         TESTJMPAHEAD
+J3  BNE         START
+    BHI         TESTJMPAHEAD
+    BHI         JMP
+    BRA         TESTJMPAHEAD
+    JSR         TESTJMPAHEAD
+    RTS  
 
 
 *-----------------EORI Variants-------------------
@@ -210,17 +225,6 @@ START:                  ; first instruction of program
     
 
 
-*------------------BCC VARIANTS + RTS/JSR-----------------------
-    
-    BEQ         TESTJMP 
-    BLT         TESTJMP
-    BNE         TESTJMP
-    BHI         TESTJMP
-    BRA         TESTJMP
-    JSR         TESTJMP
-    RTS  
-
-TESTJMP       
     
 *------------------NEG VARIANTS--------------------------------
     
@@ -277,12 +281,14 @@ TESTJMP
     MOVE.L    #1455,A6
     MOVE.L    #145555,D6    
     
+TESTJMPAHEAD 
  
     SIMHALT             ; halt simulator
 
 * Put variables and constants here
 
     END    START        ; last line of source
+
 
 
 
