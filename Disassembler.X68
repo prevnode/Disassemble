@@ -79,7 +79,7 @@ HT                  EQU         $09                 ; Tab (horizontal 5 characte
 LF                  EQU         $0A                 ; New line (line feed)
 VT                  EQU         $0B                 ; Vertical tab (4 lines)
 FF                  EQU         $0C                 ; Form Feed (Always end printing with a Form Feed.)
-
+    
 NUM_EXP_WRDS        DS.B        1                   ; Number of expansion words after the opcode
                     
 NUM_OPERANDS        DS.B        1                   ; Number of operands for the current instruction valid range: 1 or 2
@@ -2382,8 +2382,10 @@ shift_dreg
 memory_shifts
         MOVE.B  #1,NUM_OPERANDS
         MOVE.B  #2,NUM_EXP_WRDS
-        MOVE.L  D4,D2               ;EA mode is first operand in this situation
-        MOVE.L  (2,A5),D3           ;Displacement is always a long word
+        MOVE.L  #7,D2               ;EA mode is first operand in this situation
+        MOVE.L  A5,A4
+        ADD.L   #2,A4
+        MOVE.L  (A4),D3             ;Displacement is always a long word
         MOVE.L  #2,D6               ;D6 will hold the size 0 = byte, 1 = word, 2 = long
         RTS
         
@@ -3184,6 +3186,7 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
