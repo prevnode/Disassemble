@@ -2558,29 +2558,17 @@ CMP_EA
                 MOVE.B  #2,NUM_OPERANDS           
                
                 JSR     LOAD12BY3
-                
-*Calculate the number of expansion words
-                CMP     #7,D2               ;Source mode determines if expansion words needed
-                BLT     cmp_output          ;Modes less than 7 don't have words
-                JSR     INCREMENT_WRD_CNT   ;Mode 7 has at least 1 expansion word
-                CMP     #0,D3               ;Look at register
-                BEQ     cmp_output          ;Source register of 0 is short word so already incremented once
-                CMP     #1,D3               ;Source register of 4 is imediate data need to look at atribute (opmode)
-                BNE     cmp_op_mod          ;If register is not one (earlier checked 0) then it is 4 which means immediate
-                JSR     INCREMENT_WRD_CNT   ;Register 1 means long word add one expansion
-                BRA     cmp_output          ;Thats all folks
-cmp_op_mod      CMP     #2,D3               ;Source register 4 immediate data need to check attribute (opmode)
-                BNE     cmp_output          ;Byte or Word only add a single word already done when we hit mode 7 so done
-                JSR     INCREMENT_WRD_CNT   ;Opmode 2 eauals long word so one more expansion
+                MOVE.L  D4,D6               ;Make a copy of opmode
+                MOVE.L  #0,D4                ;Second data register always dr
+                JSR     EAWCHKS             ;Load expansion data to register if needed
+                       
                 
 cmp_output
                 *Print opcode
                 LEA     CMP_OP,A1
                 MOVE.B  #14,D0
-                TRAP    #15
-                
-                MOVE.L  D4,D6               ;D6 holds the size
-                CLR.L   D4                  ;Destination is always a data register
+                TRAP    #15                
+                               
                 *Print attribute
                 CMP     #0,D6               ;Destination mode (opmode) determines attribute
                 BEQ     PRINT_BYTE          ;Mode 0 is equal to byte
@@ -2597,22 +2585,7 @@ CMPA_EA
                
                 JSR     LOAD12BY3
                 JSR     EXP2OPER
-**Calculate the number of expansion words
-*                CMP     #7,D2               ;Source mode determines if expansion words needed
-*                BLT     cmpa_output         ;Modes less than 7 don't have words
-*                JSR     INCREMENT_WRD_CNT   ;Mode 7 has at least 1 expansion word
-*                CMP     #0,D3               ;Look at register
-*                BEQ     cmpa_output         ;Source register of 0 is short word so already incremented once
-*                CMP     #1,D3               ;Source register of 4 is imediate data need to look at atribute (opmode)
-*                BNE     cmpa_op_mod         ;If register is not one (earlier checked 0) then it is 4 which means immediate
-*                JSR     INCREMENT_WRD_CNT   ;Register 1 means long word add one expansion
-*                BRA     cmpa_output         ;Thats all folks
-*cmpa_op_mod     CMP     #2,D3               ;Source register 4 immediate data need to check attribute (opmode)
-*                BNE     cmpa_output         ;Byte or Word only add a single word already done when we hit mode 7 so done
-*                JSR     INCREMENT_WRD_CNT   ;Opmode 2 eauals long word so one more expansion
-*cmpa_output
-
-*                
+               
                 MOVE.L  D4,D1               ;D1 will determine size
                 MOVE.L  #1,D4               ;Operand 2 is always address register
 
@@ -2930,28 +2903,7 @@ MOVEA_EA
                 MOVE.B  #14,D0
                 TRAP    #15
                
-                
-*                *Calculate the number of expansion words
-*                CMP.W   #7,D2
-*                BLT     movea_attribute             ; Source mode less than 7 lack expansion words
-*                JSR     INCREMENT_WRD_CNT
-*                
-*                CMP.W   #0,D3                       ; Source reg determines size of expansion
-*                BEQ     movea_attribute             ; Source reg 0 has only 1 expansion word
-*                
-*                CMP.W   #1,D3                       ; Source reg 1 has second expansion word
-*                BNE     chk_sreg_4                  ; Need to look at 
-*                JSR     INCREMENT_WRD_CNT           ; Source Reg 1 has second word
-*                BRA     movea_attribute             ; No more expansion words
-*                
-*                
-*chk_sreg_4      CMP.W   #4,D3                       ; Source reg 4 with mode 7 is immediate
-*                BNE     movea_unsupported           ; With source mode 7 supported registers are 0,1,4 only
-*                CMP.W   #2,D0                       ; Size indicates numb of exp words with immediate
-*                BNE     PRINT_WORD                  ; Size of 3 indicates word so only 1 expansion
-*                JSR     INCREMENT_WRD_CNT           ; Size of 2 indicates long so need another expansion
-*                BRA     PRINT_LONG          
-*                
+                               
 
                 
                 *Calculate attribute
@@ -2959,11 +2911,8 @@ movea_attribute
                 CMP.W   #2,D6                       ; Size determines attribute
                 BEQ     PRINT_LONG                  ; 2 is long
                 BRA     PRINT_WORD                  ; 3 is word (No check for invalid values)
-
               
-*
-*movea_unsupported
-*                BRA     PRINT_BAD
+
         
 *---------------------------------MOVEM_EA--------------------------
 MOVEM_EA
@@ -3064,13 +3013,19 @@ NOT_EA
         
 *---------------------------ORI_EA------------------------------------
 ORI_EA
+        JSR     IMMEAS
 
         LEA     ORI_OP,A1
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.B  #0,NUM_EXP_WRDS
-        BRA PRINT
+        CMP.B   #0,D7           ;D7 holds size
+        BEQ     PRINT_BYTE      ;0 indicates byte
+        CMP.B   #1,D7
+        BEQ     PRINT_WORD      ;1 indicates word
+        BRA     PRINT_LONG      ;2 indicates long
+        
+       
         
 *---------------------------ROL_EA------------------------------------
 ROL_EA
@@ -3186,6 +3141,7 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 

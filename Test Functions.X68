@@ -7,6 +7,68 @@
     ORG    $8888
 START:                  ; first instruction of program
 
+
+;-------------- CMP -------------------;
+
+    Cmp.B       D2,D4
+    Cmp.W       A7,D2
+    Cmp.W       (A6),D3
+    Cmp.W       (A7)+,D2
+    Cmp.W       -(A3),D2
+    Cmp.B       $1234,D7
+    Cmp.W       $12345678,D3
+    Cmp.B       $12,D2
+    Cmp.W       #1245,D5
+    Cmp.L       #12345678,D5
+        
+    CmpA.W      D4,A5
+    CmpA.W      A4,A5
+    CmpA.W      (A4),A5
+    CmpA.W      (A4)+,A5
+    CmpA.W      -(A4),A5
+    CmpA.W      $1234,A5
+    CmpA.L      $11111111,A5
+    CmpA.W      #$FFFF,A4
+    CmpA.L      #$AAAAFFFF,A6
+    CmpA.L      (A4)+,A5
+
+
+;--------- IMMEDIATE FUNCTIONS ---------;
+
+    CmpI.W      #$ABCD, D4
+    CmpI.B      #$12,D4
+    CmpI.W      #$1234,(A4)
+    CmpI.L      #$12345678,(A4)+
+    CmpI.W      #$12,-(A7)
+    CmpI.L      #$87654321, $12345678
+    CmpI.B      #12,$1234
+    
+    Ori.L       #$12345678,D1
+    OrI.B       #$02,(A6)
+    OrI.L       #12,(A5)+
+    Ori.L       #$1234,-(A1)
+    Ori.L       #$12345678,$1234
+    Ori.B       #$12,$12345678
+    
+    SubI.W      #1423,-(A3)
+    SubI.B      #12,D3
+    SubI.L       #$12345678,D1
+    SubI.B       #$02,(A6)
+    SubI.L       #12,(A5)+
+    SubI.L       #$1234,-(A1)
+    SubI.L       #$12345678,$1234
+    SubI.B       #$12,$12345678
+
+    EorI.L      #$ABCE1452,(A5)
+    EorI.B      #255,$FFFFA000
+    EorI.W      #$ABCD, D4
+    EorI.B      #$12,D4
+    EorI.W      #$1234,(A4)
+    EorI.L      #$12345678,(A4)+
+    EorI.W      #$12,-(A7)
+    EorI.L      #$87654321, $12345678
+    EorI.B      #12,$1234
+
 ;-------------- MOVE -----------------;
 
     Move.B      $4214,D1
@@ -98,29 +160,7 @@ START:                  ; first instruction of program
     SubA.W      #$1234,A2
     SubA.L      #$12345678,A3 ;output ADDQ $3,$B802
 
-;-------------- CMP -------------------;
 
-    Cmp.B       D2,D4
-    Cmp.W       A7,D2
-    Cmp.W       (A6),D3
-    Cmp.W       (A7)+,D2
-    Cmp.W       -(A3),D2
-    Cmp.B       $1234,D7
-    Cmp.W       $12345678,D3
-    Cmp.B       $12,D2
-    Cmp.W       #1245,D5
-    Cmp.L       #12345678,D5
-        
-    CmpA.W      D4,A5
-    CmpA.W      A4,A5
-    CmpA.W      (A4),A5
-    CmpA.W      (A4)+,A5
-    CmpA.W      -(A4),A5
-    CmpA.W      $1234,A5
-    CmpA.L      $11111111,A5
-    CmpA.W      #$FFFF,A4
-    CmpA.L      #$AAAAFFFF,A6
-    CmpA.L      (A4)+,A5
     
 ;------------ BCC & Jumps --------------;
 
@@ -174,41 +214,6 @@ START:                  ; first instruction of program
     ROL.B       #7,D2
     ROL.B       #8,D2
     
-;--------- IMMEDIATE FUNCTIONS ---------;
-
-    CmpI.W      #$ABCD, D4
-    CmpI.B      #$12,D4
-    CmpI.W      #$1234,(A4)
-    CmpI.L      #$12345678,(A4)+
-    CmpI.W      #$12,-(A7)
-    CmpI.L      #$87654321, $12345678
-    CmpI.B      #12,$1234
-    
-    Ori.L       #$12345678,D1
-    OrI.B       #$02,(A6)
-    OrI.L       #12,(A5)+
-    Ori.L       #$1234,-(A1)
-    Ori.L       #$12345678,$1234
-    Ori.B       #$12,$12345678
-    
-    SubI.W      #1423,-(A3)
-    SubI.B      #12,D3
-    SubI.L       #$12345678,D1
-    SubI.B       #$02,(A6)
-    SubI.L       #12,(A5)+
-    SubI.L       #$1234,-(A1)
-    SubI.L       #$12345678,$1234
-    SubI.B       #$12,$12345678
-
-    EorI.L      #$ABCE1452,(A5)
-    EorI.B      #255,$FFFFA000
-    EorI.W      #$ABCD, D4
-    EorI.B      #$12,D4
-    EorI.W      #$1234,(A4)
-    EorI.L      #$12345678,(A4)+
-    EorI.W      #$12,-(A7)
-    EorI.L      #$87654321, $12345678
-    EorI.B      #12,$1234
         
 ;------- Neg - Not - Muls - Divs -------;
 
@@ -308,6 +313,8 @@ START:                  ; first instruction of program
     Lea         $12345678,A5    
 
     END    START
+
+
 
 
 
