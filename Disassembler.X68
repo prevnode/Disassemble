@@ -2441,26 +2441,30 @@ bcc0
     CLR         D3
     MOVE.B      D7,D3               ;Displacement of 8 bits need to complement
     NEG.B       D3                  ;Get 2s complement
-    ADD.L       #%1,D3              :Add a bit         
+    *ADD.L       #%1,D3             :Add a bit         
     MOVE.L      A5,D7
+    ADD.L       #2,D7               ;ADD 2 bytes
     SUB.L       D3,D7               ;Calculate actual mem location
     MOVE.L      D7,D3
-    ADD.L       #2,D3               ;ADD 2 bytes
+    
     MOVE.B      #0,NUM_EXP_WRDS
     BRA         PRINT_WORD
     
 bcc1
     CLR         D3
     MOVE.W      (A5),D3
-    ADD.L       A5,D3               ;Calculate actual mem location need to add a word
+    NEG.W       D3
+    ADD.W       A5,D3               ;Calculate actual mem location need to add a word
+    ADD.L       #2,D3               ;Add 2 bytes to account for bcc
     MOVE.B      #1,NUM_EXP_WRDS
     BRA         PRINT_WORD
     
 bcc2    
-    MOVE.L      #2,NUM_EXP_WRDS
     CLR         D3
     MOVE.W      (A5),D3
-    ADD.L       A5,D3               ;Calculate actual mem location need to add a word
+    NEG.W       D3
+    ADD.W       A5,D3               ;Calculate actual mem location need to add a word
+    ADD.L       #2,D3               ;Add 2 bytes to account for bcc
     MOVE.B      #2,NUM_EXP_WRDS
     BRA         PRINT_LONG
 
@@ -3180,6 +3184,7 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
