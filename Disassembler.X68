@@ -2319,7 +2319,12 @@ AND_EA
         MOVE.B  #2,NUM_OPERANDS
         MOVE.B  #0,NUM_EXP_WRDS
         JSR     LOAD12BY3
-        JSR     EAWCHKS        
+        MOVE.L  D4,D6               ;Make temp copy of opmode
+        CMP.L   #2,D6               ;Use to scale size from 0-2 for eawchks
+        BLE     and_eaw             ;Ready to get expansion data
+        SUB.L   #4,D6               ;Assume range 4-6 and subtract by 4
+        
+and_eaw JSR     EAWCHKS        
         
         LEA     AND_OP,A1
         MOVE    #14,D0

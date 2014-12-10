@@ -8,8 +8,68 @@
 START:                  ; first instruction of program
 
 
+
+;------- BTST - EOR - AND ------;
+    AND.L      #15, D6
+    AND.B       $1000,D0
+    AND.W       D1,$1000
+    AND.L       D1,D0
+    AND.W      #3,D7
+    AND.B      (A2),D3
+    AND.W      $9764, D4
+    
+    AND.W      (A6),D3
+    AND.B      (A3)+,D1
+    AND.L      -(A2),D7
+    AND.W      $AAAA,D5
+    AND.W      $1234CCCC,D1
+    AND.L      #$8888,D0
+    AND.L      D0,D1
+    AND.B      D2,(A3)
+    AND.B      D2,(A2)+          
+    AND.B      D2,-(A2)
+    AND.B      D2,$AAAA
+    AND.B      D2,$CCCCBBBB
+    
+    BTST.L      D0,D1
+    BTST.B      D2,(A3)
+    BTST.B      D2,(A2)+          
+    BTST.B      D2,-(A2)
+    BTST.B      D2,$AAAA
+    BTST.B      D2,$CCCCBBBB
+    BTST.B      D2,#$AA
+    BTST.B      D2,#$11
+    BTST.L      #$8011,D1      
+    BTST.B      D0,$7000        
+    BTST.B      #$8,$8000
+    BTST.L      #$12,D1
+    BTST.B      #$33,(A3)
+    BTST.B      #$44,(A2)+          
+    BTST.B      #$FF,-(A2)
+    BTST.B      #$AA,$AAAA
+    BTST.B      #$DD,$CCCCBBBB
+      
+    
+    EOR.B       D0,$1000
+    EOR.W       D0,D1
+    EOR.L       D1,$4000
+    EOR.W       D0,(A1)
+    EOR.W       D0,(A2)+
+    EOR.L       D0,-(A6)
+    EOR.B       D0,$1234
+    EOR.B       D0,$12345678    
+
+
+
+
+
 ;-------------- CMP -------------------;
 
+    CmpA.L      #$AAAAFFFF,A6
+    CmpA.L      (A4)+,A5
+    CmpA.L      $11111111,A5
+    CmpA.W      #$FFFF,A4
+    
     Cmp.B       D2,D4
     Cmp.W       A7,D2
     Cmp.W       (A6),D3
@@ -27,10 +87,8 @@ START:                  ; first instruction of program
     CmpA.W      (A4)+,A5
     CmpA.W      -(A4),A5
     CmpA.W      $1234,A5
-    CmpA.L      $11111111,A5
-    CmpA.W      #$FFFF,A4
-    CmpA.L      #$AAAAFFFF,A6
-    CmpA.L      (A4)+,A5
+    
+    
 
 
 ;--------- IMMEDIATE FUNCTIONS ---------;
@@ -255,55 +313,8 @@ START:                  ; first instruction of program
     Divs.W      #$8888,D0
 
     
-;------- BTST - EOR - AND ------;
     
-    BTST.L      D0,D1
-    BTST.B      D2,(A3)
-    BTST.B      D2,(A2)+          
-    BTST.B      D2,-(A2)
-    BTST.B      D2,$AAAA
-    BTST.B      D2,$CCCCBBBB
-    BTST.B      D2,#$AA
-    BTST.B      D2,#$11
-    BTST.L      #$8011,D1      
-    BTST.B      D0,$7000        
-    BTST.B      #$8,$8000
-    BTST.L      #$12,D1
-    BTST.B      #$33,(A3)
-    BTST.B      #$44,(A2)+          
-    BTST.B      #$FF,-(A2)
-    BTST.B      #$AA,$AAAA
-    BTST.B      #$DD,$CCCCBBBB
-      
     
-    EOR.B       D0,$1000
-    EOR.W       D0,D1
-    EOR.L       D1,$4000
-    EOR.W       D0,(A1)
-    EOR.W       D0,(A2)+
-    EOR.L       D0,-(A6)
-    EOR.B       D0,$1234
-    EOR.B       D0,$12345678    
-    
-    AND.B       $1000,D0
-    AND.W       D1,$1000
-    AND.L       D1,D0
-    AND.W      #3,D7
-    AND.B      (A2),D3
-    AND.W      $9764, D4
-    AND.L      #15, D6
-    AND.W      (A6),D3
-    AND.B      (A3)+,D1
-    AND.L      -(A2),D7
-    AND.W      $AAAA,D5
-    AND.W      $1234CCCC,D1
-    AND.L      #$8888,D0
-    AND.L      D0,D1
-    AND.B      D2,(A3)
-    AND.B      D2,(A2)+          
-    AND.B      D2,-(A2)
-    AND.B      D2,$AAAA
-    AND.B      D2,$CCCCBBBB
     
     
 ;---------- LEA ----------;
