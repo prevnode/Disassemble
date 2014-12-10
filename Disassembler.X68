@@ -131,22 +131,23 @@ SE5                 DC.B        '',0
 SE6                 DC.B        '',0
 SE7                 DC.B        '',0
 
-MMA7    DC.W    'A7 ',0
-MMA6    DC.W    'A6 ',0
-MMA5    DC.W    'A5 ',0
-MMA4    DC.W    'A4 ',0
-MMA3    DC.W    'A3 ',0
-MMA2    DC.W    'A2 ',0
-MMA1    DC.W    'A1 ',0
-MMA0    DC.W    'A0 ',0
-MMD7    DC.W    'D7 ',0
-MMD6    DC.W    'D6 ',0
-MMD5    DC.W    'D5 ',0
-MMD4    DC.W    'D4 ',0
-MMD3    DC.W    'D3 ',0
-MMD2    DC.W    'D2 ',0
-MMD1    DC.W    'D1 ',0
-MMD0    DC.W    'D0 ',0
+MMA7    DC.W    'A7',0
+MMA6    DC.W    'A6',0
+MMA5    DC.W    'A5',0
+MMA4    DC.W    'A4',0
+MMA3    DC.W    'A3',0
+MMA2    DC.W    'A2',0
+MMA1    DC.W    'A1',0
+MMA0    DC.W    'A0',0
+MMD7    DC.W    'D7',0
+MMD6    DC.W    'D6',0
+MMD5    DC.W    'D5',0
+MMD4    DC.W    'D4',0
+MMD3    DC.W    'D3',0
+MMD2    DC.W    'D2',0
+MMD1    DC.W    'D1',0
+MMD0    DC.W    'D0',0
+MMSLASH  DC.W    '/',0
 
 MASK_13_12          EQU     %00110000000000000000000000000000
 MASK_11_9           EQU     %00001110000000000000000000000000
@@ -416,24 +417,36 @@ PRINT_MOVEM			LEA			TAB,A1
 					
 PRINT_LIST_EA       CLR         D1
                     CMPI.B      #$6,D4
-					BNE         PRINT_EA_LIST
+					BEQ         PRINT_EA_LIST
+					
 					MOVE.W      D3,D1
 					JSR         MOVEM_LIST_EA
 					LEA         OP_COMMA,A1         ; move comma string to A1
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     JSR         PRINT_OPMODE2_PRE   ; print the second opmode preface symbol
+                    JSR         PRINT_OPMODE2_POST
 					BRA         PRINT_RETURN
 					
-PRINT_EA_LIST       JSR         PRINT_OPMODE2_PRE   ; print the second opmode preface symbo
+PRINT_EA_LIST       MOVE.W      D5,D1
+                    JSR         PRINT_OPMODE1_PRE   ; print the second opmode preface symboL
+                    JSR         PRINT_OPMODE1_POST
                     LEA         OP_COMMA,A1         ; move comma string to A1
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
-                    MOVE.W      D5,D1
+                    
                     JSR         MOVEM_EA_LIST
                     BRA         PRINT_RETURN
+                    
+PRINT_MM_SLASH
+        CMPI.W  #$0,D1          ; COMPARE #$0 TO REMAINING WORD
+        BEQ     MMNGFINISH      ; IF WORD IS 0 THEN CONVERSION IS DONE
+        LEA     MMSLASH,A1      ; PRINT SLASH TO SCREEN
+        MOVE.B  #14,D0          ; TRAP TASK 14 TO DISPLAY STRING
+        TRAP    #15             ; TRAP 15 IO
+        RTS
 					
-MOVEM_LIST_EA
+MOVEM_EA_LIST
         BRA     MMNGA7
         
 MMNGA7  CLR     D0
@@ -441,294 +454,357 @@ MMNGA7  CLR     D0
         ANDI.W  #$8000,D0
         CMPI.W  #$8000,D0
         BNE     MMNGA6
+        SUB.W   D0,D1           ; SUBTRACT MATCHED MASK FROM REMAINING CODE
         LEA     MMA7,A1
-        MOVE.B  #14,D0
-        TRAP    #15
+        MOVE.B  #14,D0          ; TRAP TASK 14 TO DISPLAY STRING
+        TRAP    #15             ; TRAP 15 IO
+        JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
+
         
 MMNGA6  CLR     D0
         MOVE.W  D1,D0
         ANDI.W  #$4000,D0
         CMPI.W  #$4000,D0
         BNE     MMNGA5
+        SUB.W   D0,D1           ; SUBTRACT MATCHED MASK FROM REMAINING CODE
         LEA     MMA6,A1
-        MOVE.B  #14,D0
-        TRAP    #15
+        MOVE.B  #14,D0          ; TRAP TASK 14 TO DISPLAY STRING
+        TRAP    #15             ; TRAP 15 IO
+        JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
         
 MMNGA5  CLR     D0
         MOVE.W  D1,D0
         ANDI.W  #$2000,D0
         CMPI.W  #$2000,D0
         BNE     MMNGA4
+        SUB.W   D0,D1           ; SUBTRACT MATCHED MASK FROM REMAINING CODE
         LEA     MMA5,A1
-        MOVE.B  #14,D0
-        TRAP    #15
+        MOVE.B  #14,D0          ; TRAP TASK 14 TO DISPLAY STRING
+        TRAP    #15             ; TRAP 15 IO
+        JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
         
 MMNGA4  CLR     D0
         MOVE.W  D1,D0
         ANDI.W  #$1000,D0
         CMPI.W  #$1000,D0
         BNE     MMNGA3
+        SUB.W   D0,D1           ; SUBTRACT MATCHED MASK FROM REMAINING CODE
         LEA     MMA4,A1
-        MOVE.B  #14,D0
-        TRAP    #15
+        MOVE.B  #14,D0          ; TRAP TASK 14 TO DISPLAY STRING
+        TRAP    #15             ; TRAP 15 IO
+        JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
 MMNGA3  CLR     D0
         MOVE.W  D1,D0
         ANDI.W  #$0800,D0
         CMPI.W  #$0800,D0
         BNE     MMNGA2
+        SUB.W   D0,D1           ; SUBTRACT MATCHED MASK FROM REMAINING CODE
         LEA     MMA3,A1
-        MOVE.B  #14,D0
-        TRAP    #15
+        MOVE.B  #14,D0          ; TRAP TASK 14 TO DISPLAY STRING
+        TRAP    #15             ; TRAP 15 IO
+        JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
 MMNGA2  CLR     D0
         MOVE.W  D1,D0
         ANDI.W  #$0400,D0
         CMPI.W  #$0400,D0
         BNE     MMNGA1
+        SUB.W   D0,D1           ; SUBTRACT MATCHED MASK FROM REMAINING CODE
         LEA     MMA2,A1
-        MOVE.B  #14,D0
-        TRAP    #15
+        MOVE.B  #14,D0          ; TRAP TASK 14 TO DISPLAY STRING
+        TRAP    #15             ; TRAP 15 IO
+        JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
 MMNGA1  CLR     D0
         MOVE.W  D1,D0
         ANDI.W  #$0200,D0
         CMPI.W  #$0200,D0
         BNE     MMNGA0
+        SUB.W   D0,D1           ; SUBTRACT MATCHED MASK FROM REMAINING CODE
         LEA     MMA1,A1
-        MOVE.B  #14,D0
-        TRAP    #15
+        MOVE.B  #14,D0          ; TRAP TASK 14 TO DISPLAY STRING
+        TRAP    #15             ; TRAP 15 IO
+        JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
 MMNGA0  CLR     D0
         MOVE.W  D1,D0
         ANDI.W  #$0100,D0
         CMPI.W  #$0100,D0
         BNE     MMNGD7
+        SUB.W   D0,D1           ; SUBTRACT MATCHED MASK FROM REMAINING CODE
         LEA     MMA0,A1
-        MOVE.B  #14,D0
-        TRAP    #15
+        MOVE.B  #14,D0          ; TRAP TASK 14 TO DISPLAY STRING
+        TRAP    #15             ; TRAP 15 IO
+        JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 
 MMNGD7  CLR     D0
         MOVE.W  D1,D0
         ANDI.W  #$0080,D0
         CMPI.W  #$0080,D0
         BNE     MMNGD6
+        SUB.W   D0,D1           ; SUBTRACT MATCHED MASK FROM REMAINING CODE
         LEA     MMD7,A1
-        MOVE.B  #14,D0
-        TRAP    #15
+        MOVE.B  #14,D0          ; TRAP TASK 14 TO DISPLAY STRING
+        TRAP    #15             ; TRAP 15 IO
+        JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
 MMNGD6  CLR     D0
         MOVE.W  D1,D0
         ANDI.W  #$0040,D0
         CMPI.W  #$0040,D0
         BNE     MMNGD5
+        SUB.W   D0,D1           ; SUBTRACT MATCHED MASK FROM REMAINING CODE
         LEA     MMD6,A1
-        MOVE.B  #14,D0
-        TRAP    #15
+        MOVE.B  #14,D0          ; TRAP TASK 14 TO DISPLAY STRING
+        TRAP    #15             ; TRAP 15 IO
+        JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
 MMNGD5  CLR     D0
         MOVE.W  D1,D0
         ANDI.W  #$0020,D0
         CMPI.W  #$0020,D0
         BNE     MMNGD4
+        SUB.W   D0,D1           ; SUBTRACT MATCHED MASK FROM REMAINING CODE
         LEA     MMD5,A1
-        MOVE.B  #14,D0
-        TRAP    #15
+        MOVE.B  #14,D0          ; TRAP TASK 14 TO DISPLAY STRING
+        TRAP    #15             ; TRAP 15 IO
+        JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
 MMNGD4  CLR     D0
         MOVE.W  D1,D0
         ANDI.W  #$0010,D0
         CMPI.W  #$0010,D0
         BNE     MMNGD3
+        SUB.W   D0,D1           ; SUBTRACT MATCHED MASK FROM REMAINING CODE
         LEA     MMD4,A1
-        MOVE.B  #14,D0
-        TRAP    #15
+        MOVE.B  #14,D0          ; TRAP TASK 14 TO DISPLAY STRING
+        TRAP    #15             ; TRAP 15 IO
+        JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
 MMNGD3  CLR     D0
         MOVE.W  D1,D0
         ANDI.W  #$0008,D0
         CMPI.W  #$0008,D0
         BNE     MMNGD2
+        SUB.W   D0,D1           ; SUBTRACT MATCHED MASK FROM REMAINING CODE
         LEA     MMD3,A1
-        MOVE.B  #14,D0
-        TRAP    #15
+        MOVE.B  #14,D0          ; TRAP TASK 14 TO DISPLAY STRING
+        TRAP    #15             ; TRAP 15 IO
+        JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
 MMNGD2  CLR     D0
         MOVE.W  D1,D0
         ANDI.W  #$0004,D0
         CMPI.W  #$0004,D0
         BNE     MMNGD1
+        SUB.W   D0,D1           ; SUBTRACT MATCHED MASK FROM REMAINING CODE
         LEA     MMD2,A1
-        MOVE.B  #14,D0
-        TRAP    #15
+        MOVE.B  #14,D0          ; TRAP TASK 14 TO DISPLAY STRING
+        TRAP    #15             ; TRAP 15 IO
+        JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
 MMNGD1  CLR     D0
         MOVE.W  D1,D0
         ANDI.W  #$0002,D0
         CMPI.W  #$0002,D0
         BNE     MMNGD0
+        SUB.W   D0,D1           ; SUBTRACT MATCHED MASK FROM REMAINING CODE
         LEA     MMD1,A1
-        MOVE.B  #14,D0
-        TRAP    #15
+        MOVE.B  #14,D0          ; TRAP TASK 14 TO DISPLAY STRING
+        TRAP    #15             ; TRAP 15 IO
+        JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
 MMNGD0  CLR     D0
         MOVE.W  D1,D0
         ANDI.W  #$0001,D0
         CMPI.W  #$0001,D0
         BNE     MMNGFINISH
+        SUB.W   D0,D1           ; SUBTRACT MATCHED MASK FROM REMAINING CODE
         LEA     MMD0,A1
-        MOVE.B  #14,D0
-        TRAP    #15
+        MOVE.B  #14,D0          ; TRAP TASK 14 TO DISPLAY STRING
+        TRAP    #15             ; TRAP 15 IO
 		
 MMNGFINISH
         RTS
-        
-MOVEM_EA_LIST
+*------------------------------------------------------------------
+MOVEM_LIST_EA
         BRA     MMNSD0
 
 MMNSD0  CLR     D0
         MOVE.W  D1,D0
-        ANDI.W  #$0001,D0
-        CMPI.W  #$0001,D0
+        ANDI.W  #$8000,D0
+        CMPI.W  #$8000,D0
         BNE     MMNGD1
+        SUB.W   D0,D1           ; SUBTRACT MATCHED MASK FROM REMAINING CODE
         LEA     MMD0,A1
-        MOVE.B  #14,D0
-        TRAP    #15
+        MOVE.B  #14,D0          ; TRAP TASK 14 TO DISPLAY STRING
+        TRAP    #15             ; TRAP 15 IO
+        JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
 MMNSD1  CLR     D0
         MOVE.W  D1,D0
-        ANDI.W  #$0002,D0
-        CMPI.W  #$0002,D0
+        ANDI.W  #$4000,D0
+        CMPI.W  #$4000,D0
         BNE     MMNSD2
+        SUB.W   D0,D1           ; SUBTRACT MATCHED MASK FROM REMAINING CODE
         LEA     MMD1,A1
-        MOVE.B  #14,D0
-        TRAP    #15
+        MOVE.B  #14,D0          ; TRAP TASK 14 TO DISPLAY STRING
+        TRAP    #15             ; TRAP 15 IO
+        JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 
 MMNSD2  CLR     D0
         MOVE.W  D1,D0
-        ANDI.W  #$0004,D0
-        CMPI.W  #$0004,D0
+        ANDI.W  #$2000,D0
+        CMPI.W  #$2000,D0
         BNE     MMNSD3
+        SUB.W   D0,D1           ; SUBTRACT MATCHED MASK FROM REMAINING CODE
         LEA     MMD2,A1
-        MOVE.B  #14,D0
-        TRAP    #15
+        MOVE.B  #14,D0          ; TRAP TASK 14 TO DISPLAY STRING
+        TRAP    #15             ; TRAP 15 IO
+        JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
 MMNSD3  CLR     D0
         MOVE.W  D1,D0
-        ANDI.W  #$0008,D0
-        CMPI.W  #$0008,D0
+        ANDI.W  #$1000,D0
+        CMPI.W  #$1000,D0
         BNE     MMNSD4
+        SUB.W   D0,D1           ; SUBTRACT MATCHED MASK FROM REMAINING CODE
         LEA     MMD3,A1
-        MOVE.B  #14,D0
-        TRAP    #15
+        MOVE.B  #14,D0          ; TRAP TASK 14 TO DISPLAY STRING
+        TRAP    #15             ; TRAP 15 IO
+        JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
 MMNSD4  CLR     D0
         MOVE.W  D1,D0
-        ANDI.W  #$0010,D0
-        CMPI.W  #$0010,D0
+        ANDI.W  #$0800,D0
+        CMPI.W  #$0800,D0
         BNE     MMNSD5
+        SUB.W   D0,D1           ; SUBTRACT MATCHED MASK FROM REMAINING CODE
         LEA     MMD4,A1
-        MOVE.B  #14,D0
-        TRAP    #15
+        MOVE.B  #14,D0          ; TRAP TASK 14 TO DISPLAY STRING
+        TRAP    #15             ; TRAP 15 IO
+        JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
 MMNSD5  CLR     D0
         MOVE.W  D1,D0
-        ANDI.W  #$0020,D0
-        CMPI.W  #$0020,D0
+        ANDI.W  #$0400,D0
+        CMPI.W  #$0400,D0
         BNE     MMNSD6
+        SUB.W   D0,D1           ; SUBTRACT MATCHED MASK FROM REMAINING CODE
         LEA     MMD5,A1
-        MOVE.B  #14,D0
-        TRAP    #15
+        MOVE.B  #14,D0          ; TRAP TASK 14 TO DISPLAY STRING
+        TRAP    #15             ; TRAP 15 IO
+        JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
 MMNSD6  CLR     D0
         MOVE.W  D1,D0
-        ANDI.W  #$0040,D0
-        CMPI.W  #$0040,D0
+        ANDI.W  #$0200,D0
+        CMPI.W  #$0200,D0
         BNE     MMNSD7
+        SUB.W   D0,D1           ; SUBTRACT MATCHED MASK FROM REMAINING CODE
         LEA     MMD6,A1
-        MOVE.B  #14,D0
-        TRAP    #15
+        MOVE.B  #14,D0          ; TRAP TASK 14 TO DISPLAY STRING
+        TRAP    #15             ; TRAP 15 IO
+        JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
 MMNSD7  CLR     D0
         MOVE.W  D1,D0
-        ANDI.W  #$0080,D0
-        CMPI.W  #$0080,D0
+        ANDI.W  #$0100,D0
+        CMPI.W  #$0100,D0
         BNE     MMNSA0
+        SUB.W   D0,D1           ; SUBTRACT MATCHED MASK FROM REMAINING CODE
         LEA     MMD7,A1
-        MOVE.B  #14,D0
-        TRAP    #15
+        MOVE.B  #14,D0          ; TRAP TASK 14 TO DISPLAY STRING
+        TRAP    #15             ; TRAP 15 IO
+        JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
 MMNSA0  CLR     D0
         MOVE.W  D1,D0
-        ANDI.W  #$0100,D0
-        CMPI.W  #$0100,D0
+        ANDI.W  #$0080,D0
+        CMPI.W  #$0080,D0
         BNE     MMNSA1
+        SUB.W   D0,D1           ; SUBTRACT MATCHED MASK FROM REMAINING CODE
         LEA     MMA0,A1
-        MOVE.B  #14,D0
-        TRAP    #15
+        MOVE.B  #14,D0          ; TRAP TASK 14 TO DISPLAY STRING
+        TRAP    #15             ; TRAP 15 IO
+        JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
 MMNSA1  CLR     D0
         MOVE.W  D1,D0
-        ANDI.W  #$0200,D0
-        CMPI.W  #$0200,D0
+        ANDI.W  #$0040,D0
+        CMPI.W  #$0040,D0
         BNE     MMNSA2
+        SUB.W   D0,D1           ; SUBTRACT MATCHED MASK FROM REMAINING CODE
         LEA     MMA1,A1
-        MOVE.B  #14,D0
-        TRAP    #15
+        MOVE.B  #14,D0          ; TRAP TASK 14 TO DISPLAY STRING
+        TRAP    #15             ; TRAP 15 IO
+        JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
 MMNSA2  CLR     D0
         MOVE.W  D1,D0
-        ANDI.W  #$0400,D0
-        CMPI.W  #$0400,D0
+        ANDI.W  #$0020,D0
+        CMPI.W  #$0020,D0
         BNE     MMNSA3
+        SUB.W   D0,D1           ; SUBTRACT MATCHED MASK FROM REMAINING CODE
         LEA     MMA2,A1
-        MOVE.B  #14,D0
-        TRAP    #15
+        MOVE.B  #14,D0          ; TRAP TASK 14 TO DISPLAY STRING
+        TRAP    #15             ; TRAP 15 IO
+        JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
 MMNSA3  CLR     D0
         MOVE.W  D1,D0
-        ANDI.W  #$0800,D0
-        CMPI.W  #$0800,D0
+        ANDI.W  #$0010,D0
+        CMPI.W  #$0010,D0
         BNE     MMNSA4
+        SUB.W   D0,D1           ; SUBTRACT MATCHED MASK FROM REMAINING CODE
         LEA     MMA3,A1
-        MOVE.B  #14,D0
-        TRAP    #15
+        MOVE.B  #14,D0          ; TRAP TASK 14 TO DISPLAY STRING
+        TRAP    #15             ; TRAP 15 IO
+        JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
 MMNSA4  CLR     D0
         MOVE.W  D1,D0
-        ANDI.W  #$1000,D0
-        CMPI.W  #$1000,D0
+        ANDI.W  #$0008,D0
+        CMPI.W  #$0008,D0
         BNE     MMNSA5
+        SUB.W   D0,D1           ; SUBTRACT MATCHED MASK FROM REMAINING CODE
         LEA     MMA4,A1
-        MOVE.B  #14,D0
-        TRAP    #15
+        MOVE.B  #14,D0          ; TRAP TASK 14 TO DISPLAY STRING
+        TRAP    #15             ; TRAP 15 IO
+        JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
 MMNSA5  CLR     D0
         MOVE.W  D1,D0
-        ANDI.W  #$2000,D0
-        CMPI.W  #$2000,D0
+        ANDI.W  #$0004,D0
+        CMPI.W  #$0004,D0
         BNE     MMNSA6
+        SUB.W   D0,D1           ; SUBTRACT MATCHED MASK FROM REMAINING CODE
         LEA     MMA5,A1
-        MOVE.B  #14,D0
-        TRAP    #15
+        MOVE.B  #14,D0          ; TRAP TASK 14 TO DISPLAY STRING
+        TRAP    #15             ; TRAP 15 IO
+        JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
 MMNSA6  CLR     D0
         MOVE.W  D1,D0
-        ANDI.W  #$4000,D0
-        CMPI.W  #$4000,D0
+        ANDI.W  #$0002,D0
+        CMPI.W  #$0002,D0
         BNE     MMNSA7
+        SUB.W   D0,D1           ; SUBTRACT MATCHED MASK FROM REMAINING CODE
         LEA     MMA6,A1
-        MOVE.B  #14,D0
-        TRAP    #15
+        MOVE.B  #14,D0          ; TRAP TASK 14 TO DISPLAY STRING
+        TRAP    #15             ; TRAP 15 IO
+        JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
 MMNSA7  CLR     D0
         MOVE.W  D1,D0
-        ANDI.W  #$8000,D0
-        CMPI.W  #$8000,D0
+        ANDI.W  #$0001,D0
+        CMPI.W  #$0001,D0
         BNE     MMNSFINISH
+        SUB.W   D0,D1           ; SUBTRACT MATCHED MASK FROM REMAINING CODE
         LEA     MMA7,A1
-        MOVE.B  #14,D0
-        TRAP    #15
+        MOVE.B  #14,D0          ; TRAP TASK 14 TO DISPLAY STRING
+        TRAP    #15             ; TRAP 15 IO
 		
 MMNSFINISH
 		RTS
