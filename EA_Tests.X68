@@ -8,6 +8,38 @@
 START:                  ; first instruction of program
 
 
+*---------------SHIFT VARIANTS-----------------------------------
+    
+    ASL.B       #3,D0
+    ASL.W       #%100,D0
+    ASL.L       #3,D0
+    ASL         (A0)+ ;output ROL.L $E603E640
+    
+    ASR.B       #$3,D3 ;output MULS.L $3,D0
+    ASR.W       #3,D0
+    ASR.L       #3,D0
+
+    LSL.B       #3,D0
+    LSL.W       D1,D0
+    LSL.L       D3,D4
+    LSL         $1000
+    
+    LSR.B       #3,D0
+    LSR.W       #3,D0
+    LSR.L       #3,D0
+    LSR         $10004000
+    
+    ROR.B       #3,D0
+    ROR.W       #3,D0
+    ROR.L       #3,D0
+    ROR         (A1)
+
+    ROL.B       #3,D0
+    ROL.W       #3,D0
+    ROL         -(A2)
+
+
+
 *--------------EOR Varitants-------------
 JMP EOR     D2,$ACDB
     EOR.L   D7,-(A4)
@@ -193,35 +225,7 @@ J3  BNE         START
     NOT.L       (A3)
     NOT.L       D3
 
-*---------------SHIFT VARIANTS-----------------------------------
-    
-    ASL.B       #3,D0
-    ASL.W       #%100,D0
-    ASL.L       #3,D0
-    ASL         (A0)+ ;output ROL.L $E603E640
-    
-    ASR.B       #$3,D3 ;output MULS.L $3,D0
-    ASR.W       #3,D0
-    ASR.L       #3,D0
 
-    LSL.B       #3,D0
-    LSL.W       D1,D0
-    LSL.L       D3,D4
-    LSL         $1000
-    
-    LSR.B       #3,D0
-    LSR.W       #3,D0
-    LSR.L       #3,D0
-    LSR         $10004000
-    
-    ROR.B       #3,D0
-    ROR.W       #3,D0
-    ROR.L       #3,D0
-    ROR         (A1)
-
-    ROL.B       #3,D0
-    ROL.W       #3,D0
-    ROL         -(A2)
     
 
 
@@ -288,6 +292,7 @@ TESTJMPAHEAD
 * Put variables and constants here
 
     END    START        ; last line of source
+
 
 
 
