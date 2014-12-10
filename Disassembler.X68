@@ -1157,6 +1157,8 @@ Bits_15141312  EQU  %1111000000000000
 
 Bits_876       EQU  %0000000111000000
 
+Bits_76        EQU  %0000000011000000
+
 Bits_11109     EQU  %0000111000000000
 
 Bits_987       EQU  %0000001110000000
@@ -1227,6 +1229,20 @@ Check_987        JSR     CLEAR_DATA
 Check_876        JSR     CLEAR_DATA     
 
                  MOVE.W  #Bits_876,D3                  ;Move the mask into D3
+                 
+                 MOVE.W  #6,D1                         ;Move the shift amount into D1 
+                 
+                 MOVE.W  (A5),D0                       ; Copy the current opcode
+                
+                 AND.W   D3,D0                         ; Mask the current Opcode 
+                
+                 LSR.W   D1,D0                         ; Shift over a certain number of bits
+
+                 RTS 
+                 
+Check_76         JSR     CLEAR_DATA     
+
+                 MOVE.W  #Bits_76,D3                  ;Move the mask into D3
                  
                  MOVE.W  #6,D1                         ;Move the shift amount into D1 
                  
@@ -1768,54 +1784,42 @@ code1101       JSR          Check_43           ;if addx
 *LSR, LSL, ROL, ROR
 
 code1110       JSR          Check_11109      
-               CMPI         #0,D0           ;if AS R or L register shift
+               CMPI         #0,D0          
                BEQ          A__
-               CMPI         #1,D0           ;if LS R or L register shift
+               CMPI         #1,D0           
                BEQ          L__
-               CMPI         #3,D0           ;if RO R or L register shift
+               CMPI         #3,D0           
                BEQ          R__
 
-               JSR          Check_43                
-               CMPI         #0,D0           ;if AS R or L memory shift
+REGCHECK       JSR          Check_43                
+               CMPI         #0,D0         
                BEQ          AS_
-               CMPI         #1,D0           ;if LS R or L memory shift
+               CMPI         #1,D0          
                BEQ          LS_
-               CMPI         #3,D0           ;if RO R or L memory shift
+               CMPI         #3,D0           
                BEQ          RO_
                
                BRA          PRINT_BAD        ;anything else is not supported
                
-L__            JSR          Check_43                
-               CMPI         #0,D0           ;if AS R or L memory shift
-               BEQ          AS_
-               CMPI         #1,D0           ;if LS R or L memory shift
+L__            JSR          Check_76                
+               CMPI         #3,D0           
                BEQ          LS_
-               CMPI         #3,D0           ;if RO R or L memory shift
-               BEQ          RO_
                
-               BRA          LS_        ;anything else is not supported
+               BRA          REGCHECK        
 
             
-R__            JSR          Check_43                
-               CMPI         #0,D0           ;if AS R or L memory shift
-               BEQ          AS_
-               CMPI         #1,D0           ;if LS R or L memory shift
-               BEQ          LS_
-               CMPI         #3,D0           ;if RO R or L memory shift
+R__            JSR          Check_76                
+               CMPI         #3,D0           
                BEQ          RO_
                
-               BRA          RO_        ;anything else is not supported
+               BRA          REGCHECK       
 
 
-A__            JSR          Check_43                
-               CMPI         #0,D0           ;if AS R or L memory shift
+A__            JSR          Check_76                
+               CMPI         #3,D0          
                BEQ          AS_
-               CMPI         #1,D0           ;if LS R or L memory shift
-               BEQ          LS_
-               CMPI         #3,D0           ;if RO R or L memory shift
-               BEQ          RO_
                
-               BRA          AS_       ;anything else is not supported
+               BRA          REGCHECK      
 
 
                
