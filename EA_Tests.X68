@@ -7,6 +7,16 @@
     ORG    $8888
 START:                  ; first instruction of program
 
+*--------------------------SUBI VARIANTS----------------
+    
+    SUBI.L    #$ABCDEFED,$12345678    
+    SUBI    #45,$1234
+    SUBI    #$AA,D6
+    SUBI    #$1234,$5678
+    SUBI    #$AB,(A2)
+    *SUBI    #$5,$1234          ;Assmbler converts to addq need to note
+    *SUBI    #2,D7              ;Assembler converts to addq need to note
+    *SUBI    #3,$12345678       ;Assembler converts to addq need to note
     
     ASL.B       #3,D0
     ASL.W       #%100,D0
@@ -36,12 +46,7 @@ START:                  ; first instruction of program
     ROL.W       #3,D0
    ; ROL         -(A2)
 
-
-*--------------------------SUBI VARIANTS----------------
-*    SUBI    #$ABCD,$12345678
-*    SUBI    #45,$1234
-*    SUBI    #$AA,D6
-*    SUBI    #$5,$1234   
+   
 *--------------------BTST VARIANTS-----------------------
     BTST    #12345678,D2
     BTST.L  #$12345678, D2
@@ -215,9 +220,9 @@ TESTJMP
     
 *--------------------CMP VARIANTS------------------------------
 
-    CMPI        #3, D0
-    CMPI        #$454, $2324
-    CMPI.W      #$4564, D3   
+*    CMPI        #3, D0
+*    CMPI        #$454, $2324
+*    CMPI.W      #$4564, D3   
 
     CMPA        D3,A2
     CMPA        A2,A4
@@ -254,16 +259,7 @@ TESTJMP
     MOVE.W    #14,D6
     MOVE.L    #1455,D6
     MOVE.L    #1455,A6
-    MOVE.L    #145555,D6
-    
-
-
-
-    
-
-
-
-    
+    MOVE.L    #145555,D6    
     
  
     SIMHALT             ; halt simulator
@@ -271,6 +267,7 @@ TESTJMP
 * Put variables and constants here
 
     END    START        ; last line of source
+
 
 
 

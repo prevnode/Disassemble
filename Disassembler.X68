@@ -2536,28 +2536,89 @@ CMPA_EA
                 CMP     #7,D1
                 BEQ     PRINT_LONG          ;Mode 7 is equal to long
                 
+*---------------------------------Immediate EAs-----------------------------------
+IMMEAS
+        MOVE.B  #2,NUM_OPERANDS ;Always 2 operands
+        MOVE.B  #1,NUM_EXP_WRDS ;Always at least one expansion word
+        JSR     LOAD12BY3           
+                
+        
+        JSR     SWAPOPERANDS        
+        *D2 -> HOLDS SIZE
+        *D3 -> #2
+        *D4 -> HOLDS EA MODE
+        *D5 -> HOLDS EA REGISTER
+        
+        CMP.B   #5,D4       ;D2 holds bits 5-3 EA Mode
+        BEQ     PRINT_BAD   ;Mode 5 unsupported
+        CMP.B   #6,D4
+        BEQ     PRINT_BAD   ;Mode 6 unsupported
+        
+        MOVE.L  A5,A4               ;Make a copy of opcode pointer
+        ADD.L   #2,A4               ;Advance to first expansion word
+                
+        CMP.B   #2,D2               ;D2 holds size
+        BNE     im_word             ;2 indicates Longword of immediate data
+        MOVE.L  (A4)+,D3            ;Move a long word into Operand 1
+        ADDI.B  #1,NUM_EXP_WRDS     ;Immediate data is 2 words
+        BRA     im_op2  
+        
+im_word MOVE.W  (A4)+,D3            ;If not a long word then move a word
+       
+
+        ;D3 -> Holds immediate data
+        ;A4 now points to second expansion word (assumes needed)
+im_op2  CMP.B   #7,D4               ;Check if more expansion is needed
+        BEQ     im_ea7
+        BRA     im_fin
+        
+im_ea7  ADDI.B  #1,NUM_EXP_WRDS
+        CMP.B   #0,D5
+        BNE     im_op2_long
+        MOVE.W  (A4),D5
+        BRA     im_fin
+im_op2_long
+        ADDI.B  #1,NUM_EXP_WRDS
+        MOVE.L  (A4),D5
+        BRA     im_fin  
+        
+        
+im_fin  
+        MOVE.L  D2,D7           ;D7 now holds size
+        MOVE.L  #7,D2           ;Op1 should always be displayed as data
+        RTS
+        
+
+*        MOVE.B  #1,NUM_EXP_WRDS     ;CMPI always includes at least 1 word
+*        MOVE.B  #2,NUM_OPERANDS     
+*               
+*        MOVE.L  MASK_7_6,D7         ;Mask for size
+*        JSR     APPLYMASK
+*        MOVE.L  D7,D6               ;Hold on to size for comparrison
+*                
+*        MOVE.L  MASK_5_3,D7         ;EA mode (operand 2)
+*        JSR     APPLYMASK
+*        MOVE.L  D7,D4               ;Move ea mode for display
+*                
+*        MOVE.L  MASK_2_0,D7         ;Mask for ea register
+*        JSR     APPLYMASK
+*        MOVE.L  D7,D5               ;Move ea register for display
                     
                 
 *------------------------------------CMPI_EA--------------------------------------
 CMPI_EA
-                MOVE.B  #1,NUM_EXP_WRDS     ;CMPI always includes at least 1 word
-                MOVE.B  #2,NUM_OPERANDS     
+        JSR     LOAD12BY3
+        JSR     EXP2OPER        
+               
+        LEA     CMPI_OP,A1
+        MOVE.B  #14,D0
+        TRAP    #15
                 
-                MOVE.L  MASK_7_6,D7         ;Mask for size
-                JSR     APPLYMASK
-                MOVE.L  D7,D6               ;Hold on to size for comparrison
-                
-                MOVE.L  MASK_5_3,D7         ;EA mode (operand 2)
-                JSR     APPLYMASK
-                MOVE.L  D7,D4               ;Move ea mode for display
-                
-                MOVE.L  MASK_2_0,D7         ;Mask for ea register
-                JSR     APPLYMASK
-                MOVE.L  D7,D5               ;Move ea register for display
-                BRA     PRINT
+        BRA     PRINT
                 
 *---------------------------DIVS_EA------------------------------------
 DIVS_EA
+        
         JSR     MULDIV
 
         LEA     DIVS_OP,A1
@@ -3001,21 +3062,23 @@ SUBA_EA
         
 *---------------------------SUBI_EA------------------------------------
 SUBI_EA
-        JSR     LOAD12BY3
-        JSR     EAWCHKS
-        
-        LEA     SUBI_OP,A1
+        JSR     IMMEAS          ;Moves data into registers for display D7 holds size
+        LEA     SUBI_OP,A1      ;Print opcode
         MOVE.B  #14,D0
-        TRAP    #15
+        TRAP    #15       
         
-        MOVE.B  #0,NUM_EXP_WRDS
-        BRA PRINT
-
+        
+        CMP.B   #0,D7           ;D7 holds size
+        BEQ     PRINT_BYTE      ;0 indicates byte
+        CMP.B   #1,D7
+        BEQ     PRINT_WORD      ;1 indicates word
+        BRA     PRINT_LONG      ;2 indicates long
 
 
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
