@@ -1965,14 +1965,12 @@ EAWCHKS
         BEQ     getlongea   ;Long word
         CMP     #4,D3       ;Signifies immediate data
         BEQ     immediateea
-        BRA     PRINT_BAD   ;Other registers with mode 7 are unsupported
-        
+        BRA     PRINT_BAD   ;Other registers with mode 7 are unsupported        
         
 immediateea
         CMP     #2,D6       ;Size data register
         BEQ     getlongea   ;2 indicates long word
-        BRA     getwordea   ;1 or 3 use word
-        
+        BRA     getwordea   ;1 or 3 use word        
         
 getwordea
         CLR     D3          ;Clear the register before copy expansion word D3 holds register
@@ -2549,14 +2547,11 @@ BTST_EA
         ADD.B   #1,NUM_EXP_WRDS ;Immediate always has at least one word        
         BRA     PRINT_LONG      ;Immediate is long only        
         
-        
 btst_dynamic        
         CLR.L   D2              ;Operand 1 always a register
         CMP.B   #0,D4           ;EA Mode
         BEQ     PRINT_LONG      ;Mode 0 is long
-        BRA     PRINT_BYTE
-
-        
+        BRA     PRINT_BYTE        
 
         
 *---------------------------------CMP_EA-----------------------------------------
@@ -3103,18 +3098,25 @@ SUBA_EA
         MOVE.B  #2,NUM_OPERANDS
         MOVE.B  #0,NUM_EXP_WRDS
         JSR     LOAD12BY3
+        
+        CLR     D6                  ;EAWCHKS uses D6 for size 
+        CMP.B   #7,D4               ;D4 contains opmode determines size
+        BNE     suba_word           ;Use a size of 1 to indicate word to eawchks
+        ADD.B   #1,D6               ;Long use a size of 2
+        
+suba_word
+        ADD.B   #1,D6               ;Always add at least one (eaw chks ignores if not mode 7 reg 4)
+        
         JSR     EAWCHKS             ;Counts expansion words an moves into data reg
         
-        LEA     SUBA_OP,A1
+        LEA     SUBA_OP,A1          ;Print opcode
         MOVE.B  #14,D0
         TRAP    #15
         
-        MOVE.L  D4,D7               ;Make a copy for size compare
         MOVE.L  #1,D4               ;Operand 2 is always An mode
-        CMP.B   #3,D7               ;D7 holds opmode
+        CMP.B   #3,D6               ;D7 holds opmode
         BEQ     PRINT_WORD          ;Opmode 3 is word
-        BRA     PRINT_LONG          ;Assume opmode 7 = long      
-       
+        BRA     PRINT_LONG          ;Assume opmode 7 = long       
         
 *---------------------------SUBI_EA------------------------------------
 SUBI_EA
