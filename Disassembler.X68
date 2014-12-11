@@ -2528,29 +2528,27 @@ BTST_EA
         
         JSR     LOAD12BY3
         JSR     EAWCHKS
-        JSR     SWAPOPERANDS           
-
-
+        JSR     SWAPOPERANDS
+        
         LEA     BTST_OP,A1
         MOVE.B  #14,D0
         TRAP    #15
         
         CMP.B   #4,D2           ;D2 determines if register is dynamic
         BEQ     btst_dynamic
-        MOVE.L  #7,D2
-        MOVE.L  A5,A4
-        ADD.L   #2,A4
-        MOVE.W  (A4),D3
-        CMP.B   #0,D4
-        MOVE.B  #1,NUM_EXP_WRDS
-        BEQ     PRINT_LONG
-        BRA     PRINT_BYTE
+                                ;Immediate data
+        MOVE.L  #7,D2           ;Op 2 is always immediate
+        MOVE.L  A5,A4           ;Make a copy of opcode pointer
+        ADD.L   #2,A4           ;Move over to expansion word
+        MOVE.W  (A4),D3         ;Move the data for display
+        ADD.B   #1,NUM_EXP_WRDS ;Immediate always has at least one word        
+        BRA     PRINT_LONG      ;Immediate is long only        
         
         
 btst_dynamic        
-        CLR.L   D2
-        CMP.B   #0,D4
-        BEQ     PRINT_LONG
+        CLR.L   D2              ;Operand 1 always a register
+        CMP.B   #0,D4           ;EA Mode
+        BEQ     PRINT_LONG      ;Mode 0 is long
         BRA     PRINT_BYTE
 
         
@@ -3131,6 +3129,8 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
+
 
 
 

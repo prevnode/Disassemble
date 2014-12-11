@@ -7,29 +7,9 @@
     ORG    $8888
 START:                  ; first instruction of program
 
-;------------ BCC & Jumps --------------;
-
-    Jsr         $ABCD
-    Jsr         (A6)
-    Jsr         $1234
-    Jsr         $12345678
-    Rts
-
-    Bra         $1234
-    Beq         $5678
-    Bne         $1111
-    Blt         $9999
-    Bhi         $1000
 
 ;------- BTST - EOR - AND ------;
-    BTST.L      D0,D1
-    BTST.B      D2,(A3)
-    BTST.B      D2,(A2)+          
-    BTST.B      D2,-(A2)
-    BTST.B      D2,$AAAA
-    BTST.B      D2,$CCCCBBBB
-    BTST.B      D2,#$AA
-    BTST.B      D2,#$11
+
     BTST.L      #$8011,D1      
     BTST.B      D0,$7000        
     BTST.B      #$8,$8000
@@ -38,12 +18,21 @@ START:                  ; first instruction of program
     BTST.B      #$44,(A2)+          
     BTST.B      #$FF,-(A2)
     BTST.B      #$AA,$AAAA
-    BTST.B      #$DD,$CCCCBBBB
+    BTST.B      #$DD,$CCCCBBBB 
 
+    BTST.L      D0,D1
+    BTST.B      D2,(A3)
+    BTST.B      D2,(A2)+          
+    BTST.B      D2,-(A2)
+    BTST.B      D2,$AAAA
+    BTST.B      D2,$CCCCBBBB
+    BTST.B      D2,#$AA
+    BTST.B      D2,#$11    
+    
     AND.L      #15, D6
-    AND.B       $1000,D0
-    AND.W       D1,$1000
-    AND.L       D1,D0
+    AND.B      $1000,D0
+    AND.W      D1,$1000
+    AND.L      D1,D0
     AND.W      #3,D7
     AND.B      (A2),D3
     AND.W      $9764, D4
@@ -59,10 +48,7 @@ START:                  ; first instruction of program
     AND.B      D2,(A2)+          
     AND.B      D2,-(A2)
     AND.B      D2,$AAAA
-    AND.B      D2,$CCCCBBBB
-    
-    
-      
+    AND.B      D2,$CCCCBBBB       
     
     EOR.B       D0,$1000
     EOR.W       D0,D1
@@ -71,10 +57,57 @@ START:                  ; first instruction of program
     EOR.W       D0,(A2)+
     EOR.L       D0,-(A6)
     EOR.B       D0,$1234
-    EOR.B       D0,$12345678    
+    EOR.B       D0,$12345678
 
 
+;-------------- ADD ------------------;
 
+    Add.B       D1,D2
+    Add.W       D2,(A1)
+    Add.L       (A3)+,D1
+   ; Add.L       #$1234,D3       ; Defaults to AddI
+    Add.W       D1,$1234
+    Add.L       $1234,D1
+    Add.L       $12345678,D1
+    Add.L       D6,$1234
+    Add.W       D6,$12345678    
+
+    AddA.W      $1234,A4
+    AddA.W      $89AB,A4
+    AddA.L      $1234,A5
+    AddA.L      $12345678,A7
+    AddA.W      #$1234,A7
+    AddA.L      #$12345678,A7
+    AddA.W      D1,A2
+    AddA.W      -(A3),A2
+    AddA.W      A3,A2
+    AddA.W      (A3),A2
+    AddA.W      (A3)+,A2
+    
+    AddQ.B      #1,D0
+    AddQ.W      #2,A3
+    AddQ.W      #3,(A3)
+    AddQ.L      #4,$8000
+    AddQ.W      #5,(A3)+
+    AddQ.W      #6,-(A6)
+    AddQ.W      #7,$12345678
+    AddQ.W      #8,$12348000       
+    AddQ.W      #$8,$7000 
+
+
+;------------ BCC & Jumps --------------;
+
+    Jsr         $ABCD
+    Jsr         (A6)
+    Jsr         $1234
+    Jsr         $12345678
+    Rts
+
+    Bra         $1234
+    Beq         $5678
+    Bne         $1111
+    Blt         $9999
+    Bhi         $1000
 
 
 ;-------------- CMP -------------------;
@@ -101,9 +134,6 @@ START:                  ; first instruction of program
     CmpA.W      (A4)+,A5
     CmpA.W      -(A4),A5
     CmpA.W      $1234,A5
-    
-    
-
 
 ;--------- IMMEDIATE FUNCTIONS ---------;
 
@@ -165,39 +195,6 @@ START:                  ; first instruction of program
     MOVEM.L     D1-D5/A3-A6, -(SP)
     MOVEM.W     (SP)+, D0-D7/A0-A7
     
-;-------------- ADD ------------------;
-
-    Add.B       D1,D2
-    Add.W       D2,(A1)
-    Add.L       (A3)+,D1
-   ; Add.L       #$1234,D3       ; Defaults to AddI
-    Add.W       D1,$1234
-    Add.L       $1234,D1
-    Add.L       $12345678,D1
-    Add.L       D6,$1234
-    Add.W       D6,$12345678    
-
-    AddA.W      $1234,A4
-    AddA.W      $89AB,A4
-    AddA.L      $1234,A5
-    AddA.L      $12345678,A7
-    AddA.W      #$1234,A7
-    AddA.L      #$12345678,A7
-    AddA.W      D1,A2
-    AddA.W      -(A3),A2
-    AddA.W      A3,A2
-    AddA.W      (A3),A2
-    AddA.W      (A3)+,A2
-    
-    AddQ.B      #1,D0
-    AddQ.W      #2,A3
-    AddQ.W      #3,(A3)
-    AddQ.L      #4,$8000
-    AddQ.W      #5,(A3)+
-    AddQ.W      #6,-(A6)
-    AddQ.W      #7,$12345678
-    AddQ.W      #8,$12348000       
-    AddQ.W      #$8,$7000 
      
     
 ;-------------- SUB ------------------;
@@ -231,11 +228,7 @@ START:                  ; first instruction of program
     SubA.L      $12345678,A2
     SubA.W      #$1234,A2
     SubA.L      #$12345678,A3 ;output ADDQ $3,$B802
-    
 
-    
-    
-    
 ;--------- SHIFT FUNCTIONS -------------;
 
     ASL.B       D1, D2
@@ -314,11 +307,7 @@ START:                  ; first instruction of program
     Divs.W      $1234CCCC,D1
     Divs.W      #$8888,D0
 
-    
-    
-    
-    
-    
+
 ;---------- LEA ----------;
 
     Lea         (A5),A6
@@ -326,6 +315,7 @@ START:                  ; first instruction of program
     Lea         $12345678,A5    
 
     END    START
+
 
 
 
