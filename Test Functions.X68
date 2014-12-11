@@ -8,6 +8,40 @@
 START:                  ; first instruction of program
 
 
+;-------------- SUB ------------------;
+
+    SubA.L      #$12345678,A3 ;output ADDQ $3,$B802
+    SubA.W      $1234,A2
+    SubA.L      $12345678,A2
+    SubA.W      #$1234,A2
+    SubA.L      D1,A4
+    SubA.W      A1,A2
+    SubA.W      (A1),A2
+    SubA.W      (A1)+,A2
+    SubA.W      -(A1),A2 
+    
+    Sub.B       -(A3),D5
+    Sub.W       D7, $12345678
+    Sub.L       D4, D6
+    Sub.B       D2,D4
+    Sub.W       A7,D2
+    Sub.W       (A6),D3
+    Sub.W       (A7)+,D2
+    Sub.W       -(A3),D2
+    Sub.B       $1234,D7
+    Sub.W       $12345678,D3
+    Sub.B       $12,D2
+    Sub.W       #1245,D5
+    Sub.L       #12345678,D5
+    
+    Sub.W       D4,(A3)
+    Sub.W       D2,(A4)+
+    Sub.W       D3,-(A3)
+    Sub.W       D2,$1234
+    Sub.W       D2,$12345678
+
+
+
 ;------- BTST - EOR - AND ------;
 
     BTST.L      #$8011,D1      
@@ -194,40 +228,8 @@ START:                  ; first instruction of program
     MOVEM.W     (SP)+,D0/A1/A2
     MOVEM.L     D1-D5/A3-A6, -(SP)
     MOVEM.W     (SP)+, D0-D7/A0-A7
-    
-     
-    
-;-------------- SUB ------------------;
 
-    Sub.B       -(A3),D5
-    Sub.W       D7, $12345678
-    Sub.L       D4, D6
-    Sub.B       D2,D4
-    Sub.W       A7,D2
-    Sub.W       (A6),D3
-    Sub.W       (A7)+,D2
-    Sub.W       -(A3),D2
-    Sub.B       $1234,D7
-    Sub.W       $12345678,D3
-    Sub.B       $12,D2
-    Sub.W       #1245,D5
-    Sub.L       #12345678,D5
-    
-    Sub.W       D4,(A3)
-    Sub.W       D2,(A4)+
-    Sub.W       D3,-(A3)
-    Sub.W       D2,$1234
-    Sub.W       D2,$12345678
 
-    SubA.L      D1,A4
-    SubA.W      A1,A2
-    SubA.W      (A1),A2
-    SubA.W      (A1)+,A2
-    SubA.W      -(A1),A2
-    SubA.W      $1234,A2
-    SubA.L      $12345678,A2
-    SubA.W      #$1234,A2
-    SubA.L      #$12345678,A3 ;output ADDQ $3,$B802
 
 ;--------- SHIFT FUNCTIONS -------------;
 
