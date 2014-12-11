@@ -7,9 +7,39 @@
     ORG    $8888
 START:                  ; first instruction of program
 
+;------------ BCC & Jumps --------------;
 
+    Jsr         $ABCD
+    Jsr         (A6)
+    Jsr         $1234
+    Jsr         $12345678
+    Rts
+
+    Bra         $1234
+    Beq         $5678
+    Bne         $1111
+    Blt         $9999
+    Bhi         $1000
 
 ;------- BTST - EOR - AND ------;
+    BTST.L      D0,D1
+    BTST.B      D2,(A3)
+    BTST.B      D2,(A2)+          
+    BTST.B      D2,-(A2)
+    BTST.B      D2,$AAAA
+    BTST.B      D2,$CCCCBBBB
+    BTST.B      D2,#$AA
+    BTST.B      D2,#$11
+    BTST.L      #$8011,D1      
+    BTST.B      D0,$7000        
+    BTST.B      #$8,$8000
+    BTST.L      #$12,D1
+    BTST.B      #$33,(A3)
+    BTST.B      #$44,(A2)+          
+    BTST.B      #$FF,-(A2)
+    BTST.B      #$AA,$AAAA
+    BTST.B      #$DD,$CCCCBBBB
+
     AND.L      #15, D6
     AND.B       $1000,D0
     AND.W       D1,$1000
@@ -31,23 +61,7 @@ START:                  ; first instruction of program
     AND.B      D2,$AAAA
     AND.B      D2,$CCCCBBBB
     
-    BTST.L      D0,D1
-    BTST.B      D2,(A3)
-    BTST.B      D2,(A2)+          
-    BTST.B      D2,-(A2)
-    BTST.B      D2,$AAAA
-    BTST.B      D2,$CCCCBBBB
-    BTST.B      D2,#$AA
-    BTST.B      D2,#$11
-    BTST.L      #$8011,D1      
-    BTST.B      D0,$7000        
-    BTST.B      #$8,$8000
-    BTST.L      #$12,D1
-    BTST.B      #$33,(A3)
-    BTST.B      #$44,(A2)+          
-    BTST.B      #$FF,-(A2)
-    BTST.B      #$AA,$AAAA
-    BTST.B      #$DD,$CCCCBBBB
+    
       
     
     EOR.B       D0,$1000
@@ -217,22 +231,10 @@ START:                  ; first instruction of program
     SubA.L      $12345678,A2
     SubA.W      #$1234,A2
     SubA.L      #$12345678,A3 ;output ADDQ $3,$B802
-
+    
 
     
-;------------ BCC & Jumps --------------;
-
-    Bra         $1234
-    Beq         $5678
-    Bne         $1111
-    Blt         $9999
-    Bhi         $1000
     
-    Jsr         $ABCD
-    Jsr         (A6)
-    Jsr         $1234
-    Jsr         $12345678
-    Rts
     
 ;--------- SHIFT FUNCTIONS -------------;
 
