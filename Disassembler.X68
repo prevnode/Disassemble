@@ -2756,7 +2756,9 @@ JSR_EA
         CMP.B   #2,D2
         BEQ     PRINT
         ADD.L   A5,D3           ;Add pointer to displacement for absolute address
-        ADD.L   NUM_EXP_WRDS,D3 ;Add displacement that takes it to the next opcode
+        CLR     D7
+        MOVE.B  NUM_EXP_WRDS,D7
+        ADD     D7,D3           ;Add displacement that takes it to the next opcode
         BRA     PRINT
 
                 
