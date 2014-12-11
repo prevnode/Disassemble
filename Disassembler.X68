@@ -31,141 +31,6 @@
 * A5 START/CURRENT ADDRESS
 * A6 ENDING ADDRESS
 * A7 STACK POINTER
-
-* Put variables and constants here
-*------------------------------------------Opcode Constants----------------------------------------------------
-PAUSE_COUNT         DC.B        30                  ; COUNTER
-BEQ_OP              DC.B        'BEQ',0
-ADD_OP              DC.B        'ADD',0
-ADDA_OP             DC.B        'ADDA',0
-ADDQ_OP             DC.B        'ADDQ',0
-AND_OP              DC.B        'AND',0
-ASL_OP              DC.B        'ASL',0
-ASR_OP              DC.B        'ASR',0
-BHI_OP              DC.B        'BHI',0
-BLT_OP              DC.B        'BLT',0
-BNE_OP              DC.B        'BNE',0
-BRA_OP              DC.B        'BRA',0
-BTST_OP             DC.B        'BTST',0
-CMP_OP              DC.B        'CMP',0
-CMPA_OP             DC.B        'CMPA',0
-CMPI_OP             DC.B        'CMPI',0
-DIVS_OP             DC.B        'DIVS',0
-EOR_OP              DC.B        'EOR',0
-EORI_OP             DC.B        'EORI',0
-JSR_OP              DC.B        'JSR',HT,0
-LEA_OP              DC.B        'LEA',0
-LSL_OP              DC.B        'LSL',0
-LSR_OP              DC.B        'LSR',0
-MOVE_OP             DC.B        'MOVE',0
-MOVEA_OP            DC.B        'MOVEA',0
-MOVEM_OP            DC.B        'MOVEM',0
-MULS_OP             DC.B        'MULS',0
-NEG_OP              DC.B        'NEG',0
-NOT_OP              DC.B        'NOT',0
-ORI_OP              DC.B        'ORI',0
-ROL_OP              DC.B        'ROL',0
-ROR_OP              DC.B        'ROR',0
-RTS_OP              DC.B        'RTS',0
-SUB_OP              DC.B        'SUB',0
-SUBA_OP             DC.B        'SUBA',0
-SUBI_OP             DC.B        'SUBI',0
-*-----------------------------------------------------------
-
-CR                  EQU         $0D                 ; Carriage Return
-LF                  EQU         $0A                 ; Line Feed
-BS                  EQU         $08                 ; Backspace
-HT                  EQU         $09                 ; Tab (horizontal 5 characters)
-LF                  EQU         $0A                 ; New line (line feed)
-VT                  EQU         $0B                 ; Vertical tab (4 lines)
-FF                  EQU         $0C                 ; Form Feed (Always end printing with a Form Feed.)
-    
-NUM_EXP_WRDS        DS.B        1                   ; Number of expansion words after the opcode
-                    
-NUM_OPERANDS        DS.B        1                   ; Number of operands for the current instruction valid range: 1 or 2
-                    
-
-PAUSE_MSG           DC.B        'Dissambler paused. Press any key to continue...',0
-EL                  DC.B        '',CR,LF,0          ; End Line
-OP_COMMA            DC.B        ',',0
-TAB                 DC.B        '',HT,0
-
-SPLASH              DC.B        '        ____ ___  __ __                        ',CR,LF
-                    DC.B        '       / __/( _ )/ //_/                        ',CR,LF
-                    DC.B        '      / _ \/ _  / ,<                           ',CR,LF
-                    DC.B        '      \___/\___/_/|_|  __      _               ',CR,LF
-                    DC.B        '        / __/ /__ ____/ /_____(_)___           ',CR,LF
-                    DC.B        '       / _// / -_) __/ __/ __/ / __/           ',CR,LF
-                    DC.B        '      /___/_/\__/\__/\__/_/_/_/\__/        __  ',CR,LF
-                    DC.B        '        / __/ /  ___ ___  / /  ___ _______/ /__',CR,LF
-                    DC.B        '       _\ \/ _ \/ -_) _ \/ _ \/ -_) __/ _  (_-<',CR,LF
-                    DC.B        '      /___/_//_/\__/ .__/_//_/\__/_/  \_,_/___/',CR,LF
-                    DC.B        '                  /_/                          ',CR,LF
-                    DC.B        'Brandan Heaertel' ,CR,LF
-                    DC.B        'Erick House'      ,CR,LF
-                    DC.B        'Gary Mixson'      ,CR,LF,CR,LF,0
-
-GETSRTHEX           DC.B        'Enter Starting Hex Address Of Program: ',0
-GETENDHEX           DC.B        'Enter Ending Hex Address Of Program: ',CR,LF,0
-RUNAGAIN            DC.B        'Would You Like To Dissasmble Anouther Program? (Y/N): ',0
-CONFIRMSRT          DC.B        'Starting address is stored',CR,LF,0
-CONFIRMEND          DC.B        'Ending address is stored',CR,LF,0
-EXEASCII            DC.B        'Executing ASCII',CR,LF,0
-BADADDRESS          DC.B        'Bad address...',CR,LF,0
-GOODBYE             DC.B        CR,LF,'Good Bye!',0
-
-SP0                 DC.B        'D',0
-SP1                 DC.B        'A',0
-SP2                 DC.B        '(A',0
-SP3                 DC.B        '(A',0
-SP4                 DC.B        '-(A',0
-SP5                 DC.B        '#$',0
-SP6                 DC.B        '#WXYZ',0
-SP7                 DC.B        '$',0
-
-SE0                 DC.B        '',0
-SE1                 DC.B        '',0
-SE2                 DC.B        ')',0
-SE3                 DC.B        ')+',0
-SE4                 DC.B        ')',0
-SE5                 DC.B        '',0
-SE6                 DC.B        '',0
-SE7                 DC.B        '',0
-
-MMA7    DC.W    'A7',0
-MMA6    DC.W    'A6',0
-MMA5    DC.W    'A5',0
-MMA4    DC.W    'A4',0
-MMA3    DC.W    'A3',0
-MMA2    DC.W    'A2',0
-MMA1    DC.W    'A1',0
-MMA0    DC.W    'A0',0
-MMD7    DC.W    'D7',0
-MMD6    DC.W    'D6',0
-MMD5    DC.W    'D5',0
-MMD4    DC.W    'D4',0
-MMD3    DC.W    'D3',0
-MMD2    DC.W    'D2',0
-MMD1    DC.W    'D1',0
-MMD0    DC.W    'D0',0
-MMSLASH  DC.W    '/',0
-
-MASK_13_12          EQU     %00110000000000000000000000000000
-MASK_11_9           EQU     %00001110000000000000000000000000
-MASK_8_6            EQU     %00000001110000000000000000000000
-MASK_7_6            EQU     %00000000110000000000000000000000
-MASK_7_0            EQU     %00000000111111110000000000000000
-MASK_5_3            EQU     %00000000001110000000000000000000
-MASK_2_0            EQU     %00000000000001110000000000000000
-
-    *Attributes
-BYTE                DC.B    '.B',HT,0
-WORD                DC.B    '.W',HT,0
-LONG                DC.B    '.L',HT,0
-
-HEX_MSG             DC.B    'A',0                   ; PLACEHOLDER FOR HEX CONVERSION
-BAD_MSG             DC.B        'DATA',HT,HT,0      ; Bad message part 1
-BAD_MSG2            DC.B        '#WXYZ',CR,LF,0     ; Bad message part 2
     
 START:              ORG         $1000               ; first instruction of program
 
@@ -274,9 +139,10 @@ STARTHEX
                     MOVE.B      #2,D0               ; read a string in from the keyboard
                     TRAP        #15                 ; trap #15 I/O
             
+                    CLR         D3                  ; reset D3
                     JSR         ASCIITOHEX          ; convert the string to hex address
                     MOVEA.L     D3,A5               ; move converted address to A5(start address)
-                    MOVE.L      #$0,D3              ; reset D3
+                    CLR         D3                  ; reset D3
                     JSR         CLEAR_SCREEN
                     JSR         SPLASH_SCREEN
                     BRA         ENDHEX              ; branch to get and convert the ending address
@@ -288,6 +154,7 @@ ENDHEX
                     MOVE.B      #2,D0               ; read a string in from the keyboard
                     TRAP        #15                 ; trap #15 I/O
 
+                    CLR         D3                  ; reset D3
                     JSR         ASCIITOHEX          ; convert the string to hex address
                     MOVEA.L     D3,A6               ; move converted address to A6(end address)
                     JSR         CLEAR_DATA
@@ -351,7 +218,7 @@ RESET               JSR         CLEAR_SCREEN        ; subroutine to clear screen
                     JSR         CLEAR_DATA          ; subroutine to clear data registers
                     JSR         CLEAR_ADDRESS       ; subroutine to clear address registers
                     MOVE.B      #30,PAUSE_COUNT     ; Initialize to 30
-                    BRA         START               ; branch back to start
+                    BRA         MAIN                ; branch back to start
                     
 CLEAR_SCREEN        MOVE.B      #11,D0              ; clear the screen
                     MOVE.W      #$FF00,D1           ; clear the screen
@@ -3131,11 +2998,149 @@ SUBI_EA
         CMP.B   #1,D7
         BEQ     PRINT_WORD      ;1 indicates word
         BRA     PRINT_LONG      ;2 indicates long
+        
+        
+        
+* Put variables and constants here
+*------------------------------------------Opcode Constants----------------------------------------------------
+PAUSE_COUNT         DC.B        30                  ; COUNTER
+BEQ_OP              DC.B        'BEQ',0
+ADD_OP              DC.B        'ADD',0
+ADDA_OP             DC.B        'ADDA',0
+ADDQ_OP             DC.B        'ADDQ',0
+AND_OP              DC.B        'AND',0
+ASL_OP              DC.B        'ASL',0
+ASR_OP              DC.B        'ASR',0
+BHI_OP              DC.B        'BHI',0
+BLT_OP              DC.B        'BLT',0
+BNE_OP              DC.B        'BNE',0
+BRA_OP              DC.B        'BRA',0
+BTST_OP             DC.B        'BTST',0
+CMP_OP              DC.B        'CMP',0
+CMPA_OP             DC.B        'CMPA',0
+CMPI_OP             DC.B        'CMPI',0
+DIVS_OP             DC.B        'DIVS',0
+EOR_OP              DC.B        'EOR',0
+EORI_OP             DC.B        'EORI',0
+JSR_OP              DC.B        'JSR',HT,0
+LEA_OP              DC.B        'LEA',0
+LSL_OP              DC.B        'LSL',0
+LSR_OP              DC.B        'LSR',0
+MOVE_OP             DC.B        'MOVE',0
+MOVEA_OP            DC.B        'MOVEA',0
+MOVEM_OP            DC.B        'MOVEM',0
+MULS_OP             DC.B        'MULS',0
+NEG_OP              DC.B        'NEG',0
+NOT_OP              DC.B        'NOT',0
+ORI_OP              DC.B        'ORI',0
+ROL_OP              DC.B        'ROL',0
+ROR_OP              DC.B        'ROR',0
+RTS_OP              DC.B        'RTS',0
+SUB_OP              DC.B        'SUB',0
+SUBA_OP             DC.B        'SUBA',0
+SUBI_OP             DC.B        'SUBI',0
+*-----------------------------------------------------------
+
+CR                  EQU         $0D                 ; Carriage Return
+LF                  EQU         $0A                 ; Line Feed
+BS                  EQU         $08                 ; Backspace
+HT                  EQU         $09                 ; Tab (horizontal 5 characters)
+LF                  EQU         $0A                 ; New line (line feed)
+VT                  EQU         $0B                 ; Vertical tab (4 lines)
+FF                  EQU         $0C                 ; Form Feed (Always end printing with a Form Feed.)
+    
+NUM_EXP_WRDS        DS.B        1                   ; Number of expansion words after the opcode
+                    
+NUM_OPERANDS        DS.B        1                   ; Number of operands for the current instruction valid range: 1 or 2
+                    
+
+PAUSE_MSG           DC.B        'Dissambler paused. Press any key to continue...',0
+EL                  DC.B        '',CR,LF,0          ; End Line
+OP_COMMA            DC.B        ',',0
+TAB                 DC.B        '',HT,0
+
+SPLASH              DC.B        '        ____ ___  __ __                        ',CR,LF
+                    DC.B        '       / __/( _ )/ //_/                        ',CR,LF
+                    DC.B        '      / _ \/ _  / ,<                           ',CR,LF
+                    DC.B        '      \___/\___/_/|_|  __      _               ',CR,LF
+                    DC.B        '        / __/ /__ ____/ /_____(_)___           ',CR,LF
+                    DC.B        '       / _// / -_) __/ __/ __/ / __/           ',CR,LF
+                    DC.B        '      /___/_/\__/\__/\__/_/_/_/\__/        __  ',CR,LF
+                    DC.B        '        / __/ /  ___ ___  / /  ___ _______/ /__',CR,LF
+                    DC.B        '       _\ \/ _ \/ -_) _ \/ _ \/ -_) __/ _  (_-<',CR,LF
+                    DC.B        '      /___/_//_/\__/ .__/_//_/\__/_/  \_,_/___/',CR,LF
+                    DC.B        '                  /_/                          ',CR,LF
+                    DC.B        'Brandan Heaertel' ,CR,LF
+                    DC.B        'Erick House'      ,CR,LF
+                    DC.B        'Gary Mixson'      ,CR,LF,CR,LF,0
+
+GETSRTHEX           DC.B        'Enter Starting Hex Address Of Program: ',0
+GETENDHEX           DC.B        'Enter Ending Hex Address Of Program: ',CR,LF,0
+RUNAGAIN            DC.B        'Would You Like To Dissasmble Anouther Program? (Y/N): ',0
+CONFIRMSRT          DC.B        'Starting address is stored',CR,LF,0
+CONFIRMEND          DC.B        'Ending address is stored',CR,LF,0
+EXEASCII            DC.B        'Executing ASCII',CR,LF,0
+BADADDRESS          DC.B        'Bad address...',CR,LF,0
+GOODBYE             DC.B        CR,LF,'Good Bye!',0
+
+SP0                 DC.B        'D',0
+SP1                 DC.B        'A',0
+SP2                 DC.B        '(A',0
+SP3                 DC.B        '(A',0
+SP4                 DC.B        '-(A',0
+SP5                 DC.B        '#$',0
+SP6                 DC.B        '#WXYZ',0
+SP7                 DC.B        '$',0
+
+SE0                 DC.B        '',0
+SE1                 DC.B        '',0
+SE2                 DC.B        ')',0
+SE3                 DC.B        ')+',0
+SE4                 DC.B        ')',0
+SE5                 DC.B        '',0
+SE6                 DC.B        '',0
+SE7                 DC.B        '',0
+
+MMA7    DC.W    'A7',0
+MMA6    DC.W    'A6',0
+MMA5    DC.W    'A5',0
+MMA4    DC.W    'A4',0
+MMA3    DC.W    'A3',0
+MMA2    DC.W    'A2',0
+MMA1    DC.W    'A1',0
+MMA0    DC.W    'A0',0
+MMD7    DC.W    'D7',0
+MMD6    DC.W    'D6',0
+MMD5    DC.W    'D5',0
+MMD4    DC.W    'D4',0
+MMD3    DC.W    'D3',0
+MMD2    DC.W    'D2',0
+MMD1    DC.W    'D1',0
+MMD0    DC.W    'D0',0
+MMSLASH  DC.W    '/',0
+
+MASK_13_12          EQU     %00110000000000000000000000000000
+MASK_11_9           EQU     %00001110000000000000000000000000
+MASK_8_6            EQU     %00000001110000000000000000000000
+MASK_7_6            EQU     %00000000110000000000000000000000
+MASK_7_0            EQU     %00000000111111110000000000000000
+MASK_5_3            EQU     %00000000001110000000000000000000
+MASK_2_0            EQU     %00000000000001110000000000000000
+
+    *Attributes
+BYTE                DC.B    '.B',HT,0
+WORD                DC.B    '.W',HT,0
+LONG                DC.B    '.L',HT,0
+
+HEX_MSG             DC.B    'A',0                   ; PLACEHOLDER FOR HEX CONVERSION
+BAD_MSG             DC.B        'DATA',HT,HT,0      ; Bad message part 1
+BAD_MSG2            DC.B        '#WXYZ',CR,LF,0     ; Bad message part 2
 
 
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
