@@ -105,13 +105,14 @@ SPLASH              DC.B        '        ____ ___  __ __                        
                     DC.B        'Erick House'      ,CR,LF
                     DC.B        'Gary Mixson'      ,CR,LF,CR,LF,0
 
-GETSRTHEX           DC.B        'Enter Starting Hex Address Of Program: ',CR,LF,0
+GETSRTHEX           DC.B        'Enter Starting Hex Address Of Program: ',0
 GETENDHEX           DC.B        'Enter Ending Hex Address Of Program: ',CR,LF,0
-RUNAGAIN            DC.B        'Would You Like To Dissasmble Anouther Program? (Y/N): ',CR,LF,0
+RUNAGAIN            DC.B        'Would You Like To Dissasmble Anouther Program? (Y/N): ',0
 CONFIRMSRT          DC.B        'Starting address is stored',CR,LF,0
 CONFIRMEND          DC.B        'Ending address is stored',CR,LF,0
 EXEASCII            DC.B        'Executing ASCII',CR,LF,0
 BADADDRESS          DC.B        'Bad address...',CR,LF,0
+GOODBYE             DC.B        CR,LF,'Good Bye!',0
 
 SP0                 DC.B        'D',0
 SP1                 DC.B        'A',0
@@ -330,13 +331,17 @@ PROMPTRUNAGAIN
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                 
-                    MOVE.B      #2,D0               ; trap task 5 grabs a single character
+                    MOVE.B      #5,D0               ; trap task 5 grabs a single character
                     TRAP        #15                 ; trap #15 I/O
-                    CMP.L       #$59,D1             ; compare Y to D1
+                    CMP.B       #$59,D1             ; compare Y to D1
                     BEQ         RESET               ; brach to Reset if D1 == UPPER(Y)
                     
                     CMP.B       #$79,D1             ; compare y to D1
                     BEQ         RESET               ; brach to Reset if D1 == LOWER(y)
+                    LEA         GOODBYE,A1
+                    MOVE.B      #14,D0
+                    TRAP        #15
+                    SIMHALT             
                     BRA         ENDPROGRAM          ; else branch to end
 
 *----------------------RESET--------------------------------
@@ -345,7 +350,7 @@ PROMPTRUNAGAIN
 RESET               JSR         CLEAR_SCREEN        ; subroutine to clear screen
                     JSR         CLEAR_DATA          ; subroutine to clear data registers
                     JSR         CLEAR_ADDRESS       ; subroutine to clear address registers
-                    *MOVE.B      #30,PAUSE_COUNT     ; Initialize to 30
+                    MOVE.B      #30,PAUSE_COUNT     ; Initialize to 30
                     BRA         START               ; branch back to start
                     
 CLEAR_SCREEN        MOVE.B      #11,D0              ; clear the screen
@@ -406,36 +411,36 @@ PRINT_BAD           CLR         D2                  ; clear d2
                     TRAP        #15                 ; trap #15 I/O
                     BRA         MAIN_LOOP           ; branch back to main loop to decode next opword
 					
-PRINT_MOVEM			LEA			TAB,A1
-					MOVE.B		#14,D0
-					TRAP		#15
+PRINT_MOVEM			LEA			TAB,A1              ; print tab char
+                    MOVE        #14,D0              ; trap task #14 to print the message to screen
+                    TRAP        #15                 ; trap #15 I/O
 *					*BRA         PRINT_MOVEM_OP
 *					LEA			BAD_MSG2,A1
 *					MOVE.B		#14,D0
 *					TRAP		#15
 *					BRA			MAIN_LOOP
 					
-PRINT_LIST_EA       CLR         D1
-                    CMPI.B      #$6,D4
-					BEQ         PRINT_EA_LIST
+PRINT_LIST_EA       CLR         D1                  ; clear d1
+                    CMPI.B      #$6,D4              ; check to see if D1 is opmode 6
+					BEQ         PRINT_EA_LIST       ; if true, print movem postincrement
 					
-					MOVE.W      D3,D1
-					JSR         MOVEM_LIST_EA
+					MOVE.W      D3,D1               ; copy movem address list to d1
+					JSR         MOVEM_LIST_EA       ; jsr to print out address list
 					LEA         OP_COMMA,A1         ; move comma string to A1
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     JSR         PRINT_OPMODE2_PRE   ; print the second opmode preface symbol
-                    JSR         PRINT_OPMODE2_POST
+                    JSR         PRINT_OPMODE2_POST  ; jsr to print end of op register
 					BRA         PRINT_RETURN
 					
-PRINT_EA_LIST       MOVE.W      D5,D1
+PRINT_EA_LIST       MOVE.W      D5,D1               ; copy movem address list to d1
                     JSR         PRINT_OPMODE1_PRE   ; print the second opmode preface symboL
-                    JSR         PRINT_OPMODE1_POST
+                    JSR         PRINT_OPMODE1_POST  ; jst to print end of op register
                     LEA         OP_COMMA,A1         ; move comma string to A1
                     MOVE        #14,D0              ; trap task #14 to print the message to screen
                     TRAP        #15                 ; trap #15 I/O
                     
-                    JSR         MOVEM_EA_LIST
+                    JSR         MOVEM_EA_LIST       ; jsr to print 
                     BRA         PRINT_RETURN
                     
 PRINT_MM_SLASH
@@ -449,8 +454,8 @@ PRINT_MM_SLASH
 MOVEM_EA_LIST
         BRA     MMNGA7
         
-MMNGA7  CLR     D0
-        MOVE.W  D1,D0
+MMNGA7  CLR     D0              ; CLEAR D0
+        MOVE.W  D1,D0           ; COPY ADDRESS REGISTER TO DO
         ANDI.W  #$8000,D0
         CMPI.W  #$8000,D0
         BNE     MMNGA6
@@ -461,8 +466,8 @@ MMNGA7  CLR     D0
         JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 
         
-MMNGA6  CLR     D0
-        MOVE.W  D1,D0
+MMNGA6  CLR     D0              ; CLEAR D0
+        MOVE.W  D1,D0           ; COPY ADDRESS REGISTER TO DO
         ANDI.W  #$4000,D0
         CMPI.W  #$4000,D0
         BNE     MMNGA5
@@ -472,8 +477,8 @@ MMNGA6  CLR     D0
         TRAP    #15             ; TRAP 15 IO
         JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
         
-MMNGA5  CLR     D0
-        MOVE.W  D1,D0
+MMNGA5  CLR     D0              ; CLEAR D0
+        MOVE.W  D1,D0           ; COPY ADDRESS REGISTER TO DO
         ANDI.W  #$2000,D0
         CMPI.W  #$2000,D0
         BNE     MMNGA4
@@ -483,8 +488,8 @@ MMNGA5  CLR     D0
         TRAP    #15             ; TRAP 15 IO
         JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
         
-MMNGA4  CLR     D0
-        MOVE.W  D1,D0
+MMNGA4  CLR     D0              ; CLEAR D0
+        MOVE.W  D1,D0           ; COPY ADDRESS REGISTER TO DO
         ANDI.W  #$1000,D0
         CMPI.W  #$1000,D0
         BNE     MMNGA3
@@ -494,8 +499,8 @@ MMNGA4  CLR     D0
         TRAP    #15             ; TRAP 15 IO
         JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
-MMNGA3  CLR     D0
-        MOVE.W  D1,D0
+MMNGA3  CLR     D0              ; CLEAR D0
+        MOVE.W  D1,D0           ; COPY ADDRESS REGISTER TO DO
         ANDI.W  #$0800,D0
         CMPI.W  #$0800,D0
         BNE     MMNGA2
@@ -505,8 +510,8 @@ MMNGA3  CLR     D0
         TRAP    #15             ; TRAP 15 IO
         JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
-MMNGA2  CLR     D0
-        MOVE.W  D1,D0
+MMNGA2  CLR     D0              ; CLEAR D0
+        MOVE.W  D1,D0           ; COPY ADDRESS REGISTER TO DO
         ANDI.W  #$0400,D0
         CMPI.W  #$0400,D0
         BNE     MMNGA1
@@ -516,8 +521,8 @@ MMNGA2  CLR     D0
         TRAP    #15             ; TRAP 15 IO
         JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
-MMNGA1  CLR     D0
-        MOVE.W  D1,D0
+MMNGA1  CLR     D0              ; CLEAR D0
+        MOVE.W  D1,D0           ; COPY ADDRESS REGISTER TO DO
         ANDI.W  #$0200,D0
         CMPI.W  #$0200,D0
         BNE     MMNGA0
@@ -527,8 +532,8 @@ MMNGA1  CLR     D0
         TRAP    #15             ; TRAP 15 IO
         JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
-MMNGA0  CLR     D0
-        MOVE.W  D1,D0
+MMNGA0  CLR     D0              ; CLEAR D0
+        MOVE.W  D1,D0           ; COPY ADDRESS REGISTER TO DO
         ANDI.W  #$0100,D0
         CMPI.W  #$0100,D0
         BNE     MMNGD7
@@ -538,8 +543,8 @@ MMNGA0  CLR     D0
         TRAP    #15             ; TRAP 15 IO
         JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 
-MMNGD7  CLR     D0
-        MOVE.W  D1,D0
+MMNGD7  CLR     D0              ; CLEAR D0
+        MOVE.W  D1,D0           ; COPY ADDRESS REGISTER TO DO
         ANDI.W  #$0080,D0
         CMPI.W  #$0080,D0
         BNE     MMNGD6
@@ -549,8 +554,8 @@ MMNGD7  CLR     D0
         TRAP    #15             ; TRAP 15 IO
         JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
-MMNGD6  CLR     D0
-        MOVE.W  D1,D0
+MMNGD6  CLR     D0              ; CLEAR D0
+        MOVE.W  D1,D0           ; COPY ADDRESS REGISTER TO DO
         ANDI.W  #$0040,D0
         CMPI.W  #$0040,D0
         BNE     MMNGD5
@@ -560,8 +565,8 @@ MMNGD6  CLR     D0
         TRAP    #15             ; TRAP 15 IO
         JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
-MMNGD5  CLR     D0
-        MOVE.W  D1,D0
+MMNGD5  CLR     D0              ; CLEAR D0
+        MOVE.W  D1,D0           ; COPY ADDRESS REGISTER TO DO
         ANDI.W  #$0020,D0
         CMPI.W  #$0020,D0
         BNE     MMNGD4
@@ -571,8 +576,8 @@ MMNGD5  CLR     D0
         TRAP    #15             ; TRAP 15 IO
         JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
-MMNGD4  CLR     D0
-        MOVE.W  D1,D0
+MMNGD4  CLR     D0              ; CLEAR D0
+        MOVE.W  D1,D0           ; COPY ADDRESS REGISTER TO DO
         ANDI.W  #$0010,D0
         CMPI.W  #$0010,D0
         BNE     MMNGD3
@@ -582,8 +587,8 @@ MMNGD4  CLR     D0
         TRAP    #15             ; TRAP 15 IO
         JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
-MMNGD3  CLR     D0
-        MOVE.W  D1,D0
+MMNGD3  CLR     D0              ; CLEAR D0
+        MOVE.W  D1,D0           ; COPY ADDRESS REGISTER TO DO
         ANDI.W  #$0008,D0
         CMPI.W  #$0008,D0
         BNE     MMNGD2
@@ -593,8 +598,8 @@ MMNGD3  CLR     D0
         TRAP    #15             ; TRAP 15 IO
         JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
-MMNGD2  CLR     D0
-        MOVE.W  D1,D0
+MMNGD2  CLR     D0              ; CLEAR D0
+        MOVE.W  D1,D0           ; COPY ADDRESS REGISTER TO DO
         ANDI.W  #$0004,D0
         CMPI.W  #$0004,D0
         BNE     MMNGD1
@@ -604,8 +609,8 @@ MMNGD2  CLR     D0
         TRAP    #15             ; TRAP 15 IO
         JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
-MMNGD1  CLR     D0
-        MOVE.W  D1,D0
+MMNGD1  CLR     D0              ; CLEAR D0
+        MOVE.W  D1,D0           ; COPY ADDRESS REGISTER TO DO
         ANDI.W  #$0002,D0
         CMPI.W  #$0002,D0
         BNE     MMNGD0
@@ -615,8 +620,8 @@ MMNGD1  CLR     D0
         TRAP    #15             ; TRAP 15 IO
         JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
-MMNGD0  CLR     D0
-        MOVE.W  D1,D0
+MMNGD0  CLR     D0              ; CLEAR D0
+        MOVE.W  D1,D0           ; COPY ADDRESS REGISTER TO DO
         ANDI.W  #$0001,D0
         CMPI.W  #$0001,D0
         BNE     MMNGFINISH
@@ -631,8 +636,8 @@ MMNGFINISH
 MOVEM_LIST_EA
         BRA     MMNSD0
 
-MMNSD0  CLR     D0
-        MOVE.W  D1,D0
+MMNSD0  CLR     D0              ; CLEAR D0
+        MOVE.W  D1,D0           ; COPY ADDRESS REGISTER TO DO
         ANDI.W  #$8000,D0
         CMPI.W  #$8000,D0
         BNE     MMNGD1
@@ -642,8 +647,8 @@ MMNSD0  CLR     D0
         TRAP    #15             ; TRAP 15 IO
         JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
-MMNSD1  CLR     D0
-        MOVE.W  D1,D0
+MMNSD1  CLR     D0              ; CLEAR D0
+        MOVE.W  D1,D0           ; COPY ADDRESS REGISTER TO DO
         ANDI.W  #$4000,D0
         CMPI.W  #$4000,D0
         BNE     MMNSD2
@@ -653,8 +658,8 @@ MMNSD1  CLR     D0
         TRAP    #15             ; TRAP 15 IO
         JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 
-MMNSD2  CLR     D0
-        MOVE.W  D1,D0
+MMNSD2  CLR     D0              ; CLEAR D0
+        MOVE.W  D1,D0           ; COPY ADDRESS REGISTER TO DO
         ANDI.W  #$2000,D0
         CMPI.W  #$2000,D0
         BNE     MMNSD3
@@ -664,8 +669,8 @@ MMNSD2  CLR     D0
         TRAP    #15             ; TRAP 15 IO
         JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
-MMNSD3  CLR     D0
-        MOVE.W  D1,D0
+MMNSD3  CLR     D0              ; CLEAR D0
+        MOVE.W  D1,D0           ; COPY ADDRESS REGISTER TO DO
         ANDI.W  #$1000,D0
         CMPI.W  #$1000,D0
         BNE     MMNSD4
@@ -675,8 +680,8 @@ MMNSD3  CLR     D0
         TRAP    #15             ; TRAP 15 IO
         JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
-MMNSD4  CLR     D0
-        MOVE.W  D1,D0
+MMNSD4  CLR     D0              ; CLEAR D0
+        MOVE.W  D1,D0           ; COPY ADDRESS REGISTER TO DO
         ANDI.W  #$0800,D0
         CMPI.W  #$0800,D0
         BNE     MMNSD5
@@ -686,8 +691,8 @@ MMNSD4  CLR     D0
         TRAP    #15             ; TRAP 15 IO
         JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
-MMNSD5  CLR     D0
-        MOVE.W  D1,D0
+MMNSD5  CLR     D0              ; CLEAR D0
+        MOVE.W  D1,D0           ; COPY ADDRESS REGISTER TO DO
         ANDI.W  #$0400,D0
         CMPI.W  #$0400,D0
         BNE     MMNSD6
@@ -697,8 +702,8 @@ MMNSD5  CLR     D0
         TRAP    #15             ; TRAP 15 IO
         JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
-MMNSD6  CLR     D0
-        MOVE.W  D1,D0
+MMNSD6  CLR     D0              ; CLEAR D0
+        MOVE.W  D1,D0           ; COPY ADDRESS REGISTER TO DO
         ANDI.W  #$0200,D0
         CMPI.W  #$0200,D0
         BNE     MMNSD7
@@ -708,8 +713,8 @@ MMNSD6  CLR     D0
         TRAP    #15             ; TRAP 15 IO
         JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
-MMNSD7  CLR     D0
-        MOVE.W  D1,D0
+MMNSD7  CLR     D0              ; CLEAR D0
+        MOVE.W  D1,D0           ; COPY ADDRESS REGISTER TO DO
         ANDI.W  #$0100,D0
         CMPI.W  #$0100,D0
         BNE     MMNSA0
@@ -719,8 +724,8 @@ MMNSD7  CLR     D0
         TRAP    #15             ; TRAP 15 IO
         JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
-MMNSA0  CLR     D0
-        MOVE.W  D1,D0
+MMNSA0  CLR     D0              ; CLEAR D0
+        MOVE.W  D1,D0           ; COPY ADDRESS REGISTER TO DO
         ANDI.W  #$0080,D0
         CMPI.W  #$0080,D0
         BNE     MMNSA1
@@ -730,8 +735,8 @@ MMNSA0  CLR     D0
         TRAP    #15             ; TRAP 15 IO
         JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
-MMNSA1  CLR     D0
-        MOVE.W  D1,D0
+MMNSA1  CLR     D0              ; CLEAR D0
+        MOVE.W  D1,D0           ; COPY ADDRESS REGISTER TO DO
         ANDI.W  #$0040,D0
         CMPI.W  #$0040,D0
         BNE     MMNSA2
@@ -741,8 +746,8 @@ MMNSA1  CLR     D0
         TRAP    #15             ; TRAP 15 IO
         JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
-MMNSA2  CLR     D0
-        MOVE.W  D1,D0
+MMNSA2  CLR     D0              ; CLEAR D0
+        MOVE.W  D1,D0           ; COPY ADDRESS REGISTER TO DO
         ANDI.W  #$0020,D0
         CMPI.W  #$0020,D0
         BNE     MMNSA3
@@ -752,8 +757,8 @@ MMNSA2  CLR     D0
         TRAP    #15             ; TRAP 15 IO
         JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
-MMNSA3  CLR     D0
-        MOVE.W  D1,D0
+MMNSA3  CLR     D0              ; CLEAR D0
+        MOVE.W  D1,D0           ; COPY ADDRESS REGISTER TO DO
         ANDI.W  #$0010,D0
         CMPI.W  #$0010,D0
         BNE     MMNSA4
@@ -763,8 +768,8 @@ MMNSA3  CLR     D0
         TRAP    #15             ; TRAP 15 IO
         JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
-MMNSA4  CLR     D0
-        MOVE.W  D1,D0
+MMNSA4  CLR     D0              ; CLEAR D0
+        MOVE.W  D1,D0           ; COPY ADDRESS REGISTER TO DO
         ANDI.W  #$0008,D0
         CMPI.W  #$0008,D0
         BNE     MMNSA5
@@ -774,8 +779,8 @@ MMNSA4  CLR     D0
         TRAP    #15             ; TRAP 15 IO
         JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
-MMNSA5  CLR     D0
-        MOVE.W  D1,D0
+MMNSA5  CLR     D0              ; CLEAR D0
+        MOVE.W  D1,D0           ; COPY ADDRESS REGISTER TO DO
         ANDI.W  #$0004,D0
         CMPI.W  #$0004,D0
         BNE     MMNSA6
@@ -785,8 +790,8 @@ MMNSA5  CLR     D0
         TRAP    #15             ; TRAP 15 IO
         JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
-MMNSA6  CLR     D0
-        MOVE.W  D1,D0
+MMNSA6  CLR     D0              ; CLEAR D0
+        MOVE.W  D1,D0           ; COPY ADDRESS REGISTER TO DO
         ANDI.W  #$0002,D0
         CMPI.W  #$0002,D0
         BNE     MMNSA7
@@ -796,8 +801,8 @@ MMNSA6  CLR     D0
         TRAP    #15             ; TRAP 15 IO
         JSR     PRINT_MM_SLASH  ; JSR TO DECIDED IF SLASH OR END IS NEEDED
 		
-MMNSA7  CLR     D0
-        MOVE.W  D1,D0
+MMNSA7  CLR     D0              ; CLEAR D0
+        MOVE.W  D1,D0           ; COPY ADDRESS REGISTER TO DO
         ANDI.W  #$0001,D0
         CMPI.W  #$0001,D0
         BNE     MMNSFINISH
@@ -3129,6 +3134,7 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
