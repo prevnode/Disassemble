@@ -2,7 +2,7 @@
 * Title      :  DISSEMBLER PROTOTYPE I/O
 * Written by :  BRANDAN HAERTEL, ERICK HOUSE, GARY MIXSON
 * Date       :  10/5/2014
-* Description:  MAIN PROGRAM <- NEED A BETTER DESCRIPTION!
+* Description:  Decodes Motorola 68000 opcodes into assembly language
 *-----------------------------------------------------------
 
 * 000 Dn
@@ -3134,6 +3134,7 @@ SUBI_EA
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
