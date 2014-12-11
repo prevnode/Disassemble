@@ -1861,106 +1861,8 @@ MULDIV
         MOVE.L  #0,D4       ;Op2 mode is always Dn
 mul_long
         
-        RTS
-        
-        
-*-----------------------------Expansion to Operand Arithemitic-----------------------------
-*Moves data from the expansion words into operand registers
-*Assumes Load12by3 has been run
+        RTS      
 
-*D2 operand 1 Opmode
-*D3 operand 1 register
-*D4 operand 2 mode
-*D5 operand 2 register
-
-EXP2OPERAR
-        MOVE.B  #0,NUM_EXP_WRDS
-        MOVE.L  A5,A4   ;Make a copy of the opcode pointer
-        ADD.L   #2,A4   ;Advance to first expansion word (assumes one exists)
-        
-chk_unsupported1
-        CMP.B   #5,D2       ;Mode 5-6 are displacement and unsupported
-        BEQ     PRINT_BAD
-        CMP.B   #6,D2
-        BEQ     PRINT_BAD
-        CMP.B   #7,D2    
-        BNE     check_unsupported2
-        CMP.B   #2,D3
-        BEQ     PRINT_BAD
-        CMP.B   #3,D3
-        BEQ     PRINT_BAD
-        BRA     check_unsupported2
-        
-chk_unsupported2
-        CMP.B   #5,D4       ;Mode 5-6 are displacement and unsupported
-        BEQ     PRINT_BAD
-        CMP.B   #6,D4
-        BEQ     PRINT_BAD
-        CMP.B   #7,D4    
-        BNE     operand1a
-        CMP.B   #2,D5       ;Register 2 - 3 are unsupported
-        BEQ     PRINT_BAD
-        CMP.B   #3,D5
-        BEQ     PRINT_BAD
-        
-operand1a
-        CMP.B   #7,D2       ;Look at operand 1 mode
-        BLT     operand2a    ;Opcodes below 7 don't use expansion words
-        CMP     #0,D3       ;Register 0 is word addressing
-        BEQ     getword1a    ;Single word
-        CMP     #1,D3
-        BEQ     getlong1a   ;Long word
-        CMP     #4,D3       ;Signifies immediate data
-        BEQ     immediate1a
-        
-        
-immediate1a
-        CMP     #2,D6       ;Size data register
-        BEQ     getlong1a   ;2 indicates long word
-        BRA     getword1a   ;1 or 3 use word
-        
-immediate2a
-        CMP     #2,D6       ;Size data register
-        BEQ     getlong2a   ;2 indicates long word
-        BRA     getword2a   ;1 or 3 use word        
-        
-getword1a
-        CLR     D3          ;Clear the register before copy expansion word
-        MOVE.W  (A4)+,D3
-        ADD.B   #1,NUM_EXP_WRDS
-        BRA     operand2
-        
-getlong1a
-        CLR     D3          ;Clear the register before copy expansion word
-        MOVE.L  (A4)+,D3
-        ADD.B   #2,NUM_EXP_WRDS
-        BRA     operand2
-        
-operand2a
-        CMP.B   #7,D4       ;Look at operand 1 mode
-        BLT     fin_exp     ;Opcodes below 7 don't use expansion words
-        CMP     #0,D5       ;Register 0 is word addressing
-        BEQ     getword2a   ;Single word
-        CMP     #1,D5
-        BEQ     getlong2a   ;Long word
-        CMP     #4,D5       ;Signifies immediate data
-        BEQ     immediate2a
-        
-getword2a
-        CLR     D5          ;Clear the register before copy expansion word
-        MOVE.W  (A4)+,D5
-        ADD.B   #1,NUM_EXP_WRDS
-        BRA     fin_exp
-        
-getlong2a
-        CLR     D5          ;Clear the register before copy expansion word
-        MOVE.L  (A4)+,D5
-        ADD.B   #2,NUM_EXP_WRDS
-        BRA     fin_expa
-
-                
-fin_expa
-        RTS
         
 *-----------------------------Expansion to Operand-----------------------------
 *Moves data from the expansion words into operand registers
@@ -3138,6 +3040,7 @@ BAD_MSG2            DC.B        '#WXYZ',CR,LF,0     ; Bad message part 2
 *-------------------End Program--------------------------------------
 ENDPROGRAM
             END         START            ; last line of source
+
 
 
 
