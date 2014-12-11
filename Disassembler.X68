@@ -2758,33 +2758,6 @@ JSR_EA
         ADD.L   A5,D3           ;Add pointer to displacement for absolute address
         ADD.L   NUM_EXP_WRDS,D3 ;Add displacement that takes it to the next opcode
         BRA     PRINT
-                
-*        CMP.W   #5,D2           ;D2 is the ea mode
-*        BEQ     PRINT_BAD       ;Unsupported displacement
-*        CMP.W   #6,D2           ;D2 is the ea mode
-*        BEQ     PRINT_BAD       ;Unsupported displacement
-*        CMP.W   #7,D2           ;D2 is the ea mode
-*        BLT     jsr_operand     ;Must be mode 2
-*        CMP.W   #2,D3           ;D3 is register
-*        BGE     PRINT_BAD       ;Register 2 and up are unsupported
-*        CMP.W   #0,D3           ;D3 is register #
-*        BEQ     jsr_operand     ;Register 0 is word addressing
-*        MOVE.B  #2,NUM_EXP_WRDS ;2 words for long addressing
-*        BRA     jsr_operand
-        
-*jsr_operand
-*        MOVE.L  A5,A4   ;Make a copy of the opcode pointer
-*        ADD.L   #2,A4   ;Advance to first expansion word (assumes on exists)
-*        CMP.B   #1,NUM_EXP_WRDS
-*        BGT     jsr_2
-*        MOVE.W  (A4),D3
-*        BRA     PRINT_WORD
-*        
-*jsr_2   MOVE.L  (A4),D3
-*        BRA     PRINT_LONG
-     
- 
-  
 
                 
 *---------------------------LEA_EA------------------------------------
